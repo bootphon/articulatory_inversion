@@ -11,11 +11,14 @@ import numpy as np
 import scipy.signal
 import matplotlib.pyplot as plt
 import scipy.interpolate
-from Traitement.add_dynamic_features import get_delta_features
-import librosa
+
 import sys
 
 print('sys.path ',sys.path)
+
+
+from Traitement.add_dynamic_features import get_delta_features
+import librosa
 root_path = dirname(dirname(os.path.realpath(__file__)))
 
 window=5
