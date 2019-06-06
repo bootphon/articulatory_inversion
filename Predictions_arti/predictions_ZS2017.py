@@ -12,8 +12,8 @@ def prediction_ZS(name_model,Nmax = 20):
         print("---time",time)
         #sys.path.insert(0, os.path.dirname(os.getcwd()))
         root_folder = os.path.dirname(os.getcwd())
-        model_to_load = os.path.join(root_folder,"Apprentissage","saved_models", name_model,name_model+".txt")
-        model = my_bilstm(hidden_dim=300, input_dim=429, output_dim=12, batch_size=10,
+        model_to_load = os.path.join(root_folder,"Apprentissage","saved_models", "modeles_valides",name_model+".txt")
+        model = my_bilstm(hidden_dim=300, input_dim=429, output_dim=13, batch_size=10,
                           name_file=name_model)
         model = model.double()
         try:
@@ -47,13 +47,17 @@ def prediction_ZS(name_model,Nmax = 20):
         if Nmax== 'All':
             Nmax = len(mfcc_files)
         print(path_mfcc_treated)
-        for i in range(5200,Nmax):
-            if i%50==0:
+        if time == "1s":
+            delta_show = 50
+        elif time == "120s":
+            delta_show = 5
+        for i in range(Nmax):
+            if i%delta_show==0:
                 print("{} out of {}".format(i,Nmax))
             x = np.load(os.path.join(path_mfcc_treated,mfcc_files[i]+".npy"))
             x_2 = torch.from_numpy(x).view((1,len(x),len(x[0])))
             y_pred = model(x_2)
-            y_pred = y_pred.detach().numpy().reshape((len(x),12))
+            y_pred = y_pred.detach().numpy().reshape((len(x),13))
             write_fea_file(y_pred,mfcc_files[i])
             np.save(os.path.join(path_prediction_ema,"ema_"+mfcc_files[i]+".npy"),y_pred)
 
