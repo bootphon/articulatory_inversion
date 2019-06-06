@@ -24,7 +24,7 @@ root_path = dirname(dirname(os.path.realpath(__file__)))
 
 window=5
 
-for time in ["120s"]:
+for time in ["1s"]:
     print("---time :",time)
     path_files_treated = os.path.join(root_path, "Donnees_pretraitees", "donnees_challenge_2017",time)
 
