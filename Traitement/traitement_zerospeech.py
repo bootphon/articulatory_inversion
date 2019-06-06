@@ -24,7 +24,9 @@ for time in ["120s"]:
     path_files_treated = os.path.join(root_path, "Donnees_pretraitees", "donnees_challenge_2017",time)
 
     path_wav_files = os.path.join(root_path, "Donnees_brutes",time)
+    print(path_wav_files,"path wav files")
     wav_files = sorted([name[:-4] for name in os.listdir(path_wav_files) if name.endswith('.wav')])
+    print("wav files",wav_files[0:10])
     sampling_rate_mfcc = 16000
     frame_time = 25
     hop_time = 10  # en ms
@@ -42,7 +44,6 @@ for time in ["120s"]:
         dyna_features = get_delta_features(mfcc)
         dyna_features_2 = get_delta_features(dyna_features)
         mfcc = np.concatenate((mfcc, dyna_features, dyna_features_2), axis=1)
-
         ## zero padding de sorte que l'on intègre les dépendences temporelles : on apprend la trame du milieu
         # mais on ajoute des trames précédent et suivant pour ajouter de l'informatio temporelle
 
@@ -54,7 +55,7 @@ for time in ["120s"]:
 
     ALL_MFCC = np.zeros((1,n_col_mfcc))
     N=len(wav_files)
-    for i in range(155,N):
+    for i in range(N):
         if i%5==0:
             print(i," out of ",N)
         mfcc = wav_treatment(i)
