@@ -13,8 +13,9 @@ import matplotlib.pyplot as plt
 import scipy.interpolate
 from Traitement.add_dynamic_features import get_delta_features
 import librosa
+import sys
 
-
+print('sys.path ',sys.path)
 root_path = dirname(dirname(os.path.realpath(__file__)))
 
 window=5
@@ -35,6 +36,7 @@ for time in ["120s"]:
     n_coeff = 13
     n_col_mfcc = n_coeff*(2*window+1)*3
     N=len(wav_files)
+    N=5
     def wav_treatment(i): #reste à enlever les blancs et normaliser et ajouter trames passées et futures
         path_wav = os.path.join(path_wav_files, wav_files[i] + '.wav')
         data, sr = librosa.load(path_wav, sr=sampling_rate_mfcc)  # chargement de données
