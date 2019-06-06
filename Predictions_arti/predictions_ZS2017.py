@@ -12,7 +12,7 @@ def prediction_ZS(name_model,Nmax = 20):
         print("---time",time)
         #sys.path.insert(0, os.path.dirname(os.getcwd()))
         root_folder = os.path.dirname(os.getcwd())
-        model_to_load = os.path.join(root_folder,"Apprentissage","saved_models", name_model+".txt")
+        model_to_load = os.path.join(root_folder,"Apprentissage","saved_models", name_model,name_model+".txt")
         model = my_bilstm(hidden_dim=300, input_dim=429, output_dim=12, batch_size=10,
                           name_file=name_model)
         model = model.double()
@@ -61,7 +61,7 @@ models = ["train_fsew0_test_msak0",
           "train_fsew0_MNGU0_test_msak0",
           "train_fsew0_msak0_MNGU0_test_fsew0_msak0_MNGU0"]
 
-prediction_ZS(models[0],Nmax=5200)
+prediction_ZS(models[0],Nmax="All")
+prediction_ZS(models[1],Nmax="All")
+prediction_ZS(models[2],Nmax="All")
 
-
-# en cours : 5200 premiers de 1s
