@@ -43,6 +43,7 @@ class my_bilstm(torch.nn.Module):
         self.min_valid_error = 100000
         self.all_training_loss = []
         self.all_validation_loss = []
+        self.all_test_loss = []
         #self.std = np.load(os.path.join(root_folder,"Traitement","std_ema_"+speaker+".npy"))
         self.name_file = name_file
         self.lowpass = None
@@ -80,12 +81,12 @@ class my_bilstm(torch.nn.Module):
         N = int(np.ceil((4 / b)))  # le window
         if not N % 2:
             N += 1  # Make sure that N is odd.
-        n = torch.from_numpy(np.arange(N))  # int of [0,N]
-        alpha = torch.mul(fc,torch.tensor(2*(n-(N-1)/2)).double())
+        n=torch.arange(N).double()
+        alpha = torch.mul(fc,2*(n-(N-1)/2)).double()
         h= torch.div(torch.sin(alpha),alpha)
         h[torch.isnan(h)] = 1
 #        h = np.sinc(2 * fc * (n - (N - 1) / 2))  # Compute sinc filter.
-        beta = torch.tensor(2*math.pi*n/(N-1)).double()
+        beta = n*2*math.pi*(N-1)
         w = 0.5 * (1 - torch.cos(beta) ) # Compute hanning window.
         h = torch.mul(h, w ) # Multiply sinc filter with window.
         h = torch.div(h , torch.sum(h))
@@ -111,9 +112,11 @@ class my_bilstm(torch.nn.Module):
         lowpass = torch.nn.Conv1d(C_in, self.output_dim, window_size, stride=1, padding=padding,
                                   bias=False)
         weight_init = self.get_filter_weights()
-        lowpass.weight.data =weight_init
-        #lowpass_init = lowpass_init.view((1, 1, -1))
-        #lowpass.weight = torch.nn.Parameter(lowpass_init)
+       # lowpass.weight.data =weight_init
+       # print("lowpass size",lowpass.shape)
+
+        weight_init = weight_init.view((1, 1, -1))
+        lowpass.weight = torch.nn.Parameter(weight_init)
         lowpass = lowpass.double()
         self.lowpass = lowpass
 
@@ -134,7 +137,6 @@ class my_bilstm(torch.nn.Module):
 
             traj_arti_smoothed = traj_arti_smoothed.view(B, L)
             y_smoothed[:, :, i] = traj_arti_smoothed
-
 
            # x = traj_arti.detach().numpy()
            # x_s = traj_arti_smoothed.detach().numpy()
@@ -159,7 +161,7 @@ class my_bilstm(torch.nn.Module):
             plt.savefig(save_pics_path)
             plt.close('all')
 
-    def evaluate(self, x_valid, y_valid,epoch,criterion):
+    def evaluate(self, x_valid, y_valid,criterion):
         x_temp, y_temp = self.prepare_batch(x_valid, y_valid) #add zero to have correct size
         y_pred = self(x_temp).double()
         y_temp = y_temp.double()
@@ -170,34 +172,38 @@ class my_bilstm(torch.nn.Module):
     #    self.plot_results(y_toplot[i],y_toplot_2[i])
         return loss
 
-    def evaluate_on_test(self,X_test=None,Y_test=None,to_plot=False):
+    def evaluate_on_test(self, criterion, verbose=False,X_test=None,Y_test=None,to_plot=False):
         fileset_path = os.path.join(os.path.dirname(os.getcwd()), "Donnees_pretraitees","fileset")
          #Racine de l’erreur quadratique moyenne de prédiction des modèles
         all_diff = np.zeros((1, self.output_dim))
-        print('MODEL OK, NOW LETS SEE RESULTS ON TEST SET')
         indices_to_plot=[]
         if to_plot == True :
             print("you chose to plot")
             indices_to_plot = np.random.choice(len(X_test), 2, replace=False)
-        all_corr=[]
+        loss_test= 0
         for i in range(len(X_test)):
                 x = torch.from_numpy(X_test[i])
-                x = x.view(1, len(x), self.input_dim) #one sample of X (mfcc) : normalized
-                y = Y_test[i].reshape((len(x[0]), self.output_dim))  #one sample of y (ema) : normalized
-                y_pred = self(x)
-                y_pred = y_pred.reshape((len(x[0]), self.output_dim)).detach().numpy()
+                x = x.view(1,len(x), self.input_dim) #one sample of X (mfcc) : normalized
+                y = Y_test[i].reshape((len(x[0]), self.output_dim))#one sample of y (ema) : normalized
+                y_torch = torch.from_numpy(y).double().reshape(1,len(x[0]),self.output_dim)
+                y_pred_torch = self(x).double()
+                y_pred = y_pred_torch.detach().numpy().reshape((len(x[0]), self.output_dim))
+                the_loss = criterion(y_torch,y_pred_torch)
+                loss_test += the_loss.item()
                 if i in indices_to_plot:
                     self.plot_results(y, y_pred)
 
                 rmse = np.sqrt(np.mean(np.square(y - y_pred), axis=0))
+
                 rmse = np.reshape(rmse, (1, self.output_dim))
                 all_diff = np.concatenate((all_diff, rmse))
+        loss_test = loss_test/len(X_test)
+
         all_diff = all_diff[1:] #remove first row of zeros #all the errors per arti and per sample
-        print("rmse final : ", np.mean(all_diff))
-        corr_final = np
-
-        rmse_per_arti_mean = np.mean(all_diff,axis=0)
-        rmse_per_arti_std = np.std(all_diff,axis=0)
-
-        print("rmse mean per arti : \n", rmse_per_arti_mean)
-      #  print("rmse std per arti : \n", rmse_per_arti_std)
+        if verbose :
+            print("rmse final : ", np.mean(all_diff))
+            rmse_per_arti_mean = np.mean(all_diff,axis=0)
+            rmse_per_arti_std = np.std(all_diff,axis=0)
+            print("rmse mean per arti : \n", rmse_per_arti_mean)
+            #  print("rmse std per arti : \n", rmse_per_arti_std)
+        return loss_test
