@@ -9,7 +9,7 @@ from Apprentissage.class_network import my_bilstm
 
 import numpy as np
 
-def prediction_ZS(name_model,Nmax = 20):
+def prediction_ZS(name_model,Nmax = 20,start=0):
     for time in ['1s'] : #,'120s']:
         print("---time",time)
         #sys.path.insert(0, os.path.dirname(os.getcwd()))
@@ -53,7 +53,7 @@ def prediction_ZS(name_model,Nmax = 20):
             delta_show = 50
         elif time == "120s":
             delta_show = 5
-        for i in range(Nmax):
+        for i in range(start,Nmax):
             if i%delta_show==0:
                 print("{} out of {}".format(i,Nmax))
             x = np.load(os.path.join(path_mfcc_treated,mfcc_files[i]+".npy"))
@@ -66,8 +66,10 @@ def prediction_ZS(name_model,Nmax = 20):
 models = ["train_fsew0_test_msak0",
           "train_fsew0_MNGU0_test_msak0",
           "train_fsew0_msak0_MNGU0_test_fsew0_msak0_MNGU0"]
+print(sys.argv)
+start = int(sys.argv[1])
+Nmax = int(sys.argv[2])
+model = int(sys.argv[3])
 
-prediction_ZS(models[0],Nmax="All")
-prediction_ZS(models[1],Nmax="All")
-prediction_ZS(models[2],Nmax="All")
-
+print("chosent : ",start,Nmax,models[model])
+prediction_ZS(models[model],Nmax=Nmax,start=start)
