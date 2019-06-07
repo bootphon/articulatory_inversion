@@ -4,7 +4,9 @@ import torch
 import os
 import sys
 import time
+sys.path.append("..")
 from Apprentissage.class_network import my_bilstm
+
 import numpy as np
 
 def prediction_ZS(name_model,Nmax = 20):
