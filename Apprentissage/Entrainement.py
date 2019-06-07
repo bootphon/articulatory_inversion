@@ -16,6 +16,8 @@ import numpy as np
 from scipy import signal
 import matplotlib.pyplot as plt
 import scipy
+from os import listdir
+
 
 print(sys.argv)
 
@@ -30,9 +32,12 @@ def train_model(train_on=["fsew0"],test_on=["msak0"],n_epochs=1,delta_test=50,pa
     test_on  =str(test_on[1:-1])
     train_on = train_on.split(",")
     test_on=test_on.split(",")
-    print(train_on,test_on)
+
     name_file="train_" + "_".join(train_on) + "_test_" + "_".join(test_on)
-    PATH_weights = os.path.join("saved_models", "train_" + name_file + ".txt")
+    folder_weights= os.path.join("saved_models", name_file)
+
+
+
     X_train, Y_train =[],[]
 
     for speaker in train_on :
@@ -63,14 +68,44 @@ def train_model(train_on=["fsew0"],test_on=["msak0"],n_epochs=1,delta_test=50,pa
     X_train, X_valid, Y_train, Y_valid = np.array(X_train),np.array(X_valid),np.array(Y_train),np.array(Y_valid),
    # X_train = X_train[0:100]
    # Y_train = Y_train[0:100]
-    early_stopping = EarlyStopping(patience=patience, verbose=True,speaker=name_file)
+    early_stopping = EarlyStopping(name_file,patience=patience, verbose=True)
+
+
     model = my_bilstm(hidden_dim=hidden_dim,input_dim=input_dim,name_file =name_file, output_dim=output_dim,batch_size=batch_size)
     model = model.double()
+
     try :
-        model.load_state_dict(torch.load(PATH_weights))
+        model.load_state_dict(torch.load(os.path.join(folder_weights,name_file+".txt")))
+        model.all_training_loss=[]
+
+
+        #try :
+
+        #except:
+         #   print("pbm pour charger les anciennes loss")
     except :
        print('first time, intialisation...')
 
+
+
+    previous_epoch = 0
+
+    try :
+        previous_losses = np.load(os.path.join(folder_weights, "all_losses.npy"))
+        a,b,c = previous_losses[0, :],previous_losses[1, :],previous_losses[2, :]
+
+
+
+        if len(a)==len(b)==len(c):
+            model.all_training_loss = list(a)
+            model.all_validation_loss_loss = list(b)
+            model.all_test_loss = list(c)
+            previous_epoch  = len(a)
+    except :
+        print("seems first time no previous loss")
+
+
+    print("previous epoch  :", previous_epoch)
     #if cuda_avail:
      #   model = model.cuda()
 
@@ -79,7 +114,6 @@ def train_model(train_on=["fsew0"],test_on=["msak0"],n_epochs=1,delta_test=50,pa
 
     plt.ioff()
     print("number of epochs : ", n_epochs)
-
 
     for epoch in range(n_epochs):
         indices = np.random.choice(len(X_train), batch_size, replace=False)
@@ -93,28 +127,50 @@ def train_model(train_on=["fsew0"],test_on=["msak0"],n_epochs=1,delta_test=50,pa
         y = y.double()
         optimizer.zero_grad()
         loss = criterion(y_pred,y)
-        print("cutoff",model.cutoff)
-        print(model.cutoff.grad)
+       # print("cutoff",model.cutoff)
+       # print(model.cutoff.grad)
         loss.backward()
         optimizer.step()
+
         model.all_training_loss.append(loss.item())
         if epoch%10 ==0:
             print("---------epoch---",epoch)
         if epoch%delta_test ==0:  #toutes les 20 epochs on évalue le modèle sur validation et on sauvegarde le modele si le score est meilleur
-            mean_loss = model.evaluate(X_valid, Y_valid,epoch,criterion)
-            model.all_validation_loss.extend([mean_loss for i in range(delta_test)])
+            mean_loss = model.evaluate(X_valid, Y_valid,criterion)
+            model.all_validation_loss += [mean_loss] * (epoch+previous_epoch - len(model.all_validation_loss))
+
+            loss_test = model.evaluate_on_test(criterion,X_test = X_test,Y_test = Y_test,to_plot=False)
+            model.all_test_loss += [mean_loss] * (epoch+previous_epoch - len(model.all_test_loss))
+
             print("\n ---------- epoch" + str(epoch) + " ---------")
+            early_stopping.epoch = previous_epoch+epoch
             early_stopping(mean_loss, model)
             print("train loss ", loss.item())
             print("valid loss ", mean_loss)
+            print("test loss ",loss_test)
+
         if early_stopping.early_stop:
             print("Early stopping")
             break
 
-    model.load_state_dict(torch.load(os.path.join("saved_models",'checkpoint_'+name_file+'.pt')))
-    torch.save(model.state_dict(),  PATH_weights)
-    model.evaluate_on_test(X_test,Y_test,to_plot=False)
+    model.load_state_dict(torch.load(os.path.join(folder_weights,name_file+'.pt')))
+    torch.save(model.state_dict(), os.path.join( folder_weights,name_file+".txt"))
+    model.evaluate_on_test(criterion,X_test = X_test,Y_test = Y_test,to_plot=False)
 
+    length_expected = len(model.all_training_loss)
+    print("lenght exp",length_expected)
+    model.all_validation_loss += [model.all_validation_loss[-1]] * (length_expected - len(model.all_validation_loss))
+    model.all_test_loss += [model.all_test_loss[-1]] * (length_expected - len(model.all_test_loss))
+    model.all_training_loss = np.array(model.all_training_loss).reshape(1,length_expected)
+    model.all_validation_loss = np.array(model.all_validation_loss).reshape(1,length_expected)
+    model.all_test_loss = np.array(model.all_test_loss).reshape((1,length_expected))
+    all_losses = np.concatenate(
+        ( np.array(model.all_training_loss),
+        np.array(model.all_validation_loss),
+      np.array(model.all_test_loss) )
+          ,axis=0)
+
+    np.save(os.path.join(folder_weights,"all_losses.npy"),all_losses)
 if __name__=='__main__':
     import argparse
     parser = argparse.ArgumentParser(description='Train and save a model.')
