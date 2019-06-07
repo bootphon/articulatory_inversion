@@ -21,6 +21,11 @@ root_path = dirname(dirname(os.path.realpath(__file__)))
 
 window=5
 
+print(sys.argv)
+start = int(sys.argv[1])
+Nmax = int(sys.argv[2])
+
+
 for time in ["1s"]:
     print("---time :",time)
     path_files_treated = os.path.join(root_path, "Donnees_pretraitees", "donnees_challenge_2017",time)
@@ -37,7 +42,7 @@ for time in ["1s"]:
     frame_length = int((frame_time * sampling_rate_mfcc) / 1000)
     n_coeff = 13
     n_col_mfcc = n_coeff*(2*window+1)*3
-    N=len(wav_files)
+
     def wav_treatment(i): #reste à enlever les blancs et normaliser et ajouter trames passées et futures
         path_wav = os.path.join(path_wav_files, wav_files[i] + '.wav')
         data, sr = librosa.load(path_wav, sr=sampling_rate_mfcc)  # chargement de données
@@ -57,11 +62,9 @@ for time in ["1s"]:
         return mfcc
 
     ALL_MFCC = np.zeros((1,n_col_mfcc))
-    N=len(wav_files)
-
-    for i in range(N):
+    for i in range(start,Nmax):
         if i%100==0:
-            print(i," out of ",N)
+            print(i," out of ",Nmax)
         mfcc = wav_treatment(i)
         np.save(os.path.join(path_files_treated, wav_files[i]),mfcc)
         ALL_MFCC = np.concatenate((ALL_MFCC,mfcc),axis=0)
@@ -70,9 +73,9 @@ for time in ["1s"]:
     mean_mfcc = np.mean(ALL_MFCC,axis=0)
     std_mfcc = np.std(ALL_MFCC,axis=0)
 
-    for i in range(155,N):
-        if i%5 ==0:
-            print(i," out of ",N)
+    for i in range(start,Nmax):
+        if i%100 ==0:
+            print(i," out of ",Nmax)
         mfcc = np.load(os.path.join(path_files_treated,wav_files[i]+".npy"))
         mfcc = (mfcc - mean_mfcc)/std_mfcc
         np.save(os.path.join(path_files_treated, wav_files[i]),mfcc)
