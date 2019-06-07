@@ -24,7 +24,8 @@ window=5
 for time in ["1s"]:
     print("---time :",time)
     path_files_treated = os.path.join(root_path, "Donnees_pretraitees", "donnees_challenge_2017",time)
-
+    if not os.path.exists(path_files_treated):
+        os.makedirs(path_files_treated)
     path_wav_files = os.path.join(root_path, "Donnees_brutes",time)
     print(path_wav_files,"path wav files")
     wav_files = sorted([name[:-4] for name in os.listdir(path_wav_files) if name.endswith('.wav')])
@@ -57,7 +58,7 @@ for time in ["1s"]:
 
     ALL_MFCC = np.zeros((1,n_col_mfcc))
     N=len(wav_files)
-   
+
     for i in range(N):
         if i%100==0:
             print(i," out of ",N)
