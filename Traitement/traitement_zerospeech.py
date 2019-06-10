@@ -34,7 +34,7 @@ for time in ["1s"]:
     path_wav_files = os.path.join(root_path, "Donnees_brutes",time)
     print(path_wav_files,"path wav files")
     wav_files = sorted([name[:-4] for name in os.listdir(path_wav_files) if name.endswith('.wav')])
-    print("wav files",wav_files[0:10])
+    print("numbr of wav files",len(wav_files))
     sampling_rate_mfcc = 16000
     frame_time = 25
     hop_time = 10  # en ms
@@ -65,9 +65,10 @@ for time in ["1s"]:
     for i in range(start,Nmax):
         if i%100==0:
             print(i," out of ",Nmax)
-        mfcc = wav_treatment(i)
-        np.save(os.path.join(path_files_treated, wav_files[i]),mfcc)
-        ALL_MFCC = np.concatenate((ALL_MFCC,mfcc),axis=0)
+        if not os.path.exists(os.path.join(path_files_treated,wav_files[i])):
+            mfcc = wav_treatment(i)
+            np.save(os.path.join(path_files_treated, wav_files[i]),mfcc)
+            ALL_MFCC = np.concatenate((ALL_MFCC,mfcc),axis=0)
 
     ALL_MFCC = ALL_MFCC[1:]
     mean_mfcc = np.mean(ALL_MFCC,axis=0)
@@ -90,8 +91,6 @@ for time in ["1s"]:
 
     #all_numpy_ZS = concat_all_numpy_from(os.path.join(path_files_treated,time))
     #np.save(os.path.join(path_files_treated,time,"X_ZS.npy"),all_numpy_ZS)
-
-
 
 
 
