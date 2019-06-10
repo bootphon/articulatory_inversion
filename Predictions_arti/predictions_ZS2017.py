@@ -24,6 +24,7 @@ def prediction_ZS(name_model,Nmax = 20,start=0):
             raise Exception('Vous navez pas encore crée le modele en question')
 
         path_mfcc_treated = os.path.join(root_folder,"Donnees_pretraitees","donnees_challenge_2017",time)
+        path_prediction_ema = os.path.join(root_folder,"Predictions_arti",time,name_model)
         mfcc_files = sorted([name[:-4] for name in os.listdir(path_mfcc_treated) if name.endswith('.npy')])
         def write_fea_file(prediction,filename):
             """
@@ -39,13 +40,15 @@ def prediction_ZS(name_model,Nmax = 20,start=0):
             all_times = [frame_lenght/2+ frame_hop*i for i in range(prediction.shape[0])]
             prediction_with_time[:,0]=all_times
             lines =[ ' '.join(str(ema) for ema in prediction_with_time[i]) for i in range(5)]
-            with open(os.path.join(path_mfcc_treated,filename+".fea"), 'w') as f:
+            with open(os.path.join(path_prediction_ema,"fea",filename+".fea"), 'w') as f:
                 f.writelines("%s\n" % l for l in lines)
 
-        path_prediction_ema = os.path.join(root_folder,"Predictions_arti",time,name_model)
-        print("path pred",path_prediction_ema)
         if not os.path.exists(path_prediction_ema):
             os.makedirs(path_prediction_ema)
+        if not os.path.exists(os.path.join(path_prediction_ema,"fea")):
+            os.makedirs(os.path.join(path_prediction_ema,"fea"))
+        if not os.path.exists(os.path.join(path_prediction_ema, "npy")):
+            os.makedirs(os.path.join(path_prediction_ema, "npy"))
         if Nmax== 'All':
             Nmax = len(mfcc_files)
         print(path_mfcc_treated)
@@ -61,7 +64,7 @@ def prediction_ZS(name_model,Nmax = 20,start=0):
             y_pred = model(x_2)
             y_pred = y_pred.detach().numpy().reshape((len(x),13))
             write_fea_file(y_pred,mfcc_files[i])
-            #np.save(os.path.join(path_prediction_ema,"ema_"+mfcc_files[i]+".npy"),y_pred)
+            np.save(os.path.join(path_prediction_ema,"npy",mfcc_files[i]+".npy"),y_pred)
 
 models = ["train_fsew0_test_msak0",
           "train_fsew0_MNGU0_test_msak0",
