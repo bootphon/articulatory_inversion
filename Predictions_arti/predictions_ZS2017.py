@@ -61,7 +61,7 @@ def prediction_ZS(name_model,Nmax = 20,start=0):
             y_pred = model(x_2)
             y_pred = y_pred.detach().numpy().reshape((len(x),13))
             write_fea_file(y_pred,mfcc_files[i])
-            np.save(os.path.join(path_prediction_ema,"ema_"+mfcc_files[i]+".npy"),y_pred)
+            #np.save(os.path.join(path_prediction_ema,"ema_"+mfcc_files[i]+".npy"),y_pred)
 
 models = ["train_fsew0_test_msak0",
           "train_fsew0_MNGU0_test_msak0",
