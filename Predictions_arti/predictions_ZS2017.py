@@ -44,10 +44,10 @@ def prediction_ZS(name_model,Nmax = 20,start=0):
             prediction_with_time = np.zeros((prediction.shape[0],prediction.shape[1]+1))
             prediction_with_time[:,1:] = prediction
             frame_hop = 0.010
-            frame_lenght = 0.25
+            frame_lenght = 0.025
             all_times = [frame_lenght/2+ frame_hop*i for i in range(prediction.shape[0])]
             prediction_with_time[:,0]=all_times
-            lines =[ ' '.join(str(ema) for ema in prediction_with_time[i]) for i in range(5)]
+            lines =[ ' '.join(str(ema) for ema in prediction_with_time[i]) for i in range(len(prediction_with_time))]
             with open(os.path.join(path_prediction_ema,"fea",filename+".fea"), 'w') as f:
                 f.writelines("%s\n" % l for l in lines)
 
@@ -74,9 +74,9 @@ def prediction_ZS(name_model,Nmax = 20,start=0):
                 y_pred = y_pred.detach().numpy().reshape((len(x),13))
                 write_fea_file(y_pred,mfcc_files[i])
                 np.save(os.path.join(path_prediction_ema,"npy",mfcc_files[i]+".npy"),y_pred)
-        Y_ZS = concat_all_numpy_from(os.path.join(path_prediction_ema,"npy"))
+        Y_ZS = concat_all_numpy_from(os.path.join(path_prediction_ema,"npy"),extension=".npy")
         np.save(os.path.join(path_prediction_ema,"Y_ZS"),Y_ZS)
-        X_ZS = concat_all_numpy_from(path_mfcc_treated)
+        X_ZS = concat_all_numpy_from(path_mfcc_treated,extension =  ".npy")
         np.save(os.path.join(path_prediction_ema, "X_ZS"), X_ZS)
 
 models = ["train_fsew0_test_msak0",
