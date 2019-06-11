@@ -65,14 +65,15 @@ def prediction_ZS(name_model,Nmax = 20,start=0):
         elif time == "120s":
             delta_show = 5
         for i in range(start,Nmax):
-            if i%delta_show==0:
-                print("{} out of {}".format(i,Nmax))
-            x = np.load(os.path.join(path_mfcc_treated,mfcc_files[i]+".npy"))
-            x_2 = torch.from_numpy(x).view((1,len(x),len(x[0])))
-            y_pred = model(x_2)
-            y_pred = y_pred.detach().numpy().reshape((len(x),13))
-            write_fea_file(y_pred,mfcc_files[i])
-            np.save(os.path.join(path_prediction_ema,"npy",mfcc_files[i]+".npy"),y_pred)
+            if not os.path.exists(os.path.join(path_prediction_ema,mfcc_files[i]+".npy")):
+                if i%delta_show==0:
+                    print("{} out of {}".format(i,Nmax))
+                x = np.load(os.path.join(path_mfcc_treated,mfcc_files[i]+".npy"))
+                x_2 = torch.from_numpy(x).view((1,len(x),len(x[0])))
+                y_pred = model(x_2)
+                y_pred = y_pred.detach().numpy().reshape((len(x),13))
+                write_fea_file(y_pred,mfcc_files[i])
+                np.save(os.path.join(path_prediction_ema,"npy",mfcc_files[i]+".npy"),y_pred)
         Y_ZS = concat_all_numpy_from(os.path.join(path_prediction_ema,"npy"))
         np.save(os.path.join(path_prediction_ema,"Y_ZS"),Y_ZS)
         X_ZS = concat_all_numpy_from(path_mfcc_treated)
