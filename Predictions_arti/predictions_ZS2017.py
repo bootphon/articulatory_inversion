@@ -10,6 +10,14 @@ from Apprentissage.class_network import my_bilstm
 import numpy as np
 
 def prediction_ZS(name_model,Nmax = 20,start=0):
+    def concat_all_numpy_from(path):
+        list = []
+        for r, d, f in os.walk(path):
+            for file in f:
+                data_file = np.load(os.path.join(path, file))
+                list.append(data_file)
+        return list
+
     for time in ['1s'] : #,'120s']:
         print("---time",time)
         #sys.path.insert(0, os.path.dirname(os.getcwd()))
@@ -65,6 +73,8 @@ def prediction_ZS(name_model,Nmax = 20,start=0):
             y_pred = y_pred.detach().numpy().reshape((len(x),13))
             write_fea_file(y_pred,mfcc_files[i])
             np.save(os.path.join(path_prediction_ema,"npy",mfcc_files[i]+".npy"),y_pred)
+        X_ZS = concat_all_numpy_from(os.path.join(path_prediction_ema,"npy"))
+        np.save(os.path.join(path_prediction_ema,"X_ZS"),X_ZS)
 
 models = ["train_fsew0_test_msak0",
           "train_fsew0_MNGU0_test_msak0",
