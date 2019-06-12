@@ -53,7 +53,6 @@ class my_bilstm(torch.nn.Module):
         max_lenght = np.max([len(phrase) for phrase in x])
         new_x = torch.zeros((self.batch_size, max_lenght, self.input_dim), dtype=torch.double)
         new_y = torch.zeros((self.batch_size, max_lenght, self.output_dim), dtype=torch.double)
-
         for j in range(self.batch_size):
             zeropad = torch.nn.ZeroPad2d((0, 0, 0, max_lenght - len(x[j])))
             new_x[j] = zeropad(torch.from_numpy(x[j])).double()
@@ -63,63 +62,73 @@ class my_bilstm(torch.nn.Module):
         return x, y
 
     def forward(self, x):
-        dense_out = torch.nn.functional.relu(self.first_layer(x))
+        dense_out =  torch.nn.functional.relu(self.first_layer(x))
         dense_out_2 = torch.nn.functional.relu(self.second_layer(dense_out))
         lstm_out, hidden_dim = self.lstm_layer(dense_out_2)
-        lstm_out = torch.nn.functional.relu(lstm_out)
+        lstm_out=torch.nn.functional.relu(lstm_out)
         y_pred = self.readout_layer(lstm_out)
-        y_pred_smoothed = self.filter_layer(y_pred)
-        return y_pred_smoothed
-
-    def get_filter_weights(self):
-        # print(cutoff)
-        cutoff = torch.tensor(self.cutoff, dtype=torch.float64).view(1, 1)
-        fc = torch.div(cutoff,self.sampling_rate)  # Cutoff frequency as a fraction of the sampling rate (in (0, 0.5)).
-        if fc > 0.5:
-            raise Exception("La frequence de coupure doit etre au moins deux fois la frequence dechantillonnage")
-        b = 0.3  # Transition band, as a fraction of the sampling rate (in (0, 0.5)).
-        N = int(np.ceil((4 / b)))  # le window
-        if not N % 2:
-            N += 1  # Make sure that N is odd.
-        n=torch.arange(N).double()
-        alpha = torch.mul(fc,2*(n-(N-1)/2)).double()
-        h= torch.div(torch.sin(alpha),alpha)
-        h[torch.isnan(h)] = 1
-#        h = np.sinc(2 * fc * (n - (N - 1) / 2))  # Compute sinc filter.
-        beta = n*2*math.pi*(N-1)
-        w = 0.5 * (1 - torch.cos(beta) ) # Compute hanning window.
-        h = torch.mul(h, w ) # Multiply sinc filter with window.
-        h = torch.div(h , torch.sum(h))
-        h.require_grads=True
-        self.cutoff = Variable(cutoff, requires_grad=True)
-        self.cutoff.require_grads = True
-        self.cutoff.retain_grad()
-        #  h = torch.cat([h]*self.output_dim,0)
-        return h
-
-
+   #     y_pred = self.filter_layer(y_pred)
+        return y_pred
 
     def init_filter_layer(self):
+        def get_filter_weights():
+            # print(cutoff)
+            cutoff = torch.tensor(self.cutoff, dtype=torch.float64).view(1, 1)
+            fc = torch.div(cutoff,
+                  self.sampling_rate)  # Cutoff frequency as a fraction of the sampling rate (in (0, 0.5)).
+            if fc > 0.5:
+                raise Exception("La frequence de coupure doit etre au moins deux fois la frequence dechantillonnage")
+            b = 0.3  # Transition band, as a fraction of the sampling rate (in (0, 0.5)).
+            N = int(np.ceil((4 / b)))  # le window
+            if not N % 2:
+                N += 1  # Make sure that N is odd.
+            n = torch.arange(N).double()
+            alpha = torch.mul(fc, 2 * (n - (N - 1) / 2)).double()
+            h = torch.div(torch.sin(alpha), alpha)
+            h[torch.isnan(h)] = 1
+            #        h = np.sinc(2 * fc * (n - (N - 1) / 2))  # Compute sinc filter.
+            beta = n * 2 * math.pi * (N - 1)
+            w = 0.5 * (1 - torch.cos(beta))  # Compute hanning window.
+            h = torch.mul(h, w)  # Multiply sinc filter with window.
+            h = torch.div(h, torch.sum(h))
+           # h.require_grads = True
+          #  self.cutoff = Variable(cutoff, requires_grad=True)
+         #   self.cutoff.require_grads = True
+         #   self.cutoff.retain_grad()
+            #  h = torch.cat([h]*self.output_dim,0)
+            return h
+
+        def get_filter_weights_en_dur():
+            fc = self.cutoff/self.sampling_rate
+            if fc > 0.5:
+                raise Exception("La frequence de coupure doit etre au moins deux fois la frequence dechantillonnage")
+            b = 0.3  # Transition band, as a fraction of the sampling rate (in (0, 0.5)).
+            N = int(np.ceil((4 / b)))  # le window
+            if not N % 2:
+                N += 1  # Make sure that N is odd.
+            n = np.arange(N)
+            h = np.sinc(fc*2*(n - (N - 1) / 2))
+            w = 0.5 * (1 - np.cos( n * 2 * math.pi * (N - 1)))  # Compute hanning window.
+            h = h*w
+            h = h/np.sum(h)
+            return h
+
         # print("1",self.cutoff)
-
         # self.cutoff = torch.nn.parameter.Parameter(torch.Tensor(self.cutoff))
-
         # self.cutoff.requires_grad = True
         window_size = 5
         C_in = 1
         # stride=1
         padding = 5 # int(0.5*((C_in-1)*stride-C_in+window_size))+23
-        lowpass = torch.nn.Conv1d(C_in, self.output_dim, window_size, stride=1, padding=padding,
-                                  bias=False)
-        weight_init = self.get_filter_weights()
+        lowpass = torch.nn.Conv1d(C_in, self.output_dim, window_size, stride=1, padding=padding,              bias=False)
+        weight_init = get_filter_weights()
        # lowpass.weight.data =weight_init
        # print("lowpass size",lowpass.shape)
-
         weight_init = weight_init.view((1, 1, -1))
         lowpass.weight = torch.nn.Parameter(weight_init)
         lowpass = lowpass.double()
         self.lowpass = lowpass
-
+        #self.lowpass.require_grads=True
 
     def filter_layer(self, y):
         B = len(y) # batch size
@@ -129,35 +138,27 @@ class my_bilstm(torch.nn.Module):
         y_smoothed = torch.zeros(B, L, self.output_dim)
         for i in range(self.output_dim):
             traj_arti = y[:, :, i].view(B, 1, L)
+          #  print("traj arti shape",traj_arti.shape)
             traj_arti_smoothed = self.lowpass(traj_arti)  # prend que une seule dimension
             difference = int((L-traj_arti_smoothed.shape[2])/ 2)
 
             if difference>0: #si la traj smoothed est plus petite que L on rajoute le meme dernier élément
                 traj_arti_smoothed = torch.nn.ReplicationPad1d(difference)(traj_arti_smoothed)
-
             traj_arti_smoothed = traj_arti_smoothed.view(B, L)
             y_smoothed[:, :, i] = traj_arti_smoothed
-
-           # x = traj_arti.detach().numpy()
-           # x_s = traj_arti_smoothed.detach().numpy()
-           # plt.plot(x[0,0,:])
-           # plt.plot(x_s[0,:])
-           # plt.legend(['traj','traj smootehd'])
-           # plt.show()
         return y_smoothed
 
-
-    def plot_results(self, y, y_pred):
+    def plot_results(self, y, y_pred,suffix=""):
         plt.figure()
-        for j in range(12):
+        for j in range(self.output_dim):
             plt.figure()
             #print("10 first :",y_pred[0:10,j])
             plt.plot(y_pred[:, j])
             plt.plot(y[:, j])
-            plt.title("prediction_test_{0}_arti{1}.png".format(self.name_file, str(j)))
+            plt.title("prediction_test_{0}_{1}_arti{2}.png".format(self.name_file,suffix ,str(j)))
             plt.legend(["prediction", "vraie"])
             save_pics_path = os.path.join(
-                "images_predictions\\{0}_arti{1}.png".format(self.name_file,str(j)))
+                "images_predictions\\{0}_{1}_arti{2}.png".format(self.name_file,suffix,str(j)))
             plt.savefig(save_pics_path)
             plt.close('all')
 
@@ -172,29 +173,30 @@ class my_bilstm(torch.nn.Module):
     #    self.plot_results(y_toplot[i],y_toplot_2[i])
         return loss
 
-    def evaluate_on_test(self, criterion, verbose=False,X_test=None,Y_test=None,to_plot=False):
+    def evaluate_on_test(self, criterion, verbose=False,X_test=None,Y_test=None,to_plot=False,std_arti = 1 ,suffix= ""):
         fileset_path = os.path.join(os.path.dirname(os.getcwd()), "Donnees_pretraitees","fileset")
          #Racine de l’erreur quadratique moyenne de prédiction des modèles
         all_diff = np.zeros((1, self.output_dim))
         indices_to_plot=[]
         if to_plot == True :
             print("you chose to plot")
-            indices_to_plot = np.random.choice(len(X_test), 2, replace=False)
+            indices_to_plot = np.random.choice(len(X_test), 5, replace=False)
         loss_test= 0
+
         for i in range(len(X_test)):
                 x = torch.from_numpy(X_test[i])
                 x = x.view(1,len(x), self.input_dim) #one sample of X (mfcc) : normalized
                 y = Y_test[i].reshape((len(x[0]), self.output_dim))#one sample of y (ema) : normalized
+                y = y*std_arti #unnormalized
                 y_torch = torch.from_numpy(y).double().reshape(1,len(x[0]),self.output_dim)
                 y_pred_torch = self(x).double()
+                y_pred_torch = y_pred_torch*torch.tensor(std_arti)
                 y_pred = y_pred_torch.detach().numpy().reshape((len(x[0]), self.output_dim))
                 the_loss = criterion(y_torch,y_pred_torch)
                 loss_test += the_loss.item()
                 if i in indices_to_plot:
-                    self.plot_results(y, y_pred)
-
+                    self.plot_results(y, y_pred,suffix=suffix)
                 rmse = np.sqrt(np.mean(np.square(y - y_pred), axis=0))
-
                 rmse = np.reshape(rmse, (1, self.output_dim))
                 all_diff = np.concatenate((all_diff, rmse))
         loss_test = loss_test/len(X_test)
