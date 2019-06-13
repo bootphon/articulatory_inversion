@@ -146,7 +146,7 @@ def train_model(train_on=["fsew0"],test_on=["msak0"],n_epochs=1,delta_test=50,pa
             loss_test=0
             if test_on != [""]:
                 try:
-                    loss_test = model.evaluate_on_test(criterion,X_test = X_test,Y_test = Y_test,to_plot=False)
+                    loss_test = model.evaluate_on_test(criterion,X_test = X_test,Y_test = Y_test,to_plot=False,cuda_avail=cuda_avail)
                 except:
                     print("loss test failed")
             model.all_test_loss.append(loss_test)
