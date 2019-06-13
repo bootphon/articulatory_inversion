@@ -73,26 +73,20 @@ def train_model(train_on=["fsew0"],test_on=["msak0"],n_epochs=1,delta_test=50,pa
     #print("wweights layer",model.first_layer.weight)
     #folder_weights_init =  os.path.join("saved_models", "train_fsew0_test_msak0","train_fsew0_test_msak0.txt")
 
-   # try :
-      #  if not cuda_avail:
+    try :
+        if not cuda_avail:
+            device = torch.device('cpu')
+            loaded_state = torch.load(os.path.join(folder_weights, name_file + ".txt"), map_location=device)
 
-    device = torch.device('cpu')
-    loaded_state = torch.load(os.path.join(folder_weights, name_file + ".txt"), map_location=device)
-    #model.load_state_dict(loaded_state)
-
-    model_dict = model.state_dict()
-    # 1. filter out unnecessary keys
-    loaded_state = {k: v for k, v in loaded_state.items() if k in model_dict}
-    # 2. overwrite entries in the existing state dict
-    model_dict.update(loaded_state)
-    # 3. load the new state dict
-    model.load_state_dict(model_dict)
-
-    # else :
-    #model.load_state_dict(torch.load(os.path.join(folder_weights,name_file+".txt")))
-        #model.all_training_loss=[]
-    #except :
-    #   print('first time, intialisation with Xavier weight...')
+        else :
+            loaded_state = torch.load(os.path.join(folder_weights, name_file + ".txt"))
+        model_dict = model.state_dict()
+        loaded_state = {k: v for k, v in loaded_state.items() if k in model_dict}
+        model_dict.update(loaded_state)
+        model.load_state_dict(model_dict)
+        model.all_training_loss=[]
+    except :
+       print('first time, intialisation with Xavier weight...')
        #torch.nn.init.xavier_uniform(my_bilstm.lstm_layer.weight)
 
   #  print("wweights layer AFTER", model.first_layer.weight)
@@ -117,7 +111,7 @@ def train_model(train_on=["fsew0"],test_on=["msak0"],n_epochs=1,delta_test=50,pa
 
 
     criterion  = torch.nn.MSELoss(reduction='sum')
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr , betas = beta_param)
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr )#, betas = beta_param)
     plt.ioff()
     print("number of epochs : ", n_epochs)
     n_iteration = int(len(X_train)/batch_size)
