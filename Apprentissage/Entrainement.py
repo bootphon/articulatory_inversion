@@ -140,8 +140,7 @@ def train_model(train_on=["fsew0"],test_on=["msak0"],n_epochs=1,delta_test=50,pa
         if epoch%10 ==0:
             print("---------epoch---",epoch)
         if epoch%delta_test ==0:  #toutes les 20 epochs on évalue le modèle sur validation et on sauvegarde le modele si le score est meilleur
-
-            loss_vali = model.evaluate(X_valid,Y_valid,criterion)
+            loss_vali = model.evaluate(X_valid,Y_valid,criterion,cuda_avail=cuda_avail)
             model.all_validation_loss.append(loss_vali)
             model.all_validation_loss += [model.all_validation_loss[-1]] * (epoch+previous_epoch - len(model.all_validation_loss))
             loss_test=0
