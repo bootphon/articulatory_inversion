@@ -173,7 +173,7 @@ class my_bilstm(torch.nn.Module):
     #    self.plot_results(y_toplot[i],y_toplot_2[i])
         return loss
 
-    def evaluate_on_test(self, criterion, verbose=False,X_test=None,Y_test=None,to_plot=False,std_arti = 1 ,suffix= ""):
+    def evaluate_on_test(self, criterion, verbose=False,X_test=None,Y_test=None,to_plot=False,std_arti = 1 ,suffix= "",cuda_avail=cuda_avail):
         fileset_path = os.path.join(os.path.dirname(os.getcwd()), "Donnees_pretraitees","fileset")
          #Racine de l’erreur quadratique moyenne de prédiction des modèles
         all_diff = np.zeros((1, self.output_dim))
