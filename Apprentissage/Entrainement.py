@@ -113,7 +113,7 @@ def train_model(train_on=["fsew0"],test_on=["msak0"],n_epochs=1,delta_test=50,pa
                 print("{} out of {}".format(ite,n_iteration))
             indices = np.random.choice(len(X_train), batch_size, replace=False)
             x, y = X_train[indices], Y_train[indices]
-            x,y = model.prepare_batch(x,y,cuda_avail)
+            x,y = model.prepare_batch(x,y,cuda_avail=cuda_avail)
 
 
 #            before = model.lowpass.weight.data
