@@ -49,7 +49,7 @@ class my_bilstm(torch.nn.Module):
         self.lowpass = None
         self.init_filter_layer()
 
-    def prepare_batch(self, x, y):
+    def prepare_batch(self, x, y, cuda_avail = False):
         max_lenght = np.max([len(phrase) for phrase in x])
         new_x = torch.zeros((self.batch_size, max_lenght, self.input_dim), dtype=torch.double)
         new_y = torch.zeros((self.batch_size, max_lenght, self.output_dim), dtype=torch.double)
@@ -59,6 +59,8 @@ class my_bilstm(torch.nn.Module):
             new_y[j] = zeropad(torch.from_numpy(y[j])).double()
         x = new_x.view((self.batch_size, max_lenght, self.input_dim))
         y = new_y.view((self.batch_size, max_lenght, self.output_dim))
+        if cuda_avail :
+            x,y=x.cuda(),y.cuda()
         return x, y
 
     def forward(self, x):
@@ -129,7 +131,6 @@ class my_bilstm(torch.nn.Module):
         lowpass = lowpass.double()
         self.lowpass = lowpass
         #self.lowpass.require_grads=True
-
     def filter_layer(self, y):
         B = len(y) # batch size
         L = len(y[0])
@@ -141,7 +142,6 @@ class my_bilstm(torch.nn.Module):
           #  print("traj arti shape",traj_arti.shape)
             traj_arti_smoothed = self.lowpass(traj_arti)  # prend que une seule dimension
             difference = int((L-traj_arti_smoothed.shape[2])/ 2)
-
             if difference>0: #si la traj smoothed est plus petite que L on rajoute le meme dernier élément
                 traj_arti_smoothed = torch.nn.ReplicationPad1d(difference)(traj_arti_smoothed)
             traj_arti_smoothed = traj_arti_smoothed.view(B, L)
@@ -162,14 +162,14 @@ class my_bilstm(torch.nn.Module):
             plt.savefig(save_pics_path)
             plt.close('all')
 
-    def evaluate(self, x_valid, y_valid,criterion):
-        x_temp, y_temp = self.prepare_batch(x_valid, y_valid) #add zero to have correct size
+    def evaluate(self, x_valid, y_valid,criterion,cuda_avail=False):
+        x_temp, y_temp = self.prepare_batch(x_valid, y_valid,cuda_avail=cuda_avail) #add zero to have correct size
         y_pred = self(x_temp).double()
         y_temp = y_temp.double()
         loss = criterion(y_pred, y_temp).item()
-        y_toplot = y_temp.detach().numpy()
-        y_toplot_2 = y_pred.detach().numpy()
-        i = np.random.choice(len(y_toplot_2))
+     #   y_toplot = y_temp.detach().numpy()
+      #  y_toplot_2 = y_pred.detach().numpy()
+      #  i = np.random.choice(len(y_toplot_2))
     #    self.plot_results(y_toplot[i],y_toplot_2[i])
         return loss
 
@@ -195,7 +195,7 @@ class my_bilstm(torch.nn.Module):
                 the_loss = criterion(y_torch,y_pred_torch)
                 loss_test += the_loss.item()
                 if i in indices_to_plot:
-                    self.plot_results(y, y_pred,suffix=suffix)
+                    self.plot_results(y, y_pred,suffix=suffix+str(i))
                 rmse = np.sqrt(np.mean(np.square(y - y_pred), axis=0))
                 rmse = np.reshape(rmse, (1, self.output_dim))
                 all_diff = np.concatenate((all_diff, rmse))
@@ -207,5 +207,7 @@ class my_bilstm(torch.nn.Module):
             rmse_per_arti_mean = np.mean(all_diff,axis=0)
             rmse_per_arti_std = np.std(all_diff,axis=0)
             print("rmse mean per arti : \n", rmse_per_arti_mean)
-            #  print("rmse std per arti : \n", rmse_per_arti_std)
+            print("rmse std per arti : \n", rmse_per_arti_std)
+
         return loss_test
+
