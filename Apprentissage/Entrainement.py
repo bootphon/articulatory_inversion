@@ -76,12 +76,10 @@ def train_model(train_on=["fsew0"],test_on=["msak0"],n_epochs=1,delta_test=50,pa
     try :
         model.load_state_dict(torch.load(os.path.join(folder_weights,name_file+".txt")))
      #   model.load_state_dict(torch.load(folder_weights_init))
-
         model.all_training_loss=[]
     except :
        print('first time, intialisation with Xavier weight...')
        #torch.nn.init.xavier_uniform(my_bilstm.lstm_layer.weight)
-
 
   #  print("wweights layer AFTER", model.first_layer.weight)
     print("train size : ",len(X_train))
@@ -103,6 +101,7 @@ def train_model(train_on=["fsew0"],test_on=["msak0"],n_epochs=1,delta_test=50,pa
     if cuda_avail:
         model = model.cuda()
 
+
     criterion  = torch.nn.MSELoss(reduction='sum')
     optimizer = torch.optim.Adam(model.parameters(), lr=lr , betas = beta_param)
     plt.ioff()
@@ -114,11 +113,9 @@ def train_model(train_on=["fsew0"],test_on=["msak0"],n_epochs=1,delta_test=50,pa
                 print("{} out of {}".format(ite,n_iteration))
             indices = np.random.choice(len(X_train), batch_size, replace=False)
             x, y = X_train[indices], Y_train[indices]
-            x,y = model.prepare_batch(x,y)
+            x,y = model.prepare_batch(x,y,cuda_avail)
 
-            if cuda_avail:
-                x = x.cuda()
-                y = y.cuda()
+
 #            before = model.lowpass.weight.data
            # print("first layer 1",model.first_layer.weight)
             y_pred= model(x).double()
@@ -143,6 +140,7 @@ def train_model(train_on=["fsew0"],test_on=["msak0"],n_epochs=1,delta_test=50,pa
         if epoch%10 ==0:
             print("---------epoch---",epoch)
         if epoch%delta_test ==0:  #toutes les 20 epochs on évalue le modèle sur validation et on sauvegarde le modele si le score est meilleur
+
             loss_vali = model.evaluate(X_valid,Y_valid,criterion)
             model.all_validation_loss.append(loss_vali)
             model.all_validation_loss += [model.all_validation_loss[-1]] * (epoch+previous_epoch - len(model.all_validation_loss))
