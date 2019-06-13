@@ -191,9 +191,9 @@ class my_bilstm(torch.nn.Module):
                 if cuda_avail:
                     x_torch = x_torch.cuda()
                 y_pred_torch = self(x_torch).double() #sortie y_pred (1,L,13)
-                y_pred = y_pred_torch.detach().numpy().reshape((L,self.output_dim))   # y_pred (L,13)
                 if cuda_avail:
                     y_pred_torch = y_pred_torch.cpu()
+                y_pred = y_pred_torch.detach().numpy().reshape((L, self.output_dim))  # y_pred (L,13)
                 the_loss = criterion(y_torch, y_pred_torch)  #loss entre données de taillees  (1,L,13)
                 loss_test += the_loss.item()
                 if i in indices_to_plot:
