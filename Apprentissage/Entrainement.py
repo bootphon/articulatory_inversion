@@ -175,7 +175,7 @@ def train_model(train_on=["fsew0"],test_on=["msak0"],n_epochs=1,delta_test=50,pa
         std_speaker = std_speaker[:output_dim]
         print("std ",std_speaker)
         model.evaluate_on_test(criterion = criterion,verbose = True, X_test=X_test_temp, Y_test=Y_test_temp,
-                               to_plot=True,std_arti = std_speaker,suffix= speaker)
+                               to_plot=True,std_arti = std_speaker,suffix= speaker,cuda_avail=cuda_avail)
 
     length_expected = len(model.all_training_loss)
     print("lenght exp",length_expected)
