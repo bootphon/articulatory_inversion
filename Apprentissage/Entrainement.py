@@ -114,40 +114,23 @@ def train_model(train_on=["fsew0"],test_on=["msak0"],n_epochs=1,delta_test=50,pa
             indices = np.random.choice(len(X_train), batch_size, replace=False)
             x, y = X_train[indices], Y_train[indices]
             x,y = model.prepare_batch(x,y,cuda_avail=cuda_avail)
-
-
-#            before = model.lowpass.weight.data
-           # print("first layer 1",model.first_layer.weight)
             y_pred= model(x).double()
-          #  print("ypred ",y_pred)
-         #   print("y",y)
-          #  print("first layer 2",model.first_layer.weight)
             y = y.double()
-            #print("first layer 3",model.first_layer.weight)
-
             optimizer.zero_grad()
-            #print("first layer 4",model.first_layer.weight)
-
             loss = criterion(y_pred,y)
-           # print("cutoff",model.cutoff)
-           # print(model.cutoff.grad)
             loss.backward()
             optimizer.step()
-
-            #after = model.lowpass.weight.data
-           # print("same?",after==before)
             model.all_training_loss.append(loss.item())
-        if epoch%10 ==0:
-            print("---------epoch---",epoch)
-        if epoch%delta_test ==0:  #toutes les 20 epochs on évalue le modèle sur validation et on sauvegarde le modele si le score est meilleur
+
+        if epoch%delta_test ==0:  #toutes les delta_test epochs on évalue le modèle sur validation et on sauvegarde le modele si le score est meilleur
             loss_vali = model.evaluate(X_valid,Y_valid,criterion,cuda_avail=cuda_avail)
             model.all_validation_loss.append(loss_vali)
             model.all_validation_loss += [model.all_validation_loss[-1]] * (epoch+previous_epoch - len(model.all_validation_loss))
             loss_test=0
             if test_on != [""]:
-                try:
+                #try:
                     loss_test = model.evaluate_on_test(criterion,X_test = X_test,Y_test = Y_test,to_plot=False,cuda_avail=cuda_avail)
-                except:
+               # except:
                     print("loss test failed")
             model.all_test_loss.append(loss_test)
             model.all_test_loss += [model.all_test_loss[-1]] * (epoch+previous_epoch - len(model.all_test_loss))
@@ -161,6 +144,7 @@ def train_model(train_on=["fsew0"],test_on=["msak0"],n_epochs=1,delta_test=50,pa
         if early_stopping.early_stop:
             print("Early stopping")
             break
+        torch.cuda.empty_cache()
 
     model.load_state_dict(torch.load(os.path.join(folder_weights,name_file+'.pt')))
     torch.save(model.state_dict(), os.path.join( folder_weights,name_file+".txt"))
