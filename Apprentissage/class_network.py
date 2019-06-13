@@ -189,9 +189,10 @@ class my_bilstm(torch.nn.Module):
                 y = Y_test[i].reshape((len(x[0]), self.output_dim))#one sample of y (ema) : normalized
                 y = y*std_arti #unnormalized
                 y_torch = torch.from_numpy(y).double().reshape(1,len(x[0]),self.output_dim)
-                y_pred_torch = self(x).double()
                 if cuda_avail :
-                    y_pred_torch = y_pred_torch.cuda()
+                    x = x.cuda()
+                y_pred_torch = self(x).double()
+
                 y_pred_torch = y_pred_torch*torch.tensor(std_arti)
                 y_pred = y_pred_torch.detach().numpy().reshape((len(x[0]), self.output_dim))
                 the_loss = criterion(y_torch,y_pred_torch)
