@@ -32,6 +32,9 @@ class my_bilstm(torch.nn.Module):
         self.lstm_layer = torch.nn.LSTM(input_size=hidden_dim,
                                         hidden_size=hidden_dim, num_layers=1,
                                         bidirectional=True)
+        self.lstm_layer_2= torch.nn.LSTM(input_size=hidden_dim*2,
+                                        hidden_size=hidden_dim, num_layers=1,
+                                        bidirectional=True)
         self.readout_layer = torch.nn.Linear(hidden_dim *2, output_dim)
         self.batch_size = batch_size
         self.sigmoid = torch.nn.Sigmoid()
@@ -67,6 +70,8 @@ class my_bilstm(torch.nn.Module):
         dense_out =  torch.nn.functional.relu(self.first_layer(x))
         dense_out_2 = torch.nn.functional.relu(self.second_layer(dense_out))
         lstm_out, hidden_dim = self.lstm_layer(dense_out_2)
+        lstm_out, hidden_dim = self.lstm_layer_2(lstm_out)
+
         lstm_out=torch.nn.functional.relu(lstm_out)
         y_pred = self.readout_layer(lstm_out)
    #     y_pred = self.filter_layer(y_pred)
@@ -199,16 +204,15 @@ class my_bilstm(torch.nn.Module):
                 if i in indices_to_plot:
                     self.plot_results(y, y_pred, suffix=suffix + str(i))
                 rmse = np.sqrt(np.mean(np.square(y - y_pred), axis=0))  # calcule du rmse à la main
-                rmse = std_arti*np.reshape(rmse, (1, self.output_dim)) #dénormalisation et taille (1,13)
+                rmse = np.reshape(rmse, (1, self.output_dim)) #dénormalisation et taille (1,13)
                 all_diff = np.concatenate((all_diff, rmse))
 
         loss_test = loss_test/len(X_test)
         all_diff = all_diff[1:] #remove first row of zeros #all the errors per arti and per sample
         if verbose :
             print("rmse final : ", np.mean(all_diff))
-            rmse_per_arti_mean = np.mean(all_diff,axis=0)
+            rmse_per_arti_mean = np.mean(all_diff,axis=0)*std_arti
             rmse_per_arti_std = np.std(all_diff,axis=0)
             print("rmse UNORMALIZED mean per arti : \n", rmse_per_arti_mean)
             print("rmse std per arti : \n", rmse_per_arti_std)
         return loss_test
-
