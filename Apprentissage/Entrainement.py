@@ -22,8 +22,8 @@ from os import listdir
 print(sys.argv)
 
 def train_model(train_on=["fsew0"],test_on=["msak0"],n_epochs=1,delta_test=50,patience=5,lr=0.09,output_dim=12):
-  # cuda_avail = torch.cuda.is_available()
-   # print("cuda ?",cuda_avail)
+    cuda_avail = torch.cuda.is_available()
+    print("cuda ?",cuda_avail)
 
     root_folder = os.path.dirname(os.getcwd())
     fileset_path = os.path.join(root_folder, "Donnees_pretraitees","fileset")
@@ -65,8 +65,8 @@ def train_model(train_on=["fsew0"],test_on=["msak0"],n_epochs=1,delta_test=50,pa
     batch_size = 10
     X_train, X_valid, Y_train, Y_valid = train_test_split(X_train, Y_train, test_size=pourcent_valid, random_state=1)
     X_train, X_valid, Y_train, Y_valid = np.array(X_train),np.array(X_valid),np.array(Y_train),np.array(Y_valid),
- #  X_train = X_train[0:100]
-  #  Y_train = Y_train[0:100]
+    X_train = X_train
+    Y_train = Y_train
     early_stopping = EarlyStopping(name_file,patience=patience, verbose=True)
 
     model = my_bilstm(hidden_dim=hidden_dim,input_dim=input_dim,name_file =name_file, output_dim=output_dim,batch_size=batch_size)
@@ -100,43 +100,46 @@ def train_model(train_on=["fsew0"],test_on=["msak0"],n_epochs=1,delta_test=50,pa
 
 
     print("previous epoch  :", previous_epoch)
-    #if cuda_avail:
-     #   model = model.cuda()
+    if cuda_avail:
+        model = model.cuda()
 
     criterion  = torch.nn.MSELoss(reduction='sum')
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr)  #, betas = beta_param)
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr , betas = beta_param)
     plt.ioff()
     print("number of epochs : ", n_epochs)
-
+    n_iteration = int(len(X_train)/batch_size)
     for epoch in range(n_epochs):
-        indices = np.random.choice(len(X_train), batch_size, replace=False)
-        x, y = X_train[indices], Y_train[indices]
-        x,y = model.prepare_batch(x,y)
+        for ite in range(n_iteration):
+            if ite % 10==0:
+                print("{} out of {}".format(ite,n_iteration))
+            indices = np.random.choice(len(X_train), batch_size, replace=False)
+            x, y = X_train[indices], Y_train[indices]
+            x,y = model.prepare_batch(x,y)
 
-      #  if cuda_avail:
-      #      x = x.cuda()
-       #     y = y.cuda()
-        before = model.lowpass.weight.data
-       # print("first layer 1",model.first_layer.weight)
-        y_pred= model(x).double()
-      #  print("ypred ",y_pred)
-     #   print("y",y)
-      #  print("first layer 2",model.first_layer.weight)
-        y = y.double()
-        #print("first layer 3",model.first_layer.weight)
+            if cuda_avail:
+                x = x.cuda()
+                y = y.cuda()
+#            before = model.lowpass.weight.data
+           # print("first layer 1",model.first_layer.weight)
+            y_pred= model(x).double()
+          #  print("ypred ",y_pred)
+         #   print("y",y)
+          #  print("first layer 2",model.first_layer.weight)
+            y = y.double()
+            #print("first layer 3",model.first_layer.weight)
 
-        optimizer.zero_grad()
-        #print("first layer 4",model.first_layer.weight)
+            optimizer.zero_grad()
+            #print("first layer 4",model.first_layer.weight)
 
-        loss = criterion(y_pred,y)
-       # print("cutoff",model.cutoff)
-       # print(model.cutoff.grad)
-        loss.backward()
-        optimizer.step()
+            loss = criterion(y_pred,y)
+           # print("cutoff",model.cutoff)
+           # print(model.cutoff.grad)
+            loss.backward()
+            optimizer.step()
 
-        after = model.lowpass.weight.data
-       # print("same?",after==before)
-        model.all_training_loss.append(loss.item())
+            #after = model.lowpass.weight.data
+           # print("same?",after==before)
+            model.all_training_loss.append(loss.item())
         if epoch%10 ==0:
             print("---------epoch---",epoch)
         if epoch%delta_test ==0:  #toutes les 20 epochs on évalue le modèle sur validation et on sauvegarde le modele si le score est meilleur
