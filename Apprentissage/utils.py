@@ -71,7 +71,6 @@ def low_pass_filter_weight(cut_off,sampling_rate):
     if not N % 2:
         N += 1  # Make sure that N is odd.
     n = np.arange(N) #int of [0,N]
-
     h = np.sinc(2 * fc * (n - (N - 1) / 2))  # Compute sinc filter.
     w = 0.5 * (1 - np.cos(2 * np.pi * n / (N-1))) # Compute hanning window.
     h = h * w  # Multiply sinc filter with window.
