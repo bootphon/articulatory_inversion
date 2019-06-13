@@ -192,11 +192,16 @@ class my_bilstm(torch.nn.Module):
                 std_arti_tens = torch.tensor(std_arti)
                 if cuda_avail :
                     x = x.cuda()
-                    std_arti_tens= std_arti_tens.cuda()
+                    std_arti_tens= std_arti_tens.cuda().double()
                 y_pred_torch = self(x).double()
 
-                y_pred_torch = y_pred_torch*std_arti_tens
-                y_pred = y_pred_torch.detach().numpy().reshape((len(x[0]), self.output_dim))
+
+
+                if cuda_avail :
+                    y_pred = y_pred_torch.cpu().numpy()
+                else :
+                    y_pred = y_pred_torch.detach().numpy().reshape((len(x[0]), self.output_dim))
+
                 the_loss = criterion(y_torch,y_pred_torch)
                 loss_test += the_loss.item()
                 if i in indices_to_plot:
