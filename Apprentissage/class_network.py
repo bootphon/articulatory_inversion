@@ -198,9 +198,9 @@ class my_bilstm(torch.nn.Module):
 
 
                 if cuda_avail :
-                    y_pred = y_pred_torch.cpu().numpy()
-                else :
-                    y_pred = y_pred_torch.detach().numpy().reshape((len(x[0]), self.output_dim))
+                    y_pred_torch = y_pred_torch.cpu()
+
+                y_pred = y_pred_torch.detach().numpy().reshape((len(x[0]), self.output_dim))
 
                 the_loss = criterion(y_torch,y_pred_torch)
                 loss_test += the_loss.item()
