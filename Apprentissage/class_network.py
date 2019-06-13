@@ -182,42 +182,33 @@ class my_bilstm(torch.nn.Module):
             print("you chose to plot")
             indices_to_plot = np.random.choice(len(X_test), 5, replace=False)
         loss_test= 0
-
         for i in range(len(X_test)):
-                x = torch.from_numpy(X_test[i])
-                x = x.view(1,len(x), self.input_dim) #one sample of X (mfcc) : normalized
-                y = Y_test[i].reshape((len(x[0]), self.output_dim))#one sample of y (ema) : normalized
-                y = y*std_arti #unnormalized
-                y_torch = torch.from_numpy(y).double().reshape(1,len(x[0]),self.output_dim)
-                std_arti_tens = torch.tensor(std_arti)
-                if cuda_avail :
-                    x = x.cuda()
-                    std_arti_tens= std_arti_tens.cuda().double()
-                y_pred_torch = self(x).double()
+                L = len(X_test[i])
 
-
-
-                if cuda_avail :
+                x_torch = torch.from_numpy(X_test[i]).view(1,L,self.input_dim)  #x (1,L,429)
+                y = Y_test[i].reshape((L, self.output_dim))                     #y (L,13)
+                y_torch = torch.from_numpy(y).double().reshape(1,L,self.output_dim) #y (1,L,13)
+                if cuda_avail:
+                    x_torch = x_torch.cuda()
+                y_pred_torch = self(x_torch).double() #sortie y_pred (1,L,13)
+                y_pred = y_pred_torch.detach().numpy().reshape((L,self.output_dim))   # y_pred (L,13)
+                if cuda_avail:
                     y_pred_torch = y_pred_torch.cpu()
-
-                y_pred = y_pred_torch.detach().numpy().reshape((len(x[0]), self.output_dim))
-
-                the_loss = criterion(y_torch,y_pred_torch)
+                the_loss = criterion(y_torch, y_pred_torch)  #loss entre données de taillees  (1,L,13)
                 loss_test += the_loss.item()
                 if i in indices_to_plot:
-                    self.plot_results(y, y_pred,suffix=suffix+str(i))
-                rmse = np.sqrt(np.mean(np.square(y - y_pred), axis=0))
-                rmse = np.reshape(rmse, (1, self.output_dim))
+                    self.plot_results(y, y_pred, suffix=suffix + str(i))
+                rmse = np.sqrt(np.mean(np.square(y - y_pred), axis=0))  # calcule du rmse à la main
+                rmse = std_arti*np.reshape(rmse, (1, self.output_dim)) #dénormalisation et taille (1,13)
                 all_diff = np.concatenate((all_diff, rmse))
-        loss_test = loss_test/len(X_test)
 
+        loss_test = loss_test/len(X_test)
         all_diff = all_diff[1:] #remove first row of zeros #all the errors per arti and per sample
         if verbose :
             print("rmse final : ", np.mean(all_diff))
             rmse_per_arti_mean = np.mean(all_diff,axis=0)
             rmse_per_arti_std = np.std(all_diff,axis=0)
-            print("rmse mean per arti : \n", rmse_per_arti_mean)
+            print("rmse UNORMALIZED mean per arti : \n", rmse_per_arti_mean)
             print("rmse std per arti : \n", rmse_per_arti_std)
-
         return loss_test
 
