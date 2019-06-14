@@ -35,7 +35,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
     folder_weights = os.path.join("saved_models", name_file)
 
     X_train, X_test, Y_train, Y_test = [], [], [], []
-    for speaker in train_on:
+    for speaker in train_on+test_on:
         X_train_sp = np.load(os.path.join(fileset_path, "X_train_" + speaker + ".npy"))
         Y_train_sp = np.load(os.path.join(fileset_path, "Y_train_" + speaker + ".npy"))
         X_test_sp = np.load(os.path.join(fileset_path, "X_test_" + speaker + ".npy"))
@@ -226,7 +226,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
                 multi_loss_test = 1
 
             model.evaluate_on_test(criterion=criterion,verbose=True, X_test=X_test_sp, Y_test=Y_test_sp,
-                                   to_plot=False, std_ema=multi_loss_test, suffix=speaker, cuda_avail=cuda_avail)
+                                   to_plot=True, std_ema=multi_loss_test, suffix=speaker, cuda_avail=cuda_avail)
 
     length_expected = len(model.all_training_loss)
     print("lenght exp", length_expected)
