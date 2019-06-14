@@ -53,15 +53,17 @@ class my_bilstm(torch.nn.Module):
         self.init_filter_layer()
 
     def prepare_batch(self, x, y, cuda_avail = False):
-        max_lenght = np.max([len(phrase) for phrase in x])
-        new_x = torch.zeros((self.batch_size, max_lenght, self.input_dim), dtype=torch.double)
-        new_y = torch.zeros((self.batch_size, max_lenght, self.output_dim), dtype=torch.double)
-        for j in range(self.batch_size):
-            zeropad = torch.nn.ZeroPad2d((0, 0, 0, max_lenght - len(x[j])))
+        max_length = np.max([len(phrase) for phrase in x])
+        B = len(x)  # often batch size but not for validation
+        new_x = torch.zeros((B, max_length, self.input_dim), dtype=torch.double)
+        new_y = torch.zeros((B, max_length, self.output_dim), dtype=torch.double)
+
+        for j in range(B):
+            zeropad = torch.nn.ZeroPad2d((0, 0, 0, max_length - len(x[j])))
             new_x[j] = zeropad(torch.from_numpy(x[j])).double()
             new_y[j] = zeropad(torch.from_numpy(y[j])).double()
-        x = new_x.view((self.batch_size, max_lenght, self.input_dim))
-        y = new_y.view((self.batch_size, max_lenght, self.output_dim))
+        x = new_x.view((B, max_length, self.input_dim))
+        y = new_y.view((B, max_length, self.output_dim))
         if cuda_avail :
             x,y=x.cuda(),y.cuda()
         return x, y
