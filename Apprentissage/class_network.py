@@ -180,12 +180,13 @@ class my_bilstm(torch.nn.Module):
     #    self.plot_results(y_toplot[i],y_toplot_2[i])
         return loss
 
-    def evaluate_on_test(self, criterion, verbose=False,X_test=None,Y_test=None,to_plot=False,std_arti = 1 ,suffix= "",cuda_avail=False):
+    def evaluate_on_test(self, criterion, verbose=False,X_test=None,Y_test=None,to_plot=False,
+                         std_ema = 1 ,suffix= "",cuda_avail=False):
         fileset_path = os.path.join(os.path.dirname(os.getcwd()), "Donnees_pretraitees","fileset")
          #Racine de l’erreur quadratique moyenne de prédiction des modèles
         all_diff = np.zeros((1, self.output_dim))
         indices_to_plot=[]
-        if to_plot == True :
+        if to_plot :
             print("you chose to plot")
             indices_to_plot = np.random.choice(len(X_test), 5, replace=False)
         loss_test= 0
@@ -212,7 +213,7 @@ class my_bilstm(torch.nn.Module):
         loss_test = loss_test/len(X_test)
         all_diff = all_diff[1:] #remove first row of zeros #all the errors per arti and per sample
         if verbose :
-            rmse_per_arti_mean = np.mean(all_diff,axis=0)*std_arti
+            rmse_per_arti_mean = np.mean(all_diff,axis=0)*std_ema
             rmse_per_arti_std = np.std(all_diff,axis=0)
             print("rmse final : ", np.mean(rmse_per_arti_mean))
             print("rmse UNORMALIZED mean per arti : \n", rmse_per_arti_mean)
