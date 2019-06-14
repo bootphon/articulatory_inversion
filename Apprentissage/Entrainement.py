@@ -191,10 +191,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             model.all_validation_loss += [model.all_validation_loss[-1]] * (epoch+previous_epoch - len(model.all_validation_loss))
             loss_test=0
             if test_on != [""]:
-                #try:
-                    loss_test = model.evaluate_on_test(criterion,X_test = X_test,Y_test = Y_test,to_plot=False,cuda_avail=cuda_avail)
-               # except:
-                    print("loss test failed")
+                loss_test = model.evaluate_on_test(criterion,X_test = X_test,Y_test = Y_test,to_plot=False,cuda_avail=cuda_avail)
             model.all_test_loss.append(loss_test)
             model.all_test_loss += [model.all_test_loss[-1]] * (epoch+previous_epoch - len(model.all_test_loss))
             print("\n ---------- epoch" + str(epoch) + " ---------")
@@ -210,19 +207,19 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
         torch.cuda.empty_cache()
 
     if test_on != [""]:
-      for speaker in test_on:
-        print("evaluation on speaker {}".format(speaker))
-        X_test_sp = np.load(os.path.join(fileset_path, "X_test_" + speaker + ".npy"))
-        Y_test_sp = np.load(os.path.join(fileset_path, "Y_test_" + speaker + ".npy"))
-        if not (norma):
-            std_ema = np.load(os.path.join(root_folder, "Traitement", "std_ema_" + speaker + ".npy"))
-            mean_ema = np.load(os.path.join(root_folder, "Traitement", "mean_ema_" + speaker + ".npy"))
-            Y_test_sp = [(Y_test_sp[i] * std_ema) + mean_ema for i in range(len(Y_test_sp))]
+        for speaker in test_on:
+            print("evaluation on speaker {}".format(speaker))
+            X_test_sp = np.load(os.path.join(fileset_path, "X_test_" + speaker + ".npy"))
+            Y_test_sp = np.load(os.path.join(fileset_path, "Y_test_" + speaker + ".npy"))
+            if not norma:
+                std_ema = np.load(os.path.join(root_folder, "Traitement", "std_ema_" + speaker + ".npy"))
+                mean_ema = np.load(os.path.join(root_folder, "Traitement", "mean_ema_" + speaker + ".npy"))
+                Y_test_sp = [(Y_test_sp[i] * std_ema) + mean_ema for i in range(len(Y_test_sp))]
 
-        Y_test_sp = np.array([Y_test_temp[i][:, :output_dim] for i in range(len(Y_test_sp))])
-        print("std ",std_speaker)
-        model.evaluate_on_test(criterion=criterion,verbose=True, X_test=X_test_sp, Y_test=Y_test_sp,
-                               to_plot=True, std_arti=std_speaker, suffix=speaker, cuda_avail=cuda_avail)
+            Y_test_sp = np.array([Y_test_sp[i][:, :output_dim] for i in range(len(Y_test_sp))])
+            print("std ",std_speaker)
+            model.evaluate_on_test(criterion=criterion,verbose=True, X_test=X_test_sp, Y_test=Y_test_sp,
+                                   to_plot=True, std_arti=std_speaker, suffix=speaker, cuda_avail=cuda_avail)
 
     length_expected = len(model.all_training_loss)
     print("lenght exp", length_expected)
