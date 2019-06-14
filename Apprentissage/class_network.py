@@ -210,9 +210,9 @@ class my_bilstm(torch.nn.Module):
         loss_test = loss_test/len(X_test)
         all_diff = all_diff[1:] #remove first row of zeros #all the errors per arti and per sample
         if verbose :
-            print("rmse final : ", np.mean(all_diff))
             rmse_per_arti_mean = np.mean(all_diff,axis=0)*std_arti
             rmse_per_arti_std = np.std(all_diff,axis=0)
+            print("rmse final : ", np.mean(rmse_per_arti_mean))
             print("rmse UNORMALIZED mean per arti : \n", rmse_per_arti_mean)
             print("rmse std per arti : \n", rmse_per_arti_std)
         return loss_test
