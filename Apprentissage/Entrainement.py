@@ -1,7 +1,6 @@
 ### ETUDIER ARTI 6
 
 from class_network import my_bilstm
-
 import sys
 import torch
 import os
@@ -163,6 +162,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
     print("previous epoch  :", previous_epoch)
     if cuda_avail:
         model = model.cuda()
+        os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
         os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
     criterion  = torch.nn.MSELoss(reduction='sum')
