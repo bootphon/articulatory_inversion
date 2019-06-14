@@ -166,7 +166,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
         os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
     criterion  = torch.nn.MSELoss(reduction='sum')
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr )#, betas = beta_param)
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr , betas = beta_param)
     plt.ioff()
     print("number of epochs : ", n_epochs)
     n_iteration = int(len(X_train)/batch_size)
