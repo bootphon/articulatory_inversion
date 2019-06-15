@@ -18,6 +18,7 @@ def prediction_ZS(name_model,Nmax = 20,start=0):
                 list.append(data_file)
         return list
 
+    cuda_avail = torch.cuda.is_available()
     for time in ['1s'] : #,'120s']:
         print("---time",time)
         #sys.path.insert(0, os.path.dirname(os.getcwd()))
@@ -26,10 +27,15 @@ def prediction_ZS(name_model,Nmax = 20,start=0):
         model = my_bilstm(hidden_dim=300, input_dim=429, output_dim=13, batch_size=10,
                           name_file=name_model)
         model = model.double()
-        try:
-            model.load_state_dict(torch.load(model_to_load))
-        except OSError:
-            raise Exception('Vous navez pas encore crée le modele en question')
+        if not cuda_avail:
+            device = torch.device('cpu')
+            loaded_state = torch.load(model_to_load, map_location=device)
+
+        else:
+            loaded_state = torch.load(model_to_load)
+
+        model.load_state_dict(loaded_state)
+
 
         path_mfcc_treated = os.path.join(root_folder,"Donnees_pretraitees","donnees_challenge_2017",time)
         path_prediction_ema = os.path.join(root_folder,"Predictions_arti",time,name_model)
@@ -74,18 +80,20 @@ def prediction_ZS(name_model,Nmax = 20,start=0):
                 y_pred = y_pred.detach().numpy().reshape((len(x),13))
                 write_fea_file(y_pred,mfcc_files[i])
                 np.save(os.path.join(path_prediction_ema,"npy",mfcc_files[i]+".npy"),y_pred)
-        Y_ZS = concat_all_numpy_from(os.path.join(path_prediction_ema,"npy"),extension=".npy")
+        Y_ZS = concat_all_numpy_from(os.path.join(path_prediction_ema,"npy")) #,extension=".npy")
         np.save(os.path.join(path_prediction_ema,"Y_ZS"),Y_ZS)
-        X_ZS = concat_all_numpy_from(path_mfcc_treated,extension =  ".npy")
+        X_ZS = concat_all_numpy_from(path_mfcc_treated) #,extension =  ".npy")
         np.save(os.path.join(path_prediction_ema, "X_ZS"), X_ZS)
 
 models = ["train_fsew0_test_msak0",
+          "train_fsew0_msak0_test_fsew0_msak0",
           "train_fsew0_MNGU0_test_msak0",
           "train_fsew0_msak0_MNGU0_test_fsew0_msak0_MNGU0"]
 print(sys.argv)
 start = int(sys.argv[1])
 Nmax = int(sys.argv[2])
 model = int(sys.argv[3])
+
 
 print("chosent : ",start,Nmax,models[model])
 prediction_ZS(models[model],Nmax=Nmax,start=start)
