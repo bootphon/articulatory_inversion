@@ -192,7 +192,6 @@ class my_bilstm(torch.nn.Module):
         loss_test= 0
         for i in range(len(X_test)):
                 L = len(X_test[i])
-
                 x_torch = torch.from_numpy(X_test[i]).view(1,L,self.input_dim)  #x (1,L,429)
                 y = Y_test[i].reshape((L, self.output_dim))                     #y (L,13)
                 y_torch = torch.from_numpy(y).double().reshape(1,L,self.output_dim) #y (1,L,13)
