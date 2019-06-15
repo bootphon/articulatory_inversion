@@ -44,11 +44,8 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
         X_test_sp = np.load(os.path.join(fileset_path, "X_test_" + speaker + ".npy"),allow_pickle=True)
         Y_test_sp = np.load(os.path.join(fileset_path, "Y_test_" + speaker + ".npy"),allow_pickle=True)
 
-    #    if not norma :
-     #       std_ema = np.load(os.path.join(root_folder, "Traitement", "std_ema_" + speaker + ".npy"))
-      #      mean_ema = np.load(os.path.join(root_folder, "Traitement", "mean_ema_" + speaker + ".npy"))
-       #     Y_train_sp = [(Y_train_sp[i] * std_ema) + mean_ema for i in range(len(Y_train_sp))]
-        #    Y_test_sp = [(Y_test_sp[i] * std_ema) + mean_ema for i in range(len(Y_test_sp))]
+        Y_train_sp = np.array([Y_train_sp[i][:, :output_dim] for i in range(len(Y_train_sp))])
+        Y_test_sp = np.array([Y_train_sp[i][:, :output_dim] for i in range(len(Y_test_sp))])
 
         if speaker in train_on:
             X_train.extend(X_train_sp)
@@ -66,10 +63,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
                 Y_test.extend(Y_train_sp)
             print("2",len(X_train))
 
-    if output_dim != len(Y_train[0][0]): #besoin denlever quelques features , les premieres
-        print('we remove some features and Y goes from size {} to {}'.format(len(Y_train[0][0]), output_dim))
-        Y_train = np.array([Y_train[i][:, :output_dim] for i in range(len(Y_train))])
-        Y_test = np.array([Y_test[i][:, :output_dim] for i in range(len(Y_test))])
+
     pourcent_valid = 0.05
     hidden_dim = 300
     input_dim = 429
