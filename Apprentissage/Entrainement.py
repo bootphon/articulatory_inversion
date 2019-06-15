@@ -23,7 +23,7 @@ fileset_path = os.path.join(root_folder, "Donnees_pretraitees", "fileset")
 print(sys.argv)
 
 
-def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, output_dim=13,norma=True):
+def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, output_dim=13): #,norma=True):
     cuda_avail = torch.cuda.is_available()
     print(" cuda ?", cuda_avail)
 
@@ -35,18 +35,20 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
     folder_weights = os.path.join("saved_models", name_file)
 
     X_train, X_test, Y_train, Y_test = [], [], [], []
-    for speaker in set(train_on+test_on):
+    speakers_in_lists = list(set(train_on+test_on) & set(["msak0","fsew0","MNGU0"]))
+    print("list ",speakers_in_lists)
+    for speaker in speakers_in_lists:
 
         X_train_sp = np.load(os.path.join(fileset_path, "X_train_" + speaker + ".npy"),allow_pickle=True)
         Y_train_sp = np.load(os.path.join(fileset_path, "Y_train_" + speaker + ".npy"),allow_pickle=True)
         X_test_sp = np.load(os.path.join(fileset_path, "X_test_" + speaker + ".npy"),allow_pickle=True)
         Y_test_sp = np.load(os.path.join(fileset_path, "Y_test_" + speaker + ".npy"),allow_pickle=True)
 
-        if not norma :
-            std_ema = np.load(os.path.join(root_folder, "Traitement", "std_ema_" + speaker + ".npy"))
-            mean_ema = np.load(os.path.join(root_folder, "Traitement", "mean_ema_" + speaker + ".npy"))
-            Y_train_sp = [(Y_train_sp[i] * std_ema) + mean_ema for i in range(len(Y_train_sp))]
-            Y_test_sp = [(Y_test_sp[i] * std_ema) + mean_ema for i in range(len(Y_test_sp))]
+    #    if not norma :
+     #       std_ema = np.load(os.path.join(root_folder, "Traitement", "std_ema_" + speaker + ".npy"))
+      #      mean_ema = np.load(os.path.join(root_folder, "Traitement", "mean_ema_" + speaker + ".npy"))
+       #     Y_train_sp = [(Y_train_sp[i] * std_ema) + mean_ema for i in range(len(Y_train_sp))]
+        #    Y_test_sp = [(Y_test_sp[i] * std_ema) + mean_ema for i in range(len(Y_test_sp))]
 
         if speaker in train_on:
             X_train.extend(X_train_sp)
@@ -133,10 +135,10 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
    # try :
     if not cuda_avail:
         device = torch.device('cpu')
-        loaded_state = torch.load(os.path.join(folder_weights, name_file + "_norma_"+str(int(norma))+".txt"), map_location=device)
+        loaded_state = torch.load(os.path.join(folder_weights, name_file +".txt"), map_location=device)
 
     else :
-        loaded_state = torch.load(os.path.join(folder_weights, name_file +"_norma_"+str(int(norma))+".txt"))
+        loaded_state = torch.load(os.path.join(folder_weights, name_file +".txt"))
     model_dict = model.state_dict()
     loaded_state = {k: v for k, v in loaded_state.items() if k in model_dict}
     model_dict.update(loaded_state)
@@ -210,7 +212,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
 
     if n_epochs>0:
         model.load_state_dict(torch.load(os.path.join(folder_weights,name_file+'.pt')))
-        torch.save(model.state_dict(), os.path.join( folder_weights,name_file+"_norma_"+str(int(norma))+".txt"))
+        torch.save(model.state_dict(), os.path.join( folder_weights,name_file+".txt"))
 
     if test_on != [""]:
         for speaker in test_on:
@@ -220,15 +222,15 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             multi_loss_test=  np.load(os.path.join(root_folder, "Traitement", "std_ema_" + speaker + ".npy"))
             multi_loss_test=multi_loss_test[:output_dim]
             Y_test_sp = np.array([Y_test_sp[i][:, :output_dim] for i in range(len(Y_test_sp))])
-            if not norma:
-                std_ema = multi_loss_test
-                mean_ema = np.load(os.path.join(root_folder, "Traitement", "mean_ema_" + speaker + ".npy"))
-                mean_ema =mean_ema[:output_dim]
-                Y_test_sp = [(Y_test_sp[i] * std_ema) + mean_ema for i in range(len(Y_test_sp))]
-                multi_loss_test = 1
+           # if not norma:
+            #    std_ema = multi_loss_test
+             #   mean_ema = np.load(os.path.join(root_folder, "Traitement", "mean_ema_" + speaker + ".npy"))
+              #  mean_ema =mean_ema[:output_dim]
+               # Y_test_sp = [(Y_test_sp[i] * std_ema) + mean_ema for i in range(len(Y_test_sp))]
+                #multi_loss_test = 1
 
             model.evaluate_on_test(criterion=criterion,verbose=True, X_test=X_test_sp, Y_test=Y_test_sp,
-                                   to_plot=False, std_ema=multi_loss_test, suffix=speaker, cuda_avail=cuda_avail)
+                                   to_plot=True, std_ema=multi_loss_test, suffix=speaker, cuda_avail=cuda_avail)
 
     length_expected = len(model.all_training_loss)
     print("lenght exp", length_expected)
@@ -269,8 +271,8 @@ if __name__=='__main__':
     parser.add_argument('output_dim', metavar='output_dim', type=int,
                         help='simple  : 12, +lipaperture : 13, +velu : 15 -attention il faut avoir appris sur mngu0')
 
-    parser.add_argument('norma', metavar='norma', type=bool,
-                        help='')
+   # parser.add_argument('norma', metavar='norma', type=bool,
+    #                    help='')
 
   #  parser.add_argument('to_plot', metavar='to_plot', type=bool,
    #                     help='')
@@ -284,8 +286,8 @@ if __name__=='__main__':
     patience = int(sys.argv[5])
     lr = float(sys.argv[6])
     output_dim = int(sys.argv[7])
-    norma = bool(sys.argv[8])
+   # norma = bool(sys.argv[8])
    # to_plot = bool(sys.argv[9])
 
     train_model(train_on = train_on,test_on = test_on ,n_epochs=n_epochs,delta_test=delta_test,patience=patience,
-                lr = lr,output_dim=output_dim,norma=norma)
+                lr = lr,output_dim=output_dim) #,norma=norma)
