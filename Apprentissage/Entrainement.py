@@ -35,11 +35,12 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
     folder_weights = os.path.join("saved_models", name_file)
 
     X_train, X_test, Y_train, Y_test = [], [], [], []
-    for speaker in train_on+test_on:
-        X_train_sp = np.load(os.path.join(fileset_path, "X_train_" + speaker + ".npy"))
-        Y_train_sp = np.load(os.path.join(fileset_path, "Y_train_" + speaker + ".npy"))
-        X_test_sp = np.load(os.path.join(fileset_path, "X_test_" + speaker + ".npy"))
-        Y_test_sp = np.load(os.path.join(fileset_path, "Y_test_" + speaker + ".npy"))
+    for speaker in set(train_on+test_on):
+
+        X_train_sp = np.load(os.path.join(fileset_path, "X_train_" + speaker + ".npy"),allow_pickle=True)
+        Y_train_sp = np.load(os.path.join(fileset_path, "Y_train_" + speaker + ".npy"),allow_pickle=True)
+        X_test_sp = np.load(os.path.join(fileset_path, "X_test_" + speaker + ".npy"),allow_pickle=True)
+        Y_test_sp = np.load(os.path.join(fileset_path, "Y_test_" + speaker + ".npy"),allow_pickle=True)
 
         if not norma :
             std_ema = np.load(os.path.join(root_folder, "Traitement", "std_ema_" + speaker + ".npy"))
@@ -53,6 +54,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             if speaker not in test_on:
                 X_train.extend(X_test_sp)
                 Y_train.extend(Y_test_sp)
+            print("1",len(X_train))
 
         if speaker in test_on:
             X_test.extend(X_test_sp)
@@ -60,6 +62,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             if speaker not in test_on:
                 X_test.extend(X_train_sp)
                 Y_test.extend(Y_train_sp)
+            print("2",len(X_train))
 
 
     #for speaker in train_on :
@@ -158,7 +161,6 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
     except :
         print("seems first time no previous loss")
 
-
     print("previous epoch  :", previous_epoch)
     if cuda_avail:
         model = model.cuda()
@@ -166,7 +168,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
         os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
     criterion  = torch.nn.MSELoss(reduction='sum')
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr , betas = beta_param)
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr ) #, betas = beta_param)
     plt.ioff()
     print("number of epochs : ", n_epochs)
     n_iteration = int(len(X_train)/batch_size)
@@ -206,15 +208,15 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             break
         torch.cuda.empty_cache()
 
-    model.load_state_dict(torch.load(os.path.join(folder_weights,name_file+'.pt')))
-    torch.save(model.state_dict(), os.path.join( folder_weights,name_file+"_norma_"+str(int(norma))+".txt"))
-
+    if n_epochs>0:
+        model.load_state_dict(torch.load(os.path.join(folder_weights,name_file+'.pt')))
+        torch.save(model.state_dict(), os.path.join( folder_weights,name_file+"_norma_"+str(int(norma))+".txt"))
 
     if test_on != [""]:
         for speaker in test_on:
             print("evaluation on speaker {}".format(speaker))
-            X_test_sp = np.load(os.path.join(fileset_path, "X_test_" + speaker + ".npy"))
-            Y_test_sp = np.load(os.path.join(fileset_path, "Y_test_" + speaker + ".npy"))
+            X_test_sp = np.load(os.path.join(fileset_path, "X_test_" + speaker + ".npy"),allow_pickle=True)
+            Y_test_sp = np.load(os.path.join(fileset_path, "Y_test_" + speaker + ".npy"),allow_pickle=True)
             multi_loss_test=  np.load(os.path.join(root_folder, "Traitement", "std_ema_" + speaker + ".npy"))
             multi_loss_test=multi_loss_test[:output_dim]
             Y_test_sp = np.array([Y_test_sp[i][:, :output_dim] for i in range(len(Y_test_sp))])
@@ -226,7 +228,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
                 multi_loss_test = 1
 
             model.evaluate_on_test(criterion=criterion,verbose=True, X_test=X_test_sp, Y_test=Y_test_sp,
-                                   to_plot=True, std_ema=multi_loss_test, suffix=speaker, cuda_avail=cuda_avail)
+                                   to_plot=False, std_ema=multi_loss_test, suffix=speaker, cuda_avail=cuda_avail)
 
     length_expected = len(model.all_training_loss)
     print("lenght exp", length_expected)
