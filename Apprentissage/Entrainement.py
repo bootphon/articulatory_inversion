@@ -155,11 +155,11 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             print("train loss ", loss.item())
             print("valid loss ", loss_vali)
             print("test loss ", loss_test)
+            torch.cuda.empty_cache()
 
         if early_stopping.early_stop:
             print("Early stopping")
             break
-        torch.cuda.empty_cache()
 
     if n_epochs>0:
         model.load_state_dict(torch.load(os.path.join(folder_weights,name_file+'.pt')))
