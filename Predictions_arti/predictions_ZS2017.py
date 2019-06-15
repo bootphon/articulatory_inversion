@@ -19,6 +19,7 @@ def prediction_ZS(name_model,Nmax = 20,start=0):
         return list
 
     cuda_avail = torch.cuda.is_available()
+    print("cuda avail?",cuda_avail)
     for time in ['1s'] : #,'120s']:
         print("---time",time)
         #sys.path.insert(0, os.path.dirname(os.getcwd()))
@@ -87,6 +88,7 @@ def prediction_ZS(name_model,Nmax = 20,start=0):
 
 models = ["train_fsew0_test_msak0",
           "train_fsew0_msak0_test_fsew0_msak0",
+
           "train_fsew0_MNGU0_test_msak0",
           "train_fsew0_msak0_MNGU0_test_fsew0_msak0_MNGU0"]
 print(sys.argv)
