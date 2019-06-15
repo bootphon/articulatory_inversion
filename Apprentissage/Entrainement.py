@@ -66,49 +66,6 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
                 Y_test.extend(Y_train_sp)
             print("2",len(X_train))
 
-
-    #for speaker in train_on :
-     #   X_train_sp = np.load(os.path.join(fileset_path,"X_train_"+speaker+".npy"))
-      #  Y_train_sp = np.load(os.path.join(fileset_path,"Y_train_"+speaker+".npy"))
-       # if norma :
-        ##    std_ema = np.load(os.path.join(root_folder,"Traitement","std_ema_"+speaker+".npy"))
-          #  mean_ema = np.load(os.path.join(root_folder,"Traitement","mean_ema_"+speaker+".npy"))
-           # Y_train_sp = [(y[i]-mean_ema)/std_ema for i in range(len(Y_train_sp))]
-
-      #  X_train.extend( X_train_sp )
-       # Y_train.extend( Y_train_sp )
-
-        #if speaker not in test_on :#then we can train on the test part of this speaker
-   #         X_test_sp = np.load(os.path.join(fileset_path, "X_test_" + speaker + ".npy"))
-    #        Y_test_sp = np.load(os.path.join(fileset_path, "Y_test_" + speaker + ".npy"))
-     #       if norma:
-      #          Y_test_sp = [(y[i] - mean_ema) / std_ema for i in range(len(Y_test_sp))]
-       #     X_train.extend( X_test_sp)
-        #    Y_train.extend(np.load(Y_test_sp))
-
-    #X_test,Y_test = [],[]
-    #if test_on != [""]:
-     #   for speaker in test_on:
-
-         #   X_test_sp = np.load(os.path.join(fileset_path, "X_test_" + speaker + ".npy"))
-          #  Y_test_sp = np.load(os.path.join(fileset_path, "Y_test_" + speaker + ".npy"))
-           # if norma:
-            #    std_ema = np.load(os.path.join(root_folder, "Traitement", "std_ema" + speaker + ".npy"))
-             #   mean_ema = np.load(os.path.join(root_folder, "Traitement", "mean_ema" + speaker + ".npy"))
-              #  Y_test_sp = [(y[i] - mean_ema) / std_ema for i in range(len(Y_train_sp))]
-
-            #X_test.extend(X_test_sp)
-            #Y_test.extend(Y_test_sp)
-
-     #       if speaker not in train_on:  # then we can train on the test part of this speaker
-      #          X_train_sp = np.load(os.path.join(fileset_path, "X_train_" + speaker + ".npy"))
-       #         Y_train_sp = np.load(os.path.join(fileset_path, "Y_train_" + speaker + ".npy"))
-
-        #        if norma:
-         #           Y_train_sp = [(y[i] - mean_ema) / std_ema for i in range(len(Y_test_sp))]
-          #      X_test.extend(X_train_sp)
-           #     Y_test.extend(np.load(Y_train_sp))
-
     if output_dim != len(Y_train[0][0]): #besoin denlever quelques features , les premieres
         print('we remove some features and Y goes from size {} to {}'.format(len(Y_train[0][0]), output_dim))
         Y_train = np.array([Y_train[i][:, :output_dim] for i in range(len(Y_train))])
@@ -222,15 +179,9 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             multi_loss_test=  np.load(os.path.join(root_folder, "Traitement", "std_ema_" + speaker + ".npy"))
             multi_loss_test=multi_loss_test[:output_dim]
             Y_test_sp = np.array([Y_test_sp[i][:, :output_dim] for i in range(len(Y_test_sp))])
-           # if not norma:
-            #    std_ema = multi_loss_test
-             #   mean_ema = np.load(os.path.join(root_folder, "Traitement", "mean_ema_" + speaker + ".npy"))
-              #  mean_ema =mean_ema[:output_dim]
-               # Y_test_sp = [(Y_test_sp[i] * std_ema) + mean_ema for i in range(len(Y_test_sp))]
-                #multi_loss_test = 1
 
             model.evaluate_on_test(criterion=criterion,verbose=True, X_test=X_test_sp, Y_test=Y_test_sp,
-                                   to_plot=True, std_ema=multi_loss_test, suffix=speaker, cuda_avail=cuda_avail)
+                                   to_plot=False, std_ema=multi_loss_test, suffix=speaker, cuda_avail=cuda_avail)
 
     length_expected = len(model.all_training_loss)
     print("lenght exp", length_expected)
@@ -250,6 +201,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
           ,axis=0 )
 
     np.save(os.path.join(folder_weights,"all_losses.npy"),all_losses)
+
 if __name__=='__main__':
     import argparse
     parser = argparse.ArgumentParser(description='Train and save a model.')
