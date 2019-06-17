@@ -185,7 +185,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             Y_test_sp = np.array([Y_test_sp[i][:, :output_dim] for i in range(len(Y_test_sp))])
 
             model.evaluate_on_test(criterion=criterion,verbose=True, X_test=X_test_sp, Y_test=Y_test_sp,
-                                   to_plot=True, std_ema=multi_loss_test, suffix=speaker, cuda_avail=cuda_avail)
+                                   to_plot=False, std_ema=multi_loss_test, suffix=speaker, cuda_avail=cuda_avail)
 
     length_expected = len(model.all_training_loss)
     print("lenght exp", length_expected)
