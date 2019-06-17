@@ -139,6 +139,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             loss.backward()
             optimizer.step()
             model.all_training_loss.append(loss.item())
+            torch.cuda.empty_cache()
 
         if epoch%delta_test ==0:  #toutes les delta_test epochs on évalue le modèle sur validation et on sauvegarde le modele si le score est meilleur
             loss_vali = model.evaluate(X_valid,Y_valid,criterion,cuda_avail=cuda_avail)
@@ -155,7 +156,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             print("train loss ", loss.item())
             print("valid loss ", loss_vali)
             print("test loss ", loss_test)
-            torch.cuda.empty_cache()
+
 
         if early_stopping.early_stop:
             print("Early stopping")
@@ -175,7 +176,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             Y_test_sp = np.array([Y_test_sp[i][:, :output_dim] for i in range(len(Y_test_sp))])
 
             model.evaluate_on_test(criterion=criterion,verbose=True, X_test=X_test_sp, Y_test=Y_test_sp,
-                                   to_plot=False, std_ema=multi_loss_test, suffix=speaker, cuda_avail=cuda_avail)
+                                   to_plot=True, std_ema=multi_loss_test, suffix=speaker, cuda_avail=cuda_avail)
 
     length_expected = len(model.all_training_loss)
     print("lenght exp", length_expected)
