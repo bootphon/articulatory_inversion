@@ -38,30 +38,38 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
     speakers_in_lists = list(set(train_on+test_on) & set(["msak0","fsew0","MNGU0"]))
     print("list ",speakers_in_lists)
     for speaker in speakers_in_lists:
-
+        print("SPEAKER ",speaker)
         X_train_sp = np.load(os.path.join(fileset_path, "X_train_" + speaker + ".npy"),allow_pickle=True)
         Y_train_sp = np.load(os.path.join(fileset_path, "Y_train_" + speaker + ".npy"),allow_pickle=True)
         X_test_sp = np.load(os.path.join(fileset_path, "X_test_" + speaker + ".npy"),allow_pickle=True)
         Y_test_sp = np.load(os.path.join(fileset_path, "Y_test_" + speaker + ".npy"),allow_pickle=True)
 
         Y_train_sp = np.array([Y_train_sp[i][:, :output_dim] for i in range(len(Y_train_sp))])
-        Y_test_sp = np.array([Y_train_sp[i][:, :output_dim] for i in range(len(Y_test_sp))])
+        Y_test_sp = np.array([Y_test_sp[i][:, :output_dim] for i in range(len(Y_test_sp))])
+
 
         if speaker in train_on:
+
             X_train.extend(X_train_sp)
             Y_train.extend(Y_train_sp)
+
+            print(False in [(X_train[i].shape[0] == Y_train[i].shape[0]) for i in range(len(Y_train))])
+            print(False in [(X_test[i].shape[0] == Y_test[i].shape[0]) for i in range(len(Y_test))])
             if speaker not in test_on:
+
                 X_train.extend(X_test_sp)
                 Y_train.extend(Y_test_sp)
-            print("1",len(X_train))
+
+
 
         if speaker in test_on:
+
             X_test.extend(X_test_sp)
             Y_test.extend(Y_test_sp)
-            if speaker not in test_on:
+            if speaker not in train_on:
+
                 X_test.extend(X_train_sp)
                 Y_test.extend(Y_train_sp)
-            print("2",len(X_train))
 
 
     pourcent_valid = 0.05
@@ -131,6 +139,8 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
                 print("{} out of {}".format(ite, n_iteration))
             indices = np.random.choice(len(X_train), batch_size, replace=False)
             x, y = X_train[indices], Y_train[indices]
+            print(x.shape,y.shape,"kkk")
+
             x, y = model.prepare_batch(x, y, cuda_avail=cuda_avail)
             y_pred= model(x).double()
             y = y.double()
