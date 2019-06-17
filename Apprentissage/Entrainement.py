@@ -139,7 +139,6 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
                 print("{} out of {}".format(ite, n_iteration))
             indices = np.random.choice(len(X_train), batch_size, replace=False)
             x, y = X_train[indices], Y_train[indices]
-            print(x.shape,y.shape,"kkk")
 
             x, y = model.prepare_batch(x, y, cuda_avail=cuda_avail)
             y_pred= model(x).double()
