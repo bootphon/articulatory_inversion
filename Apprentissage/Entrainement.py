@@ -140,7 +140,6 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
         y_pred_1 = y_pred - torch.mean(y_pred)
         loss = torch.sum(y_1 * y_pred_1) / (
                     torch.sqrt(torch.sum(y_1 ** 2)) * torch.sqrt(torch.sum(y_pred_1 ** 2)))# use Pearson correlation
-        loss = torch.abs(loss)
         return -loss
 
     optimizer = torch.optim.Adam(model.parameters(), lr=lr ) #, betas = beta_param)
