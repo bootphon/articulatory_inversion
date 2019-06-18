@@ -39,9 +39,9 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
     print("list ",speakers_in_lists)
     for speaker in speakers_in_lists:
         print("SPEAKER ",speaker)
-        X_train_sp = np.load(os.path.join(fileset_path, "X_train_filtered" + speaker + ".npy"),allow_pickle=True)
+        X_train_sp = np.load(os.path.join(fileset_path, "X_train" + speaker + ".npy"),allow_pickle=True)
         Y_train_sp = np.load(os.path.join(fileset_path, "Y_train_filtered" + speaker + ".npy"),allow_pickle=True)
-        X_test_sp = np.load(os.path.join(fileset_path, "X_test_filtered" + speaker + ".npy"),allow_pickle=True)
+        X_test_sp = np.load(os.path.join(fileset_path, "X_test" + speaker + ".npy"),allow_pickle=True)
         Y_test_sp = np.load(os.path.join(fileset_path, "Y_test_filtered" + speaker + ".npy"),allow_pickle=True)
 
         Y_train_sp = np.array([Y_train_sp[i][:, :output_dim] for i in range(len(Y_train_sp))])
@@ -202,7 +202,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
     if test_on != [""]:
         for speaker in test_on:
             print("evaluation on speaker {}".format(speaker))
-            X_test_sp = np.load(os.path.join(fileset_path, "X_test_filtered" + speaker + ".npy"),allow_pickle=True)
+            X_test_sp = np.load(os.path.join(fileset_path, "X_test" + speaker + ".npy"),allow_pickle=True)
             Y_test_sp = np.load(os.path.join(fileset_path, "Y_test_filtered" + speaker + ".npy"),allow_pickle=True)
             multi_loss_test=  np.load(os.path.join(root_folder, "Traitement", "std_ema_" + speaker + ".npy"))
             multi_loss_test=multi_loss_test[:output_dim]
