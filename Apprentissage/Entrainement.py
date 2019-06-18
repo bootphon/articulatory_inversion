@@ -23,7 +23,7 @@ fileset_path = os.path.join(root_folder, "Donnees_pretraitees", "fileset")
 print(sys.argv)
 
 
-def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, output_dim=13,filtered=False): #,norma=True):
+def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, output_dim=13,filtered=False,to_plot=False): #,norma=True):
     cuda_avail = torch.cuda.is_available()
     print(" cuda ?", cuda_avail)
 
@@ -216,7 +216,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             Y_test_sp = np.array([Y_test_sp[i][:, :output_dim] for i in range(len(Y_test_sp))])
 
             model.evaluate_on_test(criterion=criterion,verbose=True, X_test=X_test_sp, Y_test=Y_test_sp,
-                                   to_plot=True, std_ema=multi_loss_test, suffix=speaker, cuda_avail=cuda_avail)
+                                   to_plot=to_plot, std_ema=multi_loss_test, suffix=speaker, cuda_avail=cuda_avail)
 
     length_expected = len(model.all_training_loss)
     print("lenght exp", length_expected)
@@ -259,15 +259,13 @@ if __name__=='__main__':
                         help='simple  : 12, +lipaperture : 13, +velu : 15 -attention il faut avoir appris sur mngu0')
 
     parser.add_argument('filtered', metavar='filtered', type=bool,
-                        help='simple  : 12, +lipaperture : 13, +velu : 15 -attention il faut avoir appris sur mngu0')
+                        help='si true apprend sur les données ema lissées')
 
 
    # parser.add_argument('norma', metavar='norma', type=bool,
     #                    help='')
 
-  #  parser.add_argument('to_plot', metavar='to_plot', type=bool,
-   #                     help='')
-
+    parser.add_argument('to_plot', metavar='to_plot', type=bool,         help='si true plot les resultats sur le test')
     args = parser.parse_args()
 
     train_on =  sys.argv[1]
@@ -279,7 +277,7 @@ if __name__=='__main__':
     output_dim = int(sys.argv[7])
     filtered = sys.argv[8].lower() == 'true'
    # norma = bool(sys.argv[8])
-   # to_plot = bool(sys.argv[9])
+    to_plot = sys.argv[9].lower()=="true"
 
     train_model(train_on = train_on,test_on = test_on ,n_epochs=n_epochs,delta_test=delta_test,patience=patience,
-                lr = lr,output_dim=output_dim,filtered=filtered) #,norma=norma)
+                lr = lr,output_dim=output_dim,filtered=filtered,to_plot=to_plot) #,norma=norma)
