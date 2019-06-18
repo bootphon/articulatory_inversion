@@ -67,6 +67,7 @@ def low_pass_filter_weight(cut_off,sampling_rate):
     if fc > 0.5:
         raise Exception("La frequence de coupure doit etre au moins deux fois la frequence dechantillonnage")
     b = 0.08  # Transition band, as a fraction of the sampling rate (in (0, 0.5)).
+
     N = int(np.ceil((4 / b))) #le window
     if not N % 2:
         N += 1  # Make sure that N is odd.

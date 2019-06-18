@@ -228,16 +228,16 @@ class my_bilstm(torch.nn.Module):
                 rmse = np.reshape(rmse, (1,self.output_dim)) #dénormalisation et taille (1,13)
                 all_diff = np.concatenate((all_diff, rmse))
 
-                y_1 = (y_torch - torch.mean(y_torch,dim=[0,1]))*torch.from_numpy(std_ema) #(1,L,13)
-                y_pred_1 = (y_pred_torch - torch.mean(y_pred_torch,dim=[0,1]))*torch.from_numpy(std_ema )# (1,L,13)
+
+
+                y_1 = (y_torch - torch.mean(y_torch,dim=[0,1]))*torch.from_numpy(std_ema) #(L,13)
+                y_pred_1 = (y_pred_torch - torch.mean(y_pred_torch,dim=[0,1]))*torch.from_numpy(std_ema )# (L,13)
                 pearson_1 = torch.sum(y_1 * y_pred_1,dim=[0,1])  # (13)
                 pearson_2 = torch.sqrt(torch.sum(y_1 ** 2,dim=[0,1])) * torch.sqrt(torch.sum(y_pred_1 ** 2,dim=[0,1])) #(13)
                 pearson = torch.div(pearson_1,pearson_2).view((1,self.output_dim))
                 pearson[torch.isnan(pearson)] = 1
                 pearson = pearson.detach().numpy()
                 all_pearson = np.concatenate((all_pearson,pearson))
-
-
 
         loss_test = loss_test/len(X_test)
         all_diff = all_diff[1:] #remove first row of zeros #all the errors per arti and per sample
