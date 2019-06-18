@@ -66,7 +66,7 @@ class my_bilstm(torch.nn.Module):
 
         y = new_y.view((B, max_length, self.output_dim))
         if cuda_avail :
-            print("cuda avaiiil")
+      #      print("cuda avaiiil")
             x,y=x.cuda(),y.cuda()
         return x, y
 
@@ -197,7 +197,6 @@ class my_bilstm(torch.nn.Module):
         x_temp, y_temp = self.prepare_batch(x_valid, y_valid,cuda_avail=cuda_avail) #add zero to have correct size
         y_pred = self(x_temp).double()
         y_temp = y_temp.double()
-
         loss = criterion( y_temp,y_pred).item()
         return loss
 

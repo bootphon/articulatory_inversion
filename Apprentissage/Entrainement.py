@@ -171,10 +171,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             y_pred = model(x).double()
             y = y.double()
             optimizer.zero_grad()
-            if cuda_avail:
-                y,y_pred = y.cuda(), y_pred.cuda()
             loss = criterion(y,y_pred)
-
             loss.backward()
             optimizer.step()
             model.all_training_loss.append(loss.item())
