@@ -146,6 +146,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
     plt.ioff()
     print("number of epochs : ", n_epochs)
     n_iteration = int(len(X_train)/batch_size)
+    n_iteration=1
     for epoch in range(n_epochs):
         for ite in range(n_iteration):
             if ite % 10 == 0:
@@ -168,8 +169,8 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             model.all_validation_loss.append(loss_vali)
             model.all_validation_loss += [model.all_validation_loss[-1]] * (epoch+previous_epoch - len(model.all_validation_loss))
             loss_test=0
-            if test_on != [""]:
-                loss_test = model.evaluate_on_test(criterion,X_test = X_test,Y_test = Y_test,to_plot=False,cuda_avail=cuda_avail)
+           # if test_on != [""]:
+            #    loss_test = model.evaluate_on_test(criterion,X_test = X_test,Y_test = Y_test,to_plot=False,cuda_avail=cuda_avail)
             model.all_test_loss.append(loss_test)
             model.all_test_loss += [model.all_test_loss[-1]] * (epoch+previous_epoch - len(model.all_test_loss))
             print("\n ---------- epoch" + str(epoch) + " ---------")

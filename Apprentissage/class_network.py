@@ -229,7 +229,6 @@ class my_bilstm(torch.nn.Module):
                 rmse = np.reshape(rmse, (1,self.output_dim)) #dénormalisation et taille (1,13)
                 all_diff = np.concatenate((all_diff, rmse))
 
-
                 y_1 = (y_torch - torch.mean(y_torch,dim=[0,1]))*torch.from_numpy(std_ema) #(1,L,13)
                 y_pred_1 = (y_pred_torch - torch.mean(y_pred_torch,dim=[0,1]))*torch.from_numpy(std_ema )# (1,L,13)
                 pearson_1 = torch.sum(y_1 * y_pred_1,dim=[0,1])  # (13)
