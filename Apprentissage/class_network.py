@@ -74,7 +74,6 @@ class my_bilstm(torch.nn.Module):
         dense_out_2 = torch.nn.functional.relu(self.second_layer(dense_out))
         lstm_out, hidden_dim = self.lstm_layer(dense_out_2)
         lstm_out, hidden_dim = self.lstm_layer_2(lstm_out)
-
         lstm_out=torch.nn.functional.relu(lstm_out)
         y_pred = self.readout_layer(lstm_out)
         if self.filtered :

@@ -160,22 +160,20 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
     plt.ioff()
     print("number of epochs : ", n_epochs)
     n_iteration = int(len(X_train)/batch_size)
-    n_iteration=1
+ 
     for epoch in range(n_epochs):
         for ite in range(n_iteration):
             if ite % 10 == 0:
                 print("{} out of {}".format(ite, n_iteration))
             indices = np.random.choice(len(X_train), batch_size, replace=False)
             x, y = X_train[indices], Y_train[indices]
-
             x, y = model.prepare_batch(x, y,cuda_avail = cuda_avail)
-
             y_pred = model(x).double()
-
             y = y.double()
             optimizer.zero_grad()
+            if cuda_avail:
+                y,y_pred = y.cuda(), y_pred.cuda()
             loss = criterion(y,y_pred)
-
 
             loss.backward()
             optimizer.step()
