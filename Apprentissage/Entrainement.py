@@ -92,7 +92,8 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
 
     early_stopping = EarlyStopping(name_file,patience=patience, verbose=True)
 
-    model = my_bilstm(hidden_dim=hidden_dim,input_dim=input_dim,name_file =name_file, output_dim=output_dim,batch_size=batch_size)
+    model = my_bilstm(hidden_dim=hidden_dim,input_dim=input_dim,name_file =name_file, output_dim=output_dim,
+                      batch_size=batch_size,filtered=filtered)
     model = model.double()
     #print("wweights layer",model.first_layer.weight)
     #folder_weights_init =  os.path.join("saved_models", "train_fsew0_test_msak0","train_fsew0_test_msak0.txt")
@@ -159,7 +160,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
     plt.ioff()
     print("number of epochs : ", n_epochs)
     n_iteration = int(len(X_train)/batch_size)
-
+    n_iteration=1
     for epoch in range(n_epochs):
         for ite in range(n_iteration):
             if ite % 10 == 0:

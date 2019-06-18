@@ -20,7 +20,7 @@ except :  import utils
 
 class my_bilstm(torch.nn.Module):
     def __init__(self, hidden_dim, input_dim, output_dim, batch_size,name_file, sampling_rate=200,
-                 window=5, cutoff=20):
+                 window=5, cutoff=30,filtered=False):
         root_folder = os.path.dirname(os.getcwd())
         super(my_bilstm, self).__init__()
         self.input_dim = input_dim
@@ -38,6 +38,7 @@ class my_bilstm(torch.nn.Module):
         self.readout_layer = torch.nn.Linear(hidden_dim *2, output_dim)
         self.batch_size = batch_size
         self.sigmoid = torch.nn.Sigmoid()
+        self.filtered=filtered
         self.softmax = torch.nn.Softmax(dim=output_dim)
         self.tanh = torch.nn.Tanh()
         self.sampling_rate = sampling_rate
@@ -76,7 +77,8 @@ class my_bilstm(torch.nn.Module):
 
         lstm_out=torch.nn.functional.relu(lstm_out)
         y_pred = self.readout_layer(lstm_out)
-       # y_pred = self.filter_layer(y_pred)
+        if self.filtered :
+            y_pred = self.filter_layer(y_pred)
         return y_pred
 
     def init_filter_layer(self):
@@ -206,7 +208,7 @@ class my_bilstm(torch.nn.Module):
         indices_to_plot=[]
         if to_plot :
             print("you chose to plot")
-            indices_to_plot = np.random.choice(len(X_test), 5, replace=False)
+            indices_to_plot = np.random.choice(len(X_test), 2, replace=False)
         loss_test= 0
         for i in range(len(X_test)):
                 L = len(X_test[i])
