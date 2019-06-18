@@ -66,7 +66,7 @@ class my_bilstm(torch.nn.Module):
 
         y = new_y.view((B, max_length, self.output_dim))
         if cuda_avail :
-      #      print("cuda avaiiil")
+            print("cuda avaiiil")
             x,y=x.cuda(),y.cuda()
         return x, y
 
