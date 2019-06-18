@@ -47,7 +47,6 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
         Y_train_sp = np.array([Y_train_sp[i][:, :output_dim] for i in range(len(Y_train_sp))])
         Y_test_sp = np.array([Y_test_sp[i][:, :output_dim] for i in range(len(Y_test_sp))])
 
-
         if speaker in train_on:
 
             X_train.extend(X_train_sp)
@@ -136,10 +135,11 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
  #   criterion = torch.nn.MSELoss(reduction='sum')
 
     def criterion(y,y_pred):
-        y_1 = y - torch.mean(y)
-        y_pred_1 = y_pred - torch.mean(y_pred)
-        loss = torch.sum(y_1 * y_pred_1) / (
-                    torch.sqrt(torch.sum(y_1 ** 2)) * torch.sqrt(torch.sum(y_pred_1 ** 2)))# use Pearson correlation
+        y_1 = y - torch.mean(y,dim=1)
+        y_pred_1 = y_pred - torch.mean(y_pred,dim=1)
+        loss = torch.sum(y_1 * y_pred_1,dim=1) / (
+                    torch.sqrt(torch.sum(y_1 ** 2,dim=1)) * torch.sqrt(torch.sum(y_pred_1 ** 2,dim=1)))# use Pearson correlation
+        loss = torch.sum(loss)
         return -loss
 
     optimizer = torch.optim.Adam(model.parameters(), lr=lr ) #, betas = beta_param)
