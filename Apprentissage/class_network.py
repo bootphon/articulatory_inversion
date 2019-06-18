@@ -20,7 +20,7 @@ except :  import utils
 
 class my_bilstm(torch.nn.Module):
     def __init__(self, hidden_dim, input_dim, output_dim, batch_size,name_file, sampling_rate=200,
-                 window=5, cutoff=30,filtered=False):
+                 window=5, cutoff=30,filtered=False,cuda_avail =False):
         root_folder = os.path.dirname(os.getcwd())
         super(my_bilstm, self).__init__()
         self.input_dim = input_dim
@@ -52,8 +52,9 @@ class my_bilstm(torch.nn.Module):
         self.name_file = name_file
         self.lowpass = None
         self.init_filter_layer()
+        self.cuda_avail = cuda_avail
 
-    def prepare_batch(self, x, y, cuda_avail = False):
+    def prepare_batch(self, x, y):
         max_length = np.max([len(phrase) for phrase in x])
         B = len(x)  # often batch size but not for validation
         new_x = torch.zeros((B, max_length, self.input_dim), dtype=torch.double)
@@ -65,9 +66,10 @@ class my_bilstm(torch.nn.Module):
         x = new_x.view((B, max_length, self.input_dim))
 
         y = new_y.view((B, max_length, self.output_dim))
-        if cuda_avail :
-            print("cuda avaiiil")
+        if self.cuda_avail :
+
             x,y=x.cuda(),y.cuda()
+
         return x, y
 
     def forward(self, x):
@@ -193,15 +195,17 @@ class my_bilstm(torch.nn.Module):
             plt.savefig(save_pics_path)
             plt.close('all')
 
-    def evaluate(self, x_valid, y_valid,criterion,cuda_avail=False):
-        x_temp, y_temp = self.prepare_batch(x_valid, y_valid,cuda_avail=cuda_avail) #add zero to have correct size
+    def evaluate(self, x_valid, y_valid,criterion):
+        x_temp, y_temp = self.prepare_batch(x_valid, y_valid,cuda_avail=self.cuda_avail) #add zero to have correct size
         y_pred = self(x_temp).double()
+        if self.cuda_avail:
+            y_pred = y_pred.cuda()
         y_temp = y_temp.double()
         loss = criterion( y_temp,y_pred).item()
         return loss
 
     def evaluate_on_test(self, criterion, verbose=False,X_test=None,Y_test=None,to_plot=False,
-                         std_ema = 1 ,suffix= "",cuda_avail=False):
+                         std_ema = 1 ,suffix= ""):
         all_diff = np.zeros((1, self.output_dim))
         all_pearson = np.zeros((1, self.output_dim))
 
@@ -215,10 +219,10 @@ class my_bilstm(torch.nn.Module):
                 x_torch = torch.from_numpy(X_test[i]).view(1,L,self.input_dim)  #x (1,L,429)
                 y = Y_test[i].reshape((L, self.output_dim))                     #y (L,13)
                 y_torch = torch.from_numpy(y).double().reshape(1,L,self.output_dim) #y (1,L,13)
-                if cuda_avail:
+                if self.cuda_avail:
                     x_torch = x_torch.cuda()
                 y_pred_torch = self(x_torch).double() #sortie y_pred (1,L,13)
-                if cuda_avail:
+                if self.cuda_avail:
                     y_pred_torch = y_pred_torch.cpu()
                 y_pred = y_pred_torch.detach().numpy().reshape((L, self.output_dim))  # y_pred (L,13)
                 the_loss = criterion(y_torch, y_pred_torch)  #loss entre données de taillees  (1,L,13)

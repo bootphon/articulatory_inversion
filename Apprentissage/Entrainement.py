@@ -93,7 +93,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
     early_stopping = EarlyStopping(name_file,patience=patience, verbose=True)
 
     model = my_bilstm(hidden_dim=hidden_dim,input_dim=input_dim,name_file =name_file, output_dim=output_dim,
-                      batch_size=batch_size,filtered=filtered)
+                      batch_size=batch_size,filtered=filtered,cuda_avail = cuda_avail)
     model = model.double()
     #print("wweights layer",model.first_layer.weight)
     #folder_weights_init =  os.path.join("saved_models", "train_fsew0_test_msak0","train_fsew0_test_msak0.txt")
@@ -167,9 +167,11 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
                 print("{} out of {}".format(ite, n_iteration))
             indices = np.random.choice(len(X_train), batch_size, replace=False)
             x, y = X_train[indices], Y_train[indices]
-            x, y = model.prepare_batch(x, y,cuda_avail = cuda_avail)
-         
+            x, y = model.prepare_batch(x, y)
+
             y_pred = model(x).double()
+            if cuda_avail:
+                y_pred = y_pred.cuda()
             y = y.double()
             optimizer.zero_grad()
             loss = criterion(y,y_pred)
@@ -179,7 +181,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             torch.cuda.empty_cache()
 
         if epoch%delta_test ==0:  #toutes les delta_test epochs on évalue le modèle sur validation et on sauvegarde le modele si le score est meilleur
-            loss_vali = model.evaluate(X_valid,Y_valid,criterion,cuda_avail=cuda_avail)
+            loss_vali = model.evaluate(X_valid,Y_valid,criterion)
             model.all_validation_loss.append(loss_vali)
             model.all_validation_loss += [model.all_validation_loss[-1]] * (epoch+previous_epoch - len(model.all_validation_loss))
             loss_test=0
@@ -213,7 +215,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             Y_test_sp = np.array([Y_test_sp[i][:, :output_dim] for i in range(len(Y_test_sp))])
 
             model.evaluate_on_test(criterion=criterion,verbose=True, X_test=X_test_sp, Y_test=Y_test_sp,
-                                   to_plot=to_plot, std_ema=multi_loss_test, suffix=speaker, cuda_avail=cuda_avail)
+                                   to_plot=to_plot, std_ema=multi_loss_test, suffix=speaker)
 
     length_expected = len(model.all_training_loss)
     print("lenght exp", length_expected)
