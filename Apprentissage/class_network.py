@@ -32,9 +32,9 @@ class my_bilstm(torch.nn.Module):
         self.lstm_layer = torch.nn.LSTM(input_size=hidden_dim,
                                         hidden_size=hidden_dim, num_layers=1,
                                         bidirectional=True)
-       # self.lstm_layer_2= torch.nn.LSTM(input_size=hidden_dim*2,
-        #                                hidden_size=hidden_dim, num_layers=1,
-         #                               bidirectional=True)
+      #  self.lstm_layer_2= torch.nn.LSTM(input_size=hidden_dim*2,
+       #                                 hidden_size=hidden_dim, num_layers=1,
+        #                                bidirectional=True)
         self.readout_layer = torch.nn.Linear(hidden_dim *2, output_dim)
         self.batch_size = batch_size
         self.sigmoid = torch.nn.Sigmoid()
@@ -49,8 +49,8 @@ class my_bilstm(torch.nn.Module):
         self.all_test_loss = []
         #self.std = np.load(os.path.join(root_folder,"Traitement","std_ema_"+speaker+".npy"))
         self.name_file = name_file
-        self.lowpass = None
-        self.init_filter_layer()
+      #  self.lowpass = None
+      #  self.init_filter_layer()
 
     def prepare_batch(self, x, y, cuda_avail = False):
         max_length = np.max([len(phrase) for phrase in x])
@@ -72,11 +72,11 @@ class my_bilstm(torch.nn.Module):
         dense_out =  torch.nn.functional.relu(self.first_layer(x))
         dense_out_2 = torch.nn.functional.relu(self.second_layer(dense_out))
         lstm_out, hidden_dim = self.lstm_layer(dense_out_2)
-     #   lstm_out, hidden_dim = self.lstm_layer_2(lstm_out)
+      #  lstm_out, hidden_dim = self.lstm_layer_2(lstm_out)
 
         lstm_out=torch.nn.functional.relu(lstm_out)
         y_pred = self.readout_layer(lstm_out)
-   #     y_pred = self.filter_layer(y_pred)
+       # y_pred = self.filter_layer(y_pred)
         return y_pred
 
     def init_filter_layer(self):
@@ -85,21 +85,35 @@ class my_bilstm(torch.nn.Module):
             cutoff = torch.tensor(self.cutoff, dtype=torch.float64).view(1, 1)
             fc = torch.div(cutoff,
                   self.sampling_rate)  # Cutoff frequency as a fraction of the sampling rate (in (0, 0.5)).
+           # print("0",fc)
             if fc > 0.5:
                 raise Exception("La frequence de coupure doit etre au moins deux fois la frequence dechantillonnage")
-            b = 0.3  # Transition band, as a fraction of the sampling rate (in (0, 0.5)).
+            b = 0.08  # Transition band, as a fraction of the sampling rate (in (0, 0.5)).
             N = int(np.ceil((4 / b)))  # le window
             if not N % 2:
                 N += 1  # Make sure that N is odd.
             n = torch.arange(N).double()
+
             alpha = torch.mul(fc, 2 * (n - (N - 1) / 2)).double()
+           # print("1",alpha)
             h = torch.div(torch.sin(alpha), alpha)
             h[torch.isnan(h)] = 1
+            #print("2",h)
             #        h = np.sinc(2 * fc * (n - (N - 1) / 2))  # Compute sinc filter.
             beta = n * 2 * math.pi * (N - 1)
+
+            """ n = torch.from_numpy(np.arange(N) ) # int of [0,N]
+        h = np.sinc(2 * fc * (n - (N - 1) / 2))  # Compute sinc filter.
+        h = torch.from_numpy(h)
+        w = 0.5 * (1 - np.cos(2 * np.pi * n / (N - 1)))  # Compute hanning window.
+        h = h * w  # Multiply sinc filter with window.
+       """
+           # print("2.5",beta)
             w = 0.5 * (1 - torch.cos(beta))  # Compute hanning window.
+            #print("3",w)
             h = torch.mul(h, w)  # Multiply sinc filter with window.
             h = torch.div(h, torch.sum(h))
+            #print("4",h)
            # h.require_grads = True
           #  self.cutoff = Variable(cutoff, requires_grad=True)
          #   self.cutoff.require_grads = True
@@ -111,16 +125,24 @@ class my_bilstm(torch.nn.Module):
             fc = self.cutoff/self.sampling_rate
             if fc > 0.5:
                 raise Exception("La frequence de coupure doit etre au moins deux fois la frequence dechantillonnage")
-            b = 0.3  # Transition band, as a fraction of the sampling rate (in (0, 0.5)).
+
+            b = 0.08  # Transition band, as a fraction of the sampling rate (in (0, 0.5)).
             N = int(np.ceil((4 / b)))  # le window
             if not N % 2:
                 N += 1  # Make sure that N is odd.
             n = np.arange(N)
+           # print("1",n)
             h = np.sinc(fc*2*(n - (N - 1) / 2))
-            w = 0.5 * (1 - np.cos( n * 2 * math.pi * (N - 1)))  # Compute hanning window.
+           # print("2",h)
+            w = 0.5 * (1 - np.cos( n * 2 * math.pi / (N - 1)))  # Compute hanning window.
+           # print("3",w)
+
             h = h*w
+            #print("4",h)
             h = h/np.sum(h)
-            return h
+#            print("5",h)
+
+            return torch.tensor(h)
 
         # print("1",self.cutoff)
         # self.cutoff = torch.nn.parameter.Parameter(torch.Tensor(self.cutoff))
@@ -130,13 +152,13 @@ class my_bilstm(torch.nn.Module):
         # stride=1
         padding = 5 # int(0.5*((C_in-1)*stride-C_in+window_size))+23
         lowpass = torch.nn.Conv1d(C_in, self.output_dim, window_size, stride=1, padding=padding,              bias=False)
-        weight_init = get_filter_weights()
-       # lowpass.weight.data =weight_init
-       # print("lowpass size",lowpass.shape)
+        weight_init = get_filter_weights_en_dur()
         weight_init = weight_init.view((1, 1, -1))
         lowpass.weight = torch.nn.Parameter(weight_init)
         lowpass = lowpass.double()
         self.lowpass = lowpass
+        #print("lowpasse ",self.lowpass.weight)
+
         #self.lowpass.require_grads=True
     def filter_layer(self, y):
         B = len(y) # batch size
@@ -174,17 +196,14 @@ class my_bilstm(torch.nn.Module):
         y_pred = self(x_temp).double()
         y_temp = y_temp.double()
         loss = criterion(y_pred, y_temp).item()
-     #   y_toplot = y_temp.detach().numpy()
-      #  y_toplot_2 = y_pred.detach().numpy()
-      #  i = np.random.choice(len(y_toplot_2))
-    #    self.plot_results(y_toplot[i],y_toplot_2[i])
         return loss
 
     def evaluate_on_test(self, criterion, verbose=False,X_test=None,Y_test=None,to_plot=False,
                          std_ema = 1 ,suffix= "",cuda_avail=False):
-        fileset_path = os.path.join(os.path.dirname(os.getcwd()), "Donnees_pretraitees","fileset")
-         #Racine de l’erreur quadratique moyenne de prédiction des modèles
+
         all_diff = np.zeros((1, self.output_dim))
+        all_pearson = np.zeros((1, self.output_dim))
+
         indices_to_plot=[]
         if to_plot :
             print("you chose to plot")
@@ -205,16 +224,36 @@ class my_bilstm(torch.nn.Module):
                 loss_test += the_loss.item()
                 if i in indices_to_plot:
                     self.plot_results(y, y_pred, suffix=suffix + str(i))
+
                 rmse = np.sqrt(np.mean(np.square(y - y_pred), axis=0))  # calcule du rmse à la main
-                rmse = np.reshape(rmse, (1, self.output_dim)) #dénormalisation et taille (1,13)
+                rmse = np.reshape(rmse, (1,self.output_dim)) #dénormalisation et taille (1,13)
                 all_diff = np.concatenate((all_diff, rmse))
+
+
+                y_1 = (y_torch - torch.mean(y_torch,dim=[0,1]))*torch.from_numpy(std_ema) #(1,L,13)
+                y_pred_1 = (y_pred_torch - torch.mean(y_pred_torch,dim=[0,1]))*torch.from_numpy(std_ema )# (1,L,13)
+                pearson_1 = torch.sum(y_1 * y_pred_1,dim=[0,1])  # (13)
+                pearson_2 = torch.sqrt(torch.sum(y_1 ** 2,dim=[0,1])) * torch.sqrt(torch.sum(y_pred_1 ** 2,dim=[0,1])) #(13)
+                pearson = torch.div(pearson_1,pearson_2).view((1,self.output_dim))
+                pearson[torch.isnan(pearson)] = 1
+                pearson = pearson.detach().numpy()
+                all_pearson = np.concatenate((all_pearson,pearson))
+
+
 
         loss_test = loss_test/len(X_test)
         all_diff = all_diff[1:] #remove first row of zeros #all the errors per arti and per sample
+        all_pearson=all_pearson[1:]
         if verbose :
             rmse_per_arti_mean = np.mean(all_diff,axis=0)*std_ema
             rmse_per_arti_std = np.std(all_diff,axis=0)*std_ema
             print("rmse final : ", np.mean(rmse_per_arti_mean))
-            print("rmse UNORMALIZED mean per arti : \n", rmse_per_arti_mean)
-            print("rmse std per arti : \n", rmse_per_arti_std)
+            print("rmse mean per arti : \n", rmse_per_arti_mean)
+        #    print("rmse std per arti : \n", rmse_per_arti_std)
+
+            pearson_per_arti_mean = np.mean(all_pearson, axis=0)
+            pearson_per_arti_std = np.std(all_pearson, axis=0)
+            print("pearson final : ", np.mean(pearson_per_arti_mean))
+            print("pearson mean per arti : \n", pearson_per_arti_mean)
+         #   print("pearson std per arti : \n", pearson_per_arti_std)
         return loss_test

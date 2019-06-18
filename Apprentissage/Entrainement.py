@@ -99,7 +99,12 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
     else :
         loaded_state = torch.load(os.path.join(folder_weights, name_file +".txt"))
     model_dict = model.state_dict()
-    loaded_state = {k: v for k, v in loaded_state.items() if k in model_dict}
+
+    loaded_state = {k: v for k, v in loaded_state.items() if k in model_dict} #only layers param that are in our current model
+    print("before ",len(loaded_state))
+    loaded_state= {k:v for k,v in loaded_state.items() if loaded_state[k].shape==model_dict[k].shape } #only if layers have correct shapes
+    print("after",len(loaded_state))
+
     model_dict.update(loaded_state)
     model.load_state_dict(model_dict)
     model.all_training_loss=[]
@@ -128,7 +133,15 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
         os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
         os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
-    criterion  = torch.nn.MSELoss(reduction='sum')
+ #   criterion = torch.nn.MSELoss(reduction='sum')
+
+    def criterion(y,y_pred):
+        y_1 = y - torch.mean(y)
+        y_pred_1 = y_pred - torch.mean(y_pred)
+        loss = torch.sum(y_1 * y_pred_1) / (
+                    torch.sqrt(torch.sum(y_1 ** 2)) * torch.sqrt(torch.sum(y_pred_1 ** 2)))# use Pearson correlation
+        return loss
+
     optimizer = torch.optim.Adam(model.parameters(), lr=lr ) #, betas = beta_param)
     plt.ioff()
     print("number of epochs : ", n_epochs)
@@ -155,8 +168,8 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             model.all_validation_loss.append(loss_vali)
             model.all_validation_loss += [model.all_validation_loss[-1]] * (epoch+previous_epoch - len(model.all_validation_loss))
             loss_test=0
-           # if test_on != [""]:
-            #    loss_test = model.evaluate_on_test(criterion,X_test = X_test,Y_test = Y_test,to_plot=False,cuda_avail=cuda_avail)
+            if test_on != [""]:
+                loss_test = model.evaluate_on_test(criterion,X_test = X_test,Y_test = Y_test,to_plot=False,cuda_avail=cuda_avail)
             model.all_test_loss.append(loss_test)
             model.all_test_loss += [model.all_test_loss[-1]] * (epoch+previous_epoch - len(model.all_test_loss))
             print("\n ---------- epoch" + str(epoch) + " ---------")
@@ -193,7 +206,6 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
         model.all_validation_loss += [model.all_validation_loss[-1]] * (length_expected - len(model.all_validation_loss))
         model.all_training_loss = np.array(model.all_training_loss).reshape(1,length_expected)
         model.all_validation_loss = np.array(model.all_validation_loss).reshape(1,length_expected)
-
         model.all_test_loss += [model.all_test_loss[-1]] * (length_expected - len(model.all_test_loss))
         model.all_test_loss = np.array(model.all_test_loss).reshape((1, length_expected))
     except :
@@ -203,6 +215,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
         np.array(model.all_validation_loss),
       np.array(model.all_test_loss) )
           ,axis=0 )
+
 
     np.save(os.path.join(folder_weights,"all_losses.npy"),all_losses)
 
