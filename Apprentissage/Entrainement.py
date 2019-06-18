@@ -132,15 +132,21 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
         os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
         os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
- #   criterion = torch.nn.MSELoss(reduction='sum')
 
-    def criterion(y,y_pred):
-        y_1 = y - torch.mean(y,dim=1)
-        y_pred_1 = y_pred - torch.mean(y_pred,dim=1)
-        loss = torch.sum(y_1 * y_pred_1,dim=1) / (
-                    torch.sqrt(torch.sum(y_1 ** 2,dim=1)) * torch.sqrt(torch.sum(y_pred_1 ** 2,dim=1)))# use Pearson correlation
+
+    def criterion_old(y,y_pred):
+        y_1 = y - torch.mean(y,dim=1,keepdim=True)
+        y_pred_1 = y_pred - torch.mean(y_pred,dim=1,keepdim=True)
+        nume=  torch.sum(y_1 * y_pred_1,dim=1,keepdim=True)
+        deno =  torch.sqrt(torch.sum(y_1 ** 2,dim=1,keepdim=True)) * torch.sqrt(torch.sum(y_pred_1 ** 2,dim=1,keepdim=True))# use Pearson correlation
+        loss = nume/deno
+        loss[torch.isnan(loss)] = 1
         loss = torch.sum(loss)
         return -loss
+
+    criterion = torch.nn.MSELoss(reduction='sum')
+
+
 
     optimizer = torch.optim.Adam(model.parameters(), lr=lr ) #, betas = beta_param)
     plt.ioff()
@@ -153,12 +159,16 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
                 print("{} out of {}".format(ite, n_iteration))
             indices = np.random.choice(len(X_train), batch_size, replace=False)
             x, y = X_train[indices], Y_train[indices]
-
+            print("0","nan" in x)
             x, y = model.prepare_batch(x, y, cuda_avail=cuda_avail)
+            print("1",torch.isnan(x).any())
             y_pred= model(x).double()
+            print("2",torch.isnan(y_pred).any())
             y = y.double()
             optimizer.zero_grad()
-            loss = criterion(y_pred, y)
+            loss = criterion(y,y_pred)
+            print("loss : ",loss)
+
             loss.backward()
             optimizer.step()
             model.all_training_loss.append(loss.item())
