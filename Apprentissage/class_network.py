@@ -57,7 +57,6 @@ class my_bilstm(torch.nn.Module):
         B = len(x)  # often batch size but not for validation
         new_x = torch.zeros((B, max_length, self.input_dim), dtype=torch.double)
         new_y = torch.zeros((B, max_length, self.output_dim), dtype=torch.double)
-
         for j in range(B):
             zeropad = torch.nn.ZeroPad2d((0, 0, 0, max_length - len(x[j])))
             new_x[j] = zeropad(torch.from_numpy(x[j])).double()
@@ -70,13 +69,9 @@ class my_bilstm(torch.nn.Module):
         return x, y
 
     def forward(self, x):
-
         dense_out =  torch.nn.functional.relu(self.first_layer(x))
-
         dense_out_2 = torch.nn.functional.relu(self.second_layer(dense_out))
-
         lstm_out, hidden_dim = self.lstm_layer(dense_out_2)
-
       #  lstm_out, hidden_dim = self.lstm_layer_2(lstm_out)
 
         lstm_out=torch.nn.functional.relu(lstm_out)
@@ -198,16 +193,13 @@ class my_bilstm(torch.nn.Module):
 
     def evaluate(self, x_valid, y_valid,criterion,cuda_avail=False):
         x_temp, y_temp = self.prepare_batch(x_valid, y_valid,cuda_avail=cuda_avail) #add zero to have correct size
-
         y_pred = self(x_temp).double()
         y_temp = y_temp.double()
-
         loss = criterion( y_temp,y_pred).item()
         return loss
 
     def evaluate_on_test(self, criterion, verbose=False,X_test=None,Y_test=None,to_plot=False,
                          std_ema = 1 ,suffix= "",cuda_avail=False):
-
         all_diff = np.zeros((1, self.output_dim))
         all_pearson = np.zeros((1, self.output_dim))
 
