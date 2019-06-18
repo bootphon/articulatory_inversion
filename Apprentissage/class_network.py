@@ -49,8 +49,8 @@ class my_bilstm(torch.nn.Module):
         self.all_test_loss = []
         #self.std = np.load(os.path.join(root_folder,"Traitement","std_ema_"+speaker+".npy"))
         self.name_file = name_file
-      #  self.lowpass = None
-      #  self.init_filter_layer()
+        self.lowpass = None
+        self.init_filter_layer()
 
     def prepare_batch(self, x, y, cuda_avail = False):
         max_length = np.max([len(phrase) for phrase in x])
@@ -228,15 +228,19 @@ class my_bilstm(torch.nn.Module):
                 rmse = np.reshape(rmse, (1,self.output_dim)) #dénormalisation et taille (1,13)
                 all_diff = np.concatenate((all_diff, rmse))
 
-
-
-                y_1 = (y_torch - torch.mean(y_torch,dim=[0,1]))*torch.from_numpy(std_ema) #(L,13)
-                y_pred_1 = (y_pred_torch - torch.mean(y_pred_torch,dim=[0,1]))*torch.from_numpy(std_ema )# (L,13)
-                pearson_1 = torch.sum(y_1 * y_pred_1,dim=[0,1])  # (13)
-                pearson_2 = torch.sqrt(torch.sum(y_1 ** 2,dim=[0,1])) * torch.sqrt(torch.sum(y_pred_1 ** 2,dim=[0,1])) #(13)
-                pearson = torch.div(pearson_1,pearson_2).view((1,self.output_dim))
-                pearson[torch.isnan(pearson)] = 1
-                pearson = pearson.detach().numpy()
+                pearson = [0]*self.output_dim
+                for i in range(self.output_dim):
+                    pearson[i]= np.corrcoef(y[:,i].T,y_pred[:,i].T)[0,1]
+                pearson = np.array(pearson).reshape((1,self.output_dim))
+                pearson[np.isnan(pearson)] = 1
+            # print(pearson)
+             #   y_1 = (y_torch - torch.mean(y_torch,dim=[0,1]))*torch.from_numpy(std_ema) #(L,13)
+              #  y_pred_1 = (y_pred_torch - torch.mean(y_pred_torch,dim=[0,1]))*torch.from_numpy(std_ema )# (L,13)
+               # pearson_1 = torch.sum(y_1 * y_pred_1,dim=[0,1])  # (13)
+                #pearson_2 = torch.sqrt(torch.sum(y_1 ** 2,dim=[0,1])) * torch.sqrt(torch.sum(y_pred_1 ** 2,dim=[0,1])) #(13)
+                #pearson = torch.div(pearson_1,pearson_2).view((1,self.output_dim))
+                #pearson[torch.isnan(pearson)] = 1
+                #pearson = pearson.detach().numpy()
                 all_pearson = np.concatenate((all_pearson,pearson))
 
         loss_test = loss_test/len(X_test)
