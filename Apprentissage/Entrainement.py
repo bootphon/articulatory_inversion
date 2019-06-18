@@ -146,7 +146,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
     plt.ioff()
     print("number of epochs : ", n_epochs)
     n_iteration = int(len(X_train)/batch_size)
-    n_iteration=1
+   
     for epoch in range(n_epochs):
         for ite in range(n_iteration):
             if ite % 10 == 0:
