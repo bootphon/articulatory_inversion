@@ -196,7 +196,7 @@ class my_bilstm(torch.nn.Module):
             plt.close('all')
 
     def evaluate(self, x_valid, y_valid,criterion):
-        x_temp, y_temp = self.prepare_batch(x_valid, y_valid,cuda_avail=self.cuda_avail) #add zero to have correct size
+        x_temp, y_temp = self.prepare_batch(x_valid, y_valid) #add zero to have correct size
         y_pred = self(x_temp).double()
         if self.cuda_avail:
             y_pred = y_pred.cuda()
