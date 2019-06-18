@@ -159,15 +159,15 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
                 print("{} out of {}".format(ite, n_iteration))
             indices = np.random.choice(len(X_train), batch_size, replace=False)
             x, y = X_train[indices], Y_train[indices]
-            print("0","nan" in x)
-            x, y = model.prepare_batch(x, y, cuda_avail=cuda_avail)
-            print("1",torch.isnan(x).any())
+
+            x, y = model.prepare_batch(x, y)
+
             y_pred= model(x).double()
-            print("2",torch.isnan(y_pred).any())
+
             y = y.double()
             optimizer.zero_grad()
             loss = criterion(y,y_pred)
-            print("loss : ",loss)
+
 
             loss.backward()
             optimizer.step()
