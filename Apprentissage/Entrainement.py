@@ -168,7 +168,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             indices = np.random.choice(len(X_train), batch_size, replace=False)
             x, y = X_train[indices], Y_train[indices]
             x, y = model.prepare_batch(x, y,cuda_avail = cuda_avail)
-            print("x = xcuda?",x==x.cuda(),y==y.cuda())
+         
             y_pred = model(x).double()
             y = y.double()
             optimizer.zero_grad()
