@@ -6,7 +6,7 @@ import torch
 import os
 import sys
 from sklearn.model_selection import train_test_split
-
+from utils import load_filenames, load_data
 from pytorchtools import EarlyStopping
 import time
 
@@ -39,59 +39,57 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
     name_file = "train_" + "_".join(train_on) + "_test_" + "_".join(test_on) +suff
     folder_weights = os.path.join("saved_models", name_file)
 
-    X_train, X_test, Y_train, Y_test = [], [], [], []
-    speakers_in_lists = list(set(train_on+test_on) & set(["msak0","fsew0","MNGU0"]))
-    print("list ",speakers_in_lists)
+#    X_train, X_test, Y_train, Y_test = [], [], [], []
+ #   speakers_in_lists = list(set(train_on+test_on) & set(["msak0","fsew0","MNGU0"]))
+  #  print("list ",speakers_in_lists)
 
 
-    for speaker in speakers_in_lists:
-        print("SPEAKER ",speaker)
-        X_train_sp = np.load(os.path.join(fileset_path, "X_train_"  +speaker + ".npy"),allow_pickle=True)
-        Y_train_sp = np.load(os.path.join(fileset_path, "Y_train" +suff+"_"+ speaker + ".npy"),allow_pickle=True)
-        X_test_sp = np.load(os.path.join(fileset_path, "X_test_" + speaker + ".npy"),allow_pickle=True)
-        Y_test_sp = np.load(os.path.join(fileset_path, "Y_test" +suff+ "_"+speaker + ".npy"),allow_pickle=True)
+   # for speaker in speakers_in_lists:
+    #    print("SPEAKER ",speaker)
+     #   X_train_sp = np.load(os.path.join(fileset_path, "X_train_"  +speaker + ".npy"),allow_pickle=True)
+      #  Y_train_sp = np.load(os.path.join(fileset_path, "Y_train" +suff+"_"+ speaker + ".npy"),allow_pickle=True)
+       # X_test_sp = np.load(os.path.join(fileset_path, "X_test_" + speaker + ".npy"),allow_pickle=True)
+      #  Y_test_sp = np.load(os.path.join(fileset_path, "Y_test" +suff+ "_"+speaker + ".npy"),allow_pickle=True)
 
-        Y_train_sp = np.array([Y_train_sp[i][:, :output_dim] for i in range(len(Y_train_sp))])
-        Y_test_sp = np.array([Y_test_sp[i][:, :output_dim] for i in range(len(Y_test_sp))])
+   #     Y_train_sp = np.array([Y_train_sp[i][:, :output_dim] for i in range(len(Y_train_sp))])
+    #    Y_test_sp = np.array([Y_test_sp[i][:, :output_dim] for i in range(len(Y_test_sp))])
 
-        if speaker in train_on:
+     #   if speaker in train_on:
+      #      X_train.extend(X_train_sp)
+       #     Y_train.extend(Y_train_sp)
 
-            X_train.extend(X_train_sp)
-            Y_train.extend(Y_train_sp)
+        #    print(False in [(X_train[i].shape[0] == Y_train[i].shape[0]) for i in range(len(Y_train))])
+         #   print(False in [(X_test[i].shape[0] == Y_test[i].shape[0]) for i in range(len(Y_test))])
+          #  if speaker not in test_on:
 
-            print(False in [(X_train[i].shape[0] == Y_train[i].shape[0]) for i in range(len(Y_train))])
-            print(False in [(X_test[i].shape[0] == Y_test[i].shape[0]) for i in range(len(Y_test))])
-            if speaker not in test_on:
-
-                X_train.extend(X_test_sp)
-                Y_train.extend(Y_test_sp)
-
+           #     X_train.extend(X_test_sp)
+            #    Y_train.extend(Y_test_sp)
 
 
-        if speaker in test_on:
 
-            X_test.extend(X_test_sp)
-            Y_test.extend(Y_test_sp)
-            if speaker not in train_on:
+      #  if speaker in test_on:
+#
+ #           X_test.extend(X_test_sp)
+  #          Y_test.extend(Y_test_sp)
+   #         if speaker not in train_on:
 
-                X_test.extend(X_train_sp)
-                Y_test.extend(Y_train_sp)
+    #            X_test.extend(X_train_sp)
+     #           Y_test.extend(Y_train_sp)
 
 
-    pourcent_valid = 0.05
+  #  pourcent_valid = 0.05
     hidden_dim = 300
     input_dim = 429
     beta_param = [0.9 , 0.999]
     batch_size = 10
-    if "MNGU0" in speakers_in_lists:
-        batch_size=5
-    print("batch size",batch_size)
-    X_train, X_valid, Y_train, Y_valid = train_test_split(X_train, Y_train, test_size=pourcent_valid, random_state=1)
-    X_train, X_valid, Y_train, Y_valid = np.array(X_train),np.array(X_valid),np.array(Y_train),np.array(Y_valid),
 
-    print("X_valid", len(X_valid))
-    print("X_train", len(X_train))
-    print("X_test", len(X_test))
+    print("batch size",batch_size)
+    #X_train, X_valid, Y_train, Y_valid = train_test_split(X_train, Y_train, test_size=pourcent_valid, random_state=1)
+    #X_train, X_valid, Y_train, Y_valid = np.array(X_train),np.array(X_valid),np.array(Y_train),np.array(Y_valid),
+
+   # print("X_valid", len(X_valid))
+   # print("X_train", len(X_train))
+   # print("X_test", len(X_test))
 
     early_stopping = EarlyStopping(name_file,patience=patience, verbose=True)
 
@@ -114,7 +112,6 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
     print("before ",len(loaded_state))
     loaded_state= {k:v for k,v in loaded_state.items() if loaded_state[k].shape==model_dict[k].shape } #only if layers have correct shapes
     print("after",len(loaded_state))
-
     model_dict.update(loaded_state)
     model.load_state_dict(model_dict)
     model.all_training_loss=[]
@@ -123,8 +120,8 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
        #torch.nn.init.xavier_uniform(my_bilstm.lstm_layer.weight)
 
   #  print("wweights layer AFTER", model.first_layer.weight)
-    print("train size : ", len(X_train))
-    print("test size :", len(X_test))
+ #   print("train size : ", len(X_train))
+  #  print("test size :", len(X_test))
     previous_epoch = 0
     try :
         previous_losses = np.load(os.path.join(folder_weights, "all_losses.npy"))
@@ -162,14 +159,34 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
     optimizer = torch.optim.Adam(model.parameters(), lr=lr ) #, betas = beta_param)
     plt.ioff()
     print("number of epochs : ", n_epochs)
-    n_iteration = int(len(X_train)/batch_size)
+
+    valid_files_names = []
+    N_train=0
+    path_files = os.path.join(os.path.dirname(os.getcwd()),"Donnees_pretraitees","fileset")
+
+    for speaker in train_on:
+        valid_files_names.extend(open(os.path.join(path_files,speaker+"_valid.txt"), "r").read().split())
+        N_train += len(open(os.path.join(path_files,speaker+"_train.txt"), "r").read().split())
+    print(valid_files_names)
+
+    X_valid, Y_valid = load_data(valid_files_names)
+    print("len X_valid",len(X_valid))
+    n_iteration = int(N_train / batch_size)
+    n_iteration = 3
+    Y_valid = [Y_valid[i][:,:output_dim] for i in range(len(Y_valid))]
+
+    test_files_names = []
+
 
     for epoch in range(n_epochs):
         for ite in range(n_iteration):
             if ite % 10 == 0:
                 print("{} out of {}".format(ite, n_iteration))
-            indices = np.random.choice(len(X_train), batch_size, replace=False)
-            x, y = X_train[indices], Y_train[indices]
+         #   indices = np.random.choice(len(X_train), batch_size, replace=False)
+            files_for_train = load_filenames(train_on,batch_size)
+            x,y = load_data(files_for_train)
+            y = [y[i][:,:output_dim] for i in range(len(y))]
+       #     x, y = X_train[indices], Y_train[indices]
             x, y = model.prepare_batch(x, y)
 
             y_pred = model(x).double()
@@ -210,15 +227,16 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
 
     if test_on != [""]:
         for speaker in test_on:
+
+            test_files_names = open(os.path.join(path_files, speaker + "_test.txt"), "r").read().split()
+            X_test_sp, Y_test_sp = load_data(test_files_names)
             print("evaluation on speaker {}".format(speaker))
-            X_test_sp = np.load(os.path.join(fileset_path, "X_test_" + speaker + ".npy"),allow_pickle=True)
-            Y_test_sp = np.load(os.path.join(fileset_path, "Y_test" + suff+"_"+speaker + ".npy"),allow_pickle=True)
-            multi_loss_test=  np.load(os.path.join(root_folder, "Traitement", "std_ema_" + speaker + ".npy"))
-            multi_loss_test=multi_loss_test[:output_dim]
+            std_speaker=  np.load(os.path.join(root_folder, "Traitement", "std_ema_" + speaker + ".npy"))
+            std_speaker=std_speaker[:output_dim]
             Y_test_sp = np.array([Y_test_sp[i][:, :output_dim] for i in range(len(Y_test_sp))])
 
             model.evaluate_on_test(criterion=criterion,verbose=True, X_test=X_test_sp, Y_test=Y_test_sp,
-                                   to_plot=to_plot, std_ema=multi_loss_test, suffix=speaker)
+                                   to_plot=to_plot, std_ema=std_speaker, suffix=speaker)
 
     length_expected = len(model.all_training_loss)
     print("lenght exp", length_expected)
