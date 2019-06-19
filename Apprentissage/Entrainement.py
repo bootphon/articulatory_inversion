@@ -177,6 +177,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
 
     X_valid, Y_valid = load_data(valid_files_names)
     print("len X_valid",len(X_valid))
+
     n_iteration = int(N_train / batch_size)
 
     Y_valid = [Y_valid[i][:,:output_dim] for i in range(len(Y_valid))]
@@ -209,9 +210,10 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             torch.cuda.empty_cache()
         change_lr_frq = 5
         if epoch%change_lr_frq== 0 :
-            print("change learning rate")
+            print("change learning rate",)
             for g in optimizer.param_groups:
-                g['lr'] = g['lr'] /100
+                g['lr'] = g['lr'] /10
+                print(g["lr"])
         loss_memory = loss_control
         loss_control = 0
 
