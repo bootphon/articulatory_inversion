@@ -172,11 +172,13 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
     X_valid, Y_valid = load_data(valid_files_names)
     print("len X_valid",len(X_valid))
     n_iteration = int(N_train / batch_size)
-    n_iteration = 3
+
     Y_valid = [Y_valid[i][:,:output_dim] for i in range(len(Y_valid))]
 
     test_files_names = []
 
+    loss_control = 0
+    loss_memory = 10**10
 
     for epoch in range(n_epochs):
         for ite in range(n_iteration):
@@ -199,6 +201,13 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             optimizer.step()
             model.all_training_loss.append(loss.item())
             torch.cuda.empty_cache()
+        change_lr_frq = 10
+        if epoch%change_lr_frq== 0 :
+            print("change learning rate")
+            for g in optimizer.param_groups:
+                g['lr'] = g['lr'] /100
+        loss_memory = loss_control
+        loss_control = 0
 
         if epoch%delta_test ==0:  #toutes les delta_test epochs on évalue le modèle sur validation et on sauvegarde le modele si le score est meilleur
             loss_vali = model.evaluate(X_valid,Y_valid,criterion)
