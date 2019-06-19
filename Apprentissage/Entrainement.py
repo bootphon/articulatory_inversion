@@ -320,4 +320,4 @@ if __name__=='__main__':
     to_plot = sys.argv[10].lower()=="true"
 
     train_model(train_on = train_on,test_on = test_on ,n_epochs=n_epochs,delta_test=delta_test,patience=patience,
-                lr = lr,output_dim=output_dim,data_filtered=filtered,modele_filtered=   modele_filtered,to_plot=to_plot) #,norma=norma)
+                lr = lr,output_dim=output_dim,data_filtered=data_filtered,modele_filtered=   modele_filtered,to_plot=to_plot) #,norma=norma)
