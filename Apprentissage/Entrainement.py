@@ -84,7 +84,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
     beta_param = [0.9 , 0.999]
     batch_size = 10
     if "MNGU0" in speakers_in_lists:
-        batch_size=1
+        batch_size=5
     print("batch size",batch_size)
     X_train, X_valid, Y_train, Y_valid = train_test_split(X_train, Y_train, test_size=pourcent_valid, random_state=1)
     X_train, X_valid, Y_train, Y_valid = np.array(X_train),np.array(X_valid),np.array(Y_train),np.array(Y_valid),
