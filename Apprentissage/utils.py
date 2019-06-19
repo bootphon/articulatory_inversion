@@ -7,6 +7,80 @@
 from __future__ import division
 import matplotlib.pyplot as plt
 import numpy as np
+import os
+from os.path import dirname
+from numpy.random import choice
+
+def load_filenames(train_on,batch_size):
+    """
+
+    :param train_on:  liste des locuteurs sur lesquels on apprend (parmis "fsew0","msak0","MNGU0")
+    :param batch_size: nombre de phrase sur lesquelles on veut apprendre au sein d'un batch
+    :return: x,y deux listes de longueur batch_size. x contient des numpy array de format (K,429) et y de format (K, nombre_arti)
+
+    choisi #batch_size phrases au hasard parmis tous les locuteurs en respectant la proporition de chaque locuteur dans
+    le train set. Plus un locuteur aura de phrases dans le train set, plus il a de chances d'avoir de phrases dans le
+    batch.
+    """
+
+    path_files = os.path.join(os.path.dirname(os.getcwd()),"Donnees_pretraitees","fileset")
+    if len(train_on)==1:
+        files = open(os.path.join(path_files,train_on[0]+"_train.txt"), "r").read().split()
+        index = np.random.choice(len(files),batch_size)
+        train_files = [files[i] for i in index]
+    else :
+        proba_speakers = {}
+        total_number=0
+        for speaker in train_on:
+            train_speaker = open(os.path.join(path_files,speaker+"_train.txt"), "r").read().split()
+            proba_speakers[speaker] = len(train_speaker)
+            total_number+=len(train_speaker)
+        for speaker in train_on:
+            proba_speakers[speaker] = proba_speakers[speaker]/total_number
+
+        speaker_files_chosen = choice(train_on,  batch_size, p=list(proba_speakers.values()))
+        train_files=[]
+        for speaker in train_on:
+            train_speaker = open(os.path.join(path_files, speaker + "_train.txt"), "r").read().split()
+            n_train = list(speaker_files_chosen).count(speaker)
+            index = np.random.choice(len(train_speaker), n_train)
+            train_files.extend([train_speaker[i] for i in index])
+    return train_files
+
+
+def load_data(files_names,filtered=False):
+    """
+
+    :param files_names: liste des n
+    :param filtered:
+    :return:
+    """
+    folder = os.path.join(os.path.dirname(os.getcwd()), "Donnees_pretraitees")
+    x = []
+    y = []
+    suff = ""
+    if filtered :
+        suff = "_filtered"
+    for file_name in files_names :
+        speaker = file_name[0:5]
+        speaker_2=speaker
+        if speaker in ["fsew0","msak0"]:
+            speaker_2 = "mocha_"+speaker
+        files_path = os.path.join(folder,speaker_2)
+        the_ema_file = np.load(os.path.join(os.path.join(files_path, "ema"+suff), file_name + ".npy"))
+        the_mfcc_file = np.load(os.path.join(os.path.join(files_path, "mfcc"+suff), file_name+ ".npy"))
+
+        x.append(the_mfcc_file)
+        y.append(the_ema_file)
+
+    return x , y
+
+
+
+
+#filenames = load_filenames(["fsew0","msak0","MNGU0"],10)
+#x,y = load_data(filenames)
+#print(x[0].shape,y[0].shape)
 def chirp(f0, f1, T, fs):
     # f0 is the lower bound of the frequency range, in Hz
     # f1 is the upper bound of the frequency range, in Hz
@@ -60,7 +134,6 @@ def low_pass_filter_weight_old(cut_off,sampling_rate,len_window,window_type="han
     return final_weights
 #low_pass_filter_weight(cut_off=70,sampling_rate=200,len_window=100)
 
-
 def low_pass_filter_weight(cut_off,sampling_rate):
 
     fc = cut_off/sampling_rate# Cutoff frequency as a fraction of the sampling rate (in (0, 0.5)).
@@ -78,6 +151,8 @@ def low_pass_filter_weight(cut_off,sampling_rate):
     h = h / np.sum(h)
     return h
 
+
+"""
 f_1=20
 s_r = 500
 signal_1 = [np.sin(2*np.pi*f_1*n/s_r) for n in range(300)]
@@ -92,9 +167,10 @@ weights = low_pass_filter_weight(cut_off=30,sampling_rate=s_r)
 signal_filtre = np.convolve(signal,weights,mode='same')
 #print(len(signal_filtre))
 
-signal_filtre = signal_filtre*np.std(signal_1)/np.std(signal_filtre)
+€signal_filtre = signal_filtre*np.std(signal_1)/np.std(signal_filtre)
 #plt.plot(signal_filtre)
 #plt.legend(['s1','s2','somme','filtre'])
 #plt.show()
 
 
+"""
