@@ -184,9 +184,6 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
 
     test_files_names = []
 
-    loss_control = 0
-    loss_memory = 10**10
-
     for epoch in range(n_epochs):
         for ite in range(n_iteration):
             if ite % 10 == 0:
