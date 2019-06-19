@@ -20,7 +20,7 @@ except :  import utils
 
 class my_bilstm(torch.nn.Module):
     def __init__(self, hidden_dim, input_dim, output_dim, batch_size,name_file, sampling_rate=200,
-                 window=5, cutoff=30,filtered=False,cuda_avail =False):
+                 window=5, cutoff=30,data_filtered=False,cuda_avail =False,modele_filtered=False):
         root_folder = os.path.dirname(os.getcwd())
         super(my_bilstm, self).__init__()
         self.input_dim = input_dim
@@ -38,7 +38,8 @@ class my_bilstm(torch.nn.Module):
         self.readout_layer = torch.nn.Linear(hidden_dim *2, output_dim)
         self.batch_size = batch_size
         self.sigmoid = torch.nn.Sigmoid()
-        self.filtered=filtered
+        self.data_filtered=data_filtered
+        self.modele_filtered=modele_filtered
         self.softmax = torch.nn.Softmax(dim=output_dim)
         self.tanh = torch.nn.Tanh()
         self.sampling_rate = sampling_rate
@@ -79,7 +80,7 @@ class my_bilstm(torch.nn.Module):
         lstm_out, hidden_dim = self.lstm_layer_2(lstm_out)
         lstm_out=torch.nn.functional.relu(lstm_out)
         y_pred = self.readout_layer(lstm_out)
-        if self.filtered :
+        if self.modele_filtered :
             y_pred = self.filter_layer(y_pred)
         return y_pred
 

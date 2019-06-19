@@ -23,7 +23,8 @@ fileset_path = os.path.join(root_folder, "Donnees_pretraitees", "fileset")
 print(sys.argv)
 
 
-def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, output_dim=13,filtered=False,to_plot=False): #,norma=True):
+def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, output_dim=13,data_filtered=False,
+                modele_filtered=False,to_plot=False): #,norma=True):
     cuda_avail = torch.cuda.is_available()
     print(" cuda ?", cuda_avail)
 
@@ -31,11 +32,13 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
     test_on = str(test_on[1:-1])
     train_on = train_on.split(",")
     test_on = test_on.split(",")
-    print("filtered?", filtered)
     suff=""
-    if filtered:
+    if data_filtered:
         print("SMOOTHED DATA")
-        suff = "_filtered"
+        suff = suff+"_data_filtered"
+    if data_filtered:
+        print("MODELE FILTERED")
+        suff = suff + "_modele_filtered"
     name_file = "train_" + "_".join(train_on) + "_test_" + "_".join(test_on) +suff
     folder_weights = os.path.join("saved_models", name_file)
 
@@ -94,27 +97,31 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
     early_stopping = EarlyStopping(name_file,patience=patience, verbose=True)
 
     model = my_bilstm(hidden_dim=hidden_dim,input_dim=input_dim,name_file =name_file, output_dim=output_dim,
-                      batch_size=batch_size,filtered=filtered,cuda_avail = cuda_avail)
+                      batch_size=batch_size,data_filtered=data_filtered,cuda_avail = cuda_avail,modele_filtered=modele_filtered)
     model = model.double()
     #print("wweights layer",model.first_layer.weight)
     #folder_weights_init =  os.path.join("saved_models", "train_fsew0_test_msak0","train_fsew0_test_msak0.txt")
 
    # try :
-    if not cuda_avail:
-        device = torch.device('cpu')
-        loaded_state = torch.load(os.path.join(folder_weights, name_file +".txt"), map_location=device)
+    if os.path.exists(fileset_path):
+        if not cuda_avail:
+            device = torch.device('cpu')
+            loaded_state = torch.load(os.path.join(folder_weights, name_file +".txt"), map_location=device)
+
+        else :
+            loaded_state = torch.load(os.path.join(folder_weights, name_file +".txt"))
+
+        model_dict = model.state_dict()
+        loaded_state = {k: v for k, v in loaded_state.items() if k in model_dict} #only layers param that are in our current model
+        print("before ",len(loaded_state))
+        loaded_state= {k:v for k,v in loaded_state.items() if loaded_state[k].shape==model_dict[k].shape } #only if layers have correct shapes
+        print("after",len(loaded_state))
+        model_dict.update(loaded_state)
+        model.load_state_dict(model_dict)
+        model.all_training_loss=[]
 
     else :
-        loaded_state = torch.load(os.path.join(folder_weights, name_file +".txt"))
-    model_dict = model.state_dict()
-
-    loaded_state = {k: v for k, v in loaded_state.items() if k in model_dict} #only layers param that are in our current model
-    print("before ",len(loaded_state))
-    loaded_state= {k:v for k,v in loaded_state.items() if loaded_state[k].shape==model_dict[k].shape } #only if layers have correct shapes
-    print("after",len(loaded_state))
-    model_dict.update(loaded_state)
-    model.load_state_dict(model_dict)
-    model.all_training_loss=[]
+        print("premiere fois que ce modèle est crée")
 # except :
     #   print('first time, intialisation with Xavier weight...')
        #torch.nn.init.xavier_uniform(my_bilstm.lstm_layer.weight)
@@ -287,11 +294,13 @@ if __name__=='__main__':
     parser.add_argument('output_dim', metavar='output_dim', type=int,
                         help='simple  : 12, +lipaperture : 13, +velu : 15 -attention il faut avoir appris sur mngu0')
 
-    parser.add_argument('filtered', metavar='filtered', type=bool,
+    parser.add_argument('data_filtered', metavar='data_filtered', type=bool,
                         help='si true apprend sur les données ema lissées')
 
+    parser.add_argument('modele_filtered', metavar='modele_filtered', type=bool,
+                        help='si true apprend sur les données ema lissées')
 
-   # parser.add_argument('norma', metavar='norma', type=bool,
+    # parser.add_argument('norma', metavar='norma', type=bool,
     #                    help='')
 
     parser.add_argument('to_plot', metavar='to_plot', type=bool,         help='si true plot les resultats sur le test')
@@ -304,9 +313,11 @@ if __name__=='__main__':
     patience = int(sys.argv[5])
     lr = float(sys.argv[6])
     output_dim = int(sys.argv[7])
-    filtered = sys.argv[8].lower() == 'true'
+    data_filtered = sys.argv[8].lower() == 'true'
+    modele_filtered = sys.argv[9].lower() == 'true'
+
    # norma = bool(sys.argv[8])
-    to_plot = sys.argv[9].lower()=="true"
+    to_plot = sys.argv[10].lower()=="true"
 
     train_model(train_on = train_on,test_on = test_on ,n_epochs=n_epochs,delta_test=delta_test,patience=patience,
-                lr = lr,output_dim=output_dim,filtered=filtered,to_plot=to_plot) #,norma=norma)
+                lr = lr,output_dim=output_dim,data_filtered=filtered,modele_filtered=   modele_filtered,to_plot=to_plot) #,norma=norma)
