@@ -103,7 +103,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
     #folder_weights_init =  os.path.join("saved_models", "train_fsew0_test_msak0","train_fsew0_test_msak0.txt")
 
    # try :
-    if os.path.exists(fileset_path):
+    if os.path.exists(os.path.join(folder_weights, name_file +".txt")):
         if not cuda_avail:
             device = torch.device('cpu')
             loaded_state = torch.load(os.path.join(folder_weights, name_file +".txt"), map_location=device)
