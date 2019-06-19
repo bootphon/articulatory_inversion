@@ -211,8 +211,8 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             for g in optimizer.param_groups:
                 g['lr'] = g['lr'] /10
                 print(g["lr"])
-        loss_memory = loss_control
-        loss_control = 0
+    #   loss_memory = loss_control
+      # loss_control = 0
 
         if epoch%delta_test ==0:  #toutes les delta_test epochs on évalue le modèle sur validation et on sauvegarde le modele si le score est meilleur
             loss_vali = model.evaluate(X_valid,Y_valid,criterion)
