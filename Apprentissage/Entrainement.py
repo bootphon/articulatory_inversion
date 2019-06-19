@@ -174,7 +174,6 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
     for speaker in train_on:
         valid_files_names.extend(open(os.path.join(path_files,speaker+"_valid.txt"), "r").read().split())
         N_train += len(open(os.path.join(path_files,speaker+"_train.txt"), "r").read().split())
-    print(valid_files_names)
 
     X_valid, Y_valid = load_data(valid_files_names)
     print("len X_valid",len(X_valid))
@@ -208,7 +207,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             optimizer.step()
             model.all_training_loss.append(loss.item())
             torch.cuda.empty_cache()
-        change_lr_frq = 10
+        change_lr_frq = 5
         if epoch%change_lr_frq== 0 :
             print("change learning rate")
             for g in optimizer.param_groups:
