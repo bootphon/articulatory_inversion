@@ -46,65 +46,18 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
     folder_weights = os.path.join("saved_models", name_file)
     if not os.path.exists(folder_weights):
         os.makedirs(folder_weights)
-#    X_train, X_test, Y_train, Y_test = [], [], [], []
- #   speakers_in_lists = list(set(train_on+test_on) & set(["msak0","fsew0","MNGU0"]))
-  #  print("list ",speakers_in_lists)
 
-
-   # for speaker in speakers_in_lists:
-    #    print("SPEAKER ",speaker)
-     #   X_train_sp = np.load(os.path.join(fileset_path, "X_train_"  +speaker + ".npy"),allow_pickle=True)
-      #  Y_train_sp = np.load(os.path.join(fileset_path, "Y_train" +suff+"_"+ speaker + ".npy"),allow_pickle=True)
-       # X_test_sp = np.load(os.path.join(fileset_path, "X_test_" + speaker + ".npy"),allow_pickle=True)
-      #  Y_test_sp = np.load(os.path.join(fileset_path, "Y_test" +suff+ "_"+speaker + ".npy"),allow_pickle=True)
-
-   #     Y_train_sp = np.array([Y_train_sp[i][:, :output_dim] for i in range(len(Y_train_sp))])
-    #    Y_test_sp = np.array([Y_test_sp[i][:, :output_dim] for i in range(len(Y_test_sp))])
-
-     #   if speaker in train_on:
-      #      X_train.extend(X_train_sp)
-       #     Y_train.extend(Y_train_sp)
-
-        #    print(False in [(X_train[i].shape[0] == Y_train[i].shape[0]) for i in range(len(Y_train))])
-         #   print(False in [(X_test[i].shape[0] == Y_test[i].shape[0]) for i in range(len(Y_test))])
-          #  if speaker not in test_on:
-
-           #     X_train.extend(X_test_sp)
-            #    Y_train.extend(Y_test_sp)
-
-
-
-      #  if speaker in test_on:
-#
- #           X_test.extend(X_test_sp)
-  #          Y_test.extend(Y_test_sp)
-   #         if speaker not in train_on:
-
-    #            X_test.extend(X_train_sp)
-     #           Y_test.extend(Y_train_sp)
-
-
-  #  pourcent_valid = 0.05
     hidden_dim = 300
     input_dim = 429
-    beta_param = [0.9 , 0.999]
     batch_size = 10
 
     print("batch size",batch_size)
-    #X_train, X_valid, Y_train, Y_valid = train_test_split(X_train, Y_train, test_size=pourcent_valid, random_state=1)
-    #X_train, X_valid, Y_train, Y_valid = np.array(X_train),np.array(X_valid),np.array(Y_train),np.array(Y_valid),
-
-   # print("X_valid", len(X_valid))
-   # print("X_train", len(X_train))
-   # print("X_test", len(X_test))
 
     early_stopping = EarlyStopping(name_file,patience=patience, verbose=True)
 
     model = my_bilstm(hidden_dim=hidden_dim,input_dim=input_dim,name_file =name_file, output_dim=output_dim,
                       batch_size=batch_size,data_filtered=data_filtered,cuda_avail = cuda_avail,modele_filtered=modele_filtered)
     model = model.double()
-    #print("wweights layer",model.first_layer.weight)
-    #folder_weights_init =  os.path.join("saved_models", "train_fsew0_test_msak0","train_fsew0_test_msak0.txt")
 
    # try :
     if os.path.exists(os.path.join(folder_weights, name_file +".txt")):
@@ -123,32 +76,25 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
         print("after",len(loaded_state),loaded_state.keys())
         model_dict.update(loaded_state)
         model.load_state_dict(model_dict)
-        model.all_training_loss=[]
+      #  model.all_training_loss=[]
 
     else :
         print("premiere fois que ce modèle est crée")
 
-# except :
-    #   print('first time, intialisation with Xavier weight...')
-       #torch.nn.init.xavier_uniform(my_bilstm.lstm_layer.weight)
-
-  #  print("wweights layer AFTER", model.first_layer.weight)
- #   print("train size : ", len(X_train))
-  #  print("test size :", len(X_test))
     previous_epoch = 0
-    try :
-        previous_losses = np.load(os.path.join(folder_weights, "all_losses.npy"))
-        a, b, c = previous_losses[0, :], previous_losses[1, :], previous_losses[2, :]
-        if len(a) == len(b) == len(c):
-            model.all_training_loss = list(a)
-            model.all_validation_loss = list(b)
-            model.all_test_loss = list(c)
-            previous_epoch = len(a)
-    except :
-        print("seems first time no previous loss")
-        model.all_validation_loss=[10**10]
-        model.all_training_loss=[10**10]
-        model.all_test_loss=[10**10]
+#    try :
+      #  previous_losses = np.load(os.path.join(folder_weights, "all_losses.npy"))
+       # a, b, c = previous_losses[0, :], previous_losses[1, :], previous_losses[2, :]
+        #if len(a) == len(b) == len(c):
+         #   model.all_training_loss = list(a)
+          #  model.all_validation_loss = list(b)
+           # model.all_test_loss = list(c)
+            #previous_epoch = len(a)
+   # except :
+    #    print("seems first time no previous loss")
+     #   model.all_validation_loss=[10**10]
+      #  model.all_training_loss=[10**10]
+       # model.all_test_loss=[10**10]
 
     print("previous epoch  :", previous_epoch)
     if cuda_avail:
@@ -219,7 +165,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             loss = criterion(y,y_pred)
             loss.backward()
             optimizer.step()
-            model.all_training_loss.append(loss.item())
+          #  model.all_training_loss.append(loss.item())
             torch.cuda.empty_cache()
 
        # change_lr_frq = 3
@@ -235,25 +181,26 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
                 x,y = load_data(files_for_valid)
                 y = [y[i][:,:output_dim] for i in range(len(y))]
                 loss_vali+= model.evaluate(x,y,criterion)
-
-            if loss_vali > model.all_validation_loss[-1]:
-                patience_temp +=1
-                if patience_temp == 3 :
-                    print("decrease learning rate")
-                    for param_group in optimizer.param_groups:
-                        param_group['lr'] = param_group['lr'] / 2
-                        print(param_group["lr"])
-                        patience_temp=0
+            if epoch>0:
+                if loss_vali > model.all_validation_loss[-1]:
+                    patience_temp +=1
+                    if patience_temp == 3 :
+                        print("decrease learning rate")
+                        for param_group in optimizer.param_groups:
+                            param_group['lr'] = param_group['lr'] / 2
+                            print(param_group["lr"])
+                            patience_temp=0
 
 
             loss_vali = loss_vali / n_iteration_validation
             model.all_validation_loss.append(loss_vali)
-            model.all_validation_loss += [model.all_validation_loss[-1]] * (epoch+previous_epoch - len(model.all_validation_loss))
+            #model.all_validation_loss += [model.all_validation_loss[-1]] * (epoch+previous_epoch - len(model.all_validation_loss))
             loss_test=0
            # if test_on != [""]:
             #    loss_test = model.evaluate_on_test(criterion,X_test = X_test,Y_test = Y_test,to_plot=False,cuda_avail=cuda_avail)
             model.all_test_loss.append(loss_test)
-            model.all_test_loss += [model.all_test_loss[-1]] * (epoch+previous_epoch - len(model.all_test_loss))
+            model.all_training_loss.append(loss)
+            #model.all_test_loss += [model.all_test_loss[-1]] * (epoch+previous_epoch - len(model.all_test_loss))
             print("\n ---------- epoch" + str(epoch) + " ---------")
             early_stopping.epoch = previous_epoch+epoch
             early_stopping(loss_vali, model)
@@ -285,21 +232,21 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             model.evaluate_on_test(criterion=criterion,verbose=True, X_test=x, Y_test=y,
                                    to_plot=to_plot, std_ema=std_speaker, suffix=speaker)
 
-    length_expected = len(model.all_training_loss)
-    print("lenght exp", length_expected)
-    try :
-        model.all_validation_loss += [model.all_validation_loss[-1]] * (length_expected - len(model.all_validation_loss))
-        model.all_training_loss = np.array(model.all_training_loss).reshape(1,length_expected)
-        model.all_validation_loss = np.array(model.all_validation_loss).reshape(1,length_expected)
-        model.all_test_loss += [model.all_test_loss[-1]] * (length_expected - len(model.all_test_loss))
-        model.all_test_loss = np.array(model.all_test_loss).reshape((1, length_expected))
-    except :
-        print("not any train")
-    all_losses = np.concatenate(
-         ( np.array(model.all_training_loss),
-        np.array(model.all_validation_loss),
-      np.array(model.all_test_loss) )
-          ,axis=0 )
+   # length_expected = len(model.all_training_loss)
+    #print("lenght exp", length_expected)
+ #   try :
+  #      model.all_validation_loss += [model.all_validation_loss[-1]] * (length_expected - len(model.all_validation_loss))
+   #     model.all_training_loss = np.array(model.all_training_loss).reshape(1,length_expected)
+    #    model.all_validation_loss = np.array(model.all_validation_loss).reshape(1,length_expected)
+     #   model.all_test_loss += [model.all_test_loss[-1]] * (length_expected - len(model.all_test_loss))
+      #  model.all_test_loss = np.array(model.all_test_loss).reshape((1, length_expected))
+    #except :
+   #     print("not any train")
+  #  all_losses = np.concatenate(
+  #       ( np.array(model.all_training_loss),
+   #     np.array(model.all_validation_loss),
+    #  np.array(model.all_test_loss) )
+     #     ,axis=0 )
 
 
     np.save(os.path.join(folder_weights,"all_losses.npy"),all_losses)
