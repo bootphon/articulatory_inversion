@@ -40,7 +40,7 @@ def load_filenames(train_on,batch_size,part="train"):
         speaker_files_chosen = choice(train_on,  batch_size, p=list(proba_speakers.values()))
         train_files=[]
         for speaker in train_on:
-            train_speaker = open(os.path.join(path_files, speaker + "_"+part+"txt"), "r").read().split()
+            train_speaker = open(os.path.join(path_files, speaker + "_"+part+".txt"), "r").read().split()
             n_train = list(speaker_files_chosen).count(speaker)
             index = np.random.choice(len(train_speaker), n_train)
             train_files.extend([train_speaker[i] for i in index])
