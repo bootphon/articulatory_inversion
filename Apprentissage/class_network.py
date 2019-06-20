@@ -186,7 +186,7 @@ class my_bilstm(torch.nn.Module):
             if difference>0: #si la traj smoothed est plus petite que L on rajoute le meme dernier élément
                 traj_arti_smoothed = torch.nn.ReplicationPad1d(difference)(traj_arti_smoothed)
             elif difference < 0:  # si la traj smoothed est plus petite que L on rajoute le meme dernier élément
-                traj_arti_smoothed = traj_arti_smoothed[0:L]
+                traj_arti_smoothed = traj_arti_smoothed[:,:,0:L]
 
             traj_arti_smoothed = traj_arti_smoothed.view(B, L)
             y_smoothed[:, :, i] = traj_arti_smoothed
