@@ -25,6 +25,9 @@ print(sys.argv)
 
 def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, output_dim=13,data_filtered=False,
                 modele_filtered=False,to_plot=False): #,norma=True):
+
+
+
     cuda_avail = torch.cuda.is_available()
     print(" cuda ?", cuda_avail)
 
@@ -84,7 +87,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
     hidden_dim = 300
     input_dim = 429
     beta_param = [0.9 , 0.999]
-    batch_size = 5
+    batch_size = 10
 
     print("batch size",batch_size)
     #X_train, X_valid, Y_train, Y_valid = train_test_split(X_train, Y_train, test_size=pourcent_valid, random_state=1)
@@ -148,7 +151,6 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
         os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 
-
     def criterion_old(y,y_pred):
         y_1 = y - torch.mean(y,dim=1,keepdim=True)
         y_pred_1 = y_pred - torch.mean(y_pred,dim=1,keepdim=True)
@@ -164,6 +166,8 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
 
 
     optimizer = torch.optim.Adam(model.parameters(), lr=lr ) #, betas = beta_param)
+    optimizer = torch.optim.SGD(model.parameters(), lr=lr ) #, betas = beta_param)
+
     plt.ioff()
     print("number of epochs : ", n_epochs)
 
@@ -216,14 +220,19 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
         if epoch%delta_test ==0:  #toutes les delta_test epochs on évalue le modèle sur validation et on sauvegarde le modele si le score est meilleur
 
             loss_vali = 0
-            for g in optimizer.param_groups:
-                print("learning rate : ",g["lr"])
 
             for ite_valid in range(n_iteration_validation):
                 files_for_valid = load_filenames(train_on,batch_size,part="valid")
                 x,y = load_data(files_for_valid)
                 y = [y[i][:,:output_dim] for i in range(len(y))]
                 loss_vali+= model.evaluate(x,y,criterion)
+
+            if loss_vali > model.all_validation_loss[-1]:
+                print("decrease learning rate")
+                for param_group in optimizer.param_groups:
+                    param_group['lr'] = param_group['lr'] / 5
+                    print(param_group["lr"])
+
 
             loss_vali = loss_vali / n_iteration_validation
             model.all_validation_loss.append(loss_vali)
