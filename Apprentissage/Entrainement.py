@@ -209,7 +209,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
       # loss_control = 0
 
         if epoch%delta_test ==0:  #toutes les delta_test epochs on évalue le modèle sur validation et on sauvegarde le modele si le score est meilleur
-            files_for_valid = load_filenames(valid_on=train_on,batch_size,part="valid")
+            files_for_valid = load_filenames(train_on,batch_size,part="valid")
             x,y = load_data(files_for_valid)
             y = [y[i][:,:output_dim] for i in range(len(y))]
             loss_vali = model.evaluate(x,y,criterion)
