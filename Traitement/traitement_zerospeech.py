@@ -62,6 +62,8 @@ for time in ["1s"]:
         return mfcc
 
     ALL_MFCC = np.zeros((1,n_col_mfcc))
+    if Nmax.lower()=="all":
+        Nmax = len(wav_files)
     for i in range(start,Nmax):
         if i%100==0:
             print(i," out of ",Nmax)
@@ -85,12 +87,16 @@ for time in ["1s"]:
         list = []
         for r, d, f in os.walk(path):
             for file in f:
-                data_file = np.load(os.path.join(path,file))
-                list.append(data_file)
+                if file != "X_ZS.npy":
+                    data_file = np.load(os.path.join(path,file))
+                    list.append(data_file)
         return list
 
-    #all_numpy_ZS = concat_all_numpy_from(os.path.join(path_files_treated,time))
-    #np.save(os.path.join(path_files_treated,time,"X_ZS.npy"),all_numpy_ZS)
+    #X_ZS = concat_all_numpy_from(path_files_treated)
+    #print([X_ZS[i].shape for i in range(len(X_ZS))])
+    #print("yyy")
+    #np.save(os.path.join(path_files_treated,"X_ZS.npy"),X_ZS)
+
 
 
 
