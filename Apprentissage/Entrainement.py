@@ -209,16 +209,16 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             model.all_training_loss.append(loss.item())
             torch.cuda.empty_cache()
 
-        change_lr_frq = 3
-        if epoch%change_lr_frq== 0 :
-            print("change learning rate",)
-            for g in optimizer.param_groups:
-                g['lr'] = g['lr'] /10
-                print(g["lr"])
+       # change_lr_frq = 3
+       # if epoch%change_lr_frq== 0 :
+        #    print("change learning rate",)
 
         if epoch%delta_test ==0:  #toutes les delta_test epochs on évalue le modèle sur validation et on sauvegarde le modele si le score est meilleur
 
             loss_vali = 0
+            for g in optimizer.param_groups:
+                print("learning rate : ",g["lr"])
+
             for ite_valid in range(n_iteration_validation):
                 files_for_valid = load_filenames(train_on,batch_size,part="valid")
                 x,y = load_data(files_for_valid)
