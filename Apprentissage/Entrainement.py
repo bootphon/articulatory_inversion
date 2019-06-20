@@ -168,16 +168,22 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
     print("number of epochs : ", n_epochs)
 
     valid_files_names = []
-    N_train=0
+    N_train,N_valid,N_test=0,0,0
     path_files = os.path.join(os.path.dirname(os.getcwd()),"Donnees_pretraitees","fileset")
 
     for speaker in train_on:
         N_train =+len(open(os.path.join(path_files,speaker+"_train.txt"), "r").read().split())
+        N_valid =+len(open(os.path.join(path_files,speaker+"_valid.txt"), "r").read().split())
+
+    for speaker in test_on:
+        N_test =+len(open(os.path.join(path_files,speaker+"_test.txt"), "r").read().split())
 
     print('N_train',N_train)
 
 
     n_iteration = int(N_train / batch_size)
+    n_iteration_validation = int(N_valid/batch_size)
+    n_iteration_test = int(N_test/batch_size)
 
 
     test_files_names = []
@@ -211,10 +217,15 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
                 print(g["lr"])
 
         if epoch%delta_test ==0:  #toutes les delta_test epochs on évalue le modèle sur validation et on sauvegarde le modele si le score est meilleur
-            files_for_valid = load_filenames(train_on,batch_size,part="valid")
-            x,y = load_data(files_for_valid)
-            y = [y[i][:,:output_dim] for i in range(len(y))]
-            loss_vali = model.evaluate(x,y,criterion)
+
+            loss_vali = 0
+            for ite_valid in range(n_iteration_validation):
+                files_for_valid = load_filenames(train_on,batch_size,part="valid")
+                x,y = load_data(files_for_valid)
+                y = [y[i][:,:output_dim] for i in range(len(y))]
+                loss_vali+= model.evaluate(x,y,criterion)
+
+            loss_vali = loss_vali / n_iteration_validation
             model.all_validation_loss.append(loss_vali)
             model.all_validation_loss += [model.all_validation_loss[-1]] * (epoch+previous_epoch - len(model.all_validation_loss))
             loss_test=0
@@ -241,15 +252,16 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
 
     if test_on != [""]:
         for speaker in test_on:
-
-            test_files_names = open(os.path.join(path_files, speaker + "_test.txt"), "r").read().split()
-            X_test_sp, Y_test_sp = load_data(test_files_names)
+            loss_test = 0
+          #  for ite_valid in range(n_iteration_test):
+            files_for_test = load_filenames([speaker], N_test, part="test")
+            x, y = load_data(files_for_test)
+            y = [y[i][:, :output_dim] for i in range(len(y))]
             print("evaluation on speaker {}".format(speaker))
             std_speaker=  np.load(os.path.join(root_folder, "Traitement", "std_ema_" + speaker + ".npy"))
             std_speaker=std_speaker[:output_dim]
-            Y_test_sp = np.array([Y_test_sp[i][:, :output_dim] for i in range(len(Y_test_sp))])
 
-            model.evaluate_on_test(criterion=criterion,verbose=True, X_test=X_test_sp, Y_test=Y_test_sp,
+            model.evaluate_on_test(criterion=criterion,verbose=True, X_test=x, Y_test=y,
                                    to_plot=to_plot, std_ema=std_speaker, suffix=speaker)
 
     length_expected = len(model.all_training_loss)
