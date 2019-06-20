@@ -23,7 +23,7 @@ window=5
 
 print(sys.argv)
 start = int(sys.argv[1])
-Nmax = int(sys.argv[2])
+Nmax = sys.argv[2]
 
 
 for time in ["1s"]:
