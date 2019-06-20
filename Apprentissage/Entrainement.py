@@ -39,10 +39,11 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
     if data_filtered:
         print("SMOOTHED DATA")
         suff = suff+"_data_filtered"
-    if data_filtered:
+    if modele_filtered:
         print("MODELE FILTERED")
         suff = suff + "_modele_filtered"
     name_file = "train_" + "_".join(train_on) + "_test_" + "_".join(test_on) +suff
+    print("name file : ",name_file)
     folder_weights = os.path.join("saved_models", name_file)
     if not os.path.exists(folder_weights):
         os.makedirs(folder_weights)
