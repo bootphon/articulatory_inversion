@@ -143,6 +143,9 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             previous_epoch = len(a)
     except :
         print("seems first time no previous loss")
+        model.all_validation_loss=10**10
+        model.all_training_loss=10**10
+        model.all_test_loss=10**10
 
     print("previous epoch  :", previous_epoch)
     if cuda_avail:
