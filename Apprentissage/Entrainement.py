@@ -64,7 +64,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
     file_weights = os.path.join(folder_weights, name_file +".txt")
     if not os.path.exists(file_weights):
         print("premiere fois que ce modèle est crée")
-        file_weights = os.path.join(folder_weights,"modele_preentrainement.txt")
+        file_weights = os.path.join("saved_models","modele_preentrainement.txt")
 
     if not cuda_avail:
         device = torch.device('cpu')
