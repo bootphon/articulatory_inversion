@@ -11,7 +11,7 @@ import os
 from os.path import dirname
 from numpy.random import choice
 
-def load_filenames(train_on,batch_size):
+def load_filenames(train_on,batch_size,part="train"):
     """
 
     :param train_on:  liste des locuteurs sur lesquels on apprend (parmis "fsew0","msak0","MNGU0")
@@ -22,26 +22,25 @@ def load_filenames(train_on,batch_size):
     le train set. Plus un locuteur aura de phrases dans le train set, plus il a de chances d'avoir de phrases dans le
     batch.
     """
-
     path_files = os.path.join(os.path.dirname(os.getcwd()),"Donnees_pretraitees","fileset")
+
     if len(train_on)==1:
-        files = open(os.path.join(path_files,train_on[0]+"_train.txt"), "r").read().split()
+        files = open(os.path.join(path_files,train_on[0]+"_"+part+".txt"), "r").read().split()
         index = np.random.choice(len(files),batch_size)
         train_files = [files[i] for i in index]
     else :
         proba_speakers = {}
         total_number=0
         for speaker in train_on:
-            train_speaker = open(os.path.join(path_files,speaker+"_train.txt"), "r").read().split()
+            train_speaker = open(os.path.join(path_files,speaker+"_"+part+".txt"), "r").read().split()
             proba_speakers[speaker] = len(train_speaker)
             total_number+=len(train_speaker)
         for speaker in train_on:
             proba_speakers[speaker] = proba_speakers[speaker]/total_number
-
         speaker_files_chosen = choice(train_on,  batch_size, p=list(proba_speakers.values()))
         train_files=[]
         for speaker in train_on:
-            train_speaker = open(os.path.join(path_files, speaker + "_train.txt"), "r").read().split()
+            train_speaker = open(os.path.join(path_files, speaker + "_"+part+"txt"), "r").read().split()
             n_train = list(speaker_files_chosen).count(speaker)
             index = np.random.choice(len(train_speaker), n_train)
             train_files.extend([train_speaker[i] for i in index])
