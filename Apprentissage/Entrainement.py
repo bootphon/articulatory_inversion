@@ -153,7 +153,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
           #  if ite % 10 == 0:
            #     print("{} out of {}".format(ite, n_iteration))
             files_for_train = load_filenames(train_on,batch_size,part="train")
-            x,y = load_data(files_for_train)
+            x,y = load_data(files_for_train,filtered=data_filtered)
             y = [y[i][:,:output_dim] for i in range(len(y))]
        #     x, y = X_train[indices], Y_train[indices]
             x, y = model.prepare_batch(x, y)
@@ -182,7 +182,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
 
             for ite_valid in range(n_iteration_validation):
                 files_for_valid = load_filenames(train_on,batch_size,part="valid")
-                x,y = load_data(files_for_valid)
+                x,y = load_data(files_for_valid,filtered=data_filtered)
                 y = [y[i][:,:output_dim] for i in range(len(y))]
                 loss_vali+= model.evaluate(x,y,criterion)
             if epoch>0:
@@ -227,7 +227,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             loss_test = 0
           #  for ite_valid in range(n_iteration_test):
             files_for_test = load_filenames([speaker], N_test, part="test")
-            x, y = load_data(files_for_test)
+            x, y = load_data(files_for_test,filtered=data_filtered)
             y = [y[i][:, :output_dim] for i in range(len(y))]
             print("evaluation on speaker {}".format(speaker))
             std_speaker=  np.load(os.path.join(root_folder, "Traitement", "std_ema_" + speaker + ".npy"))

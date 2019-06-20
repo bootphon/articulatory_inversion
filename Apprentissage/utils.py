@@ -69,7 +69,7 @@ def load_data(files_names,filtered=False):
             speaker_2 = "MNGU0"
         files_path = os.path.join(folder,speaker_2)
         the_ema_file = np.load(os.path.join(os.path.join(files_path, "ema"+suff), file_name + ".npy"))
-        the_mfcc_file = np.load(os.path.join(os.path.join(files_path, "mfcc"+suff), file_name+ ".npy"))
+        the_mfcc_file = np.load(os.path.join(os.path.join(files_path, "mfcc"), file_name+ ".npy"))
 
         x.append(the_mfcc_file)
         y.append(the_ema_file)
