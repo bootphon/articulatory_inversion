@@ -44,7 +44,8 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
         suff = suff + "_modele_filtered"
     name_file = "train_" + "_".join(train_on) + "_test_" + "_".join(test_on) +suff
     folder_weights = os.path.join("saved_models", name_file)
-
+    if not os.path.exists(folder_weights):
+        os.makedirs(folder_weights)
 #    X_train, X_test, Y_train, Y_test = [], [], [], []
  #   speakers_in_lists = list(set(train_on+test_on) & set(["msak0","fsew0","MNGU0"]))
   #  print("list ",speakers_in_lists)
@@ -116,9 +117,10 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
 
         model_dict = model.state_dict()
         loaded_state = {k: v for k, v in loaded_state.items() if k in model_dict} #only layers param that are in our current model
-        print("before ",len(loaded_state))
+        print("before ",len(loaded_state),loaded_state.keys())
+
         loaded_state= {k:v for k,v in loaded_state.items() if loaded_state[k].shape==model_dict[k].shape } #only if layers have correct shapes
-        print("after",len(loaded_state))
+        print("after",len(loaded_state),loaded_state.keys())
         model_dict.update(loaded_state)
         model.load_state_dict(model_dict)
         model.all_training_loss=[]
@@ -170,7 +172,6 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
 
 
     optimizer = torch.optim.Adam(model.parameters(), lr=lr ) #, betas = beta_param)
-    optimizer = torch.optim.SGD(model.parameters(), lr=lr ) #, betas = beta_param)
 
     plt.ioff()
     print("number of epochs : ", n_epochs)
@@ -190,10 +191,10 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
 
 
     n_iteration = int(N_train / batch_size)
-   
+
     n_iteration_validation = int(N_valid/batch_size)
     n_iteration_test = int(N_test/batch_size)
-
+    patience_temp =0
 
     test_files_names = []
 
@@ -236,10 +237,13 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
                 loss_vali+= model.evaluate(x,y,criterion)
 
             if loss_vali > model.all_validation_loss[-1]:
-                print("decrease learning rate")
-                for param_group in optimizer.param_groups:
-                    param_group['lr'] = param_group['lr'] / 2
-                    print(param_group["lr"])
+                patience_temp +=1
+                if patience_temp == 3 :
+                    print("decrease learning rate")
+                    for param_group in optimizer.param_groups:
+                        param_group['lr'] = param_group['lr'] / 2
+                        print(param_group["lr"])
+                        patience_temp=0
 
 
             loss_vali = loss_vali / n_iteration_validation
