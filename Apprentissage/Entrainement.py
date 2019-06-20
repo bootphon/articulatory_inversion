@@ -171,16 +171,10 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
     N_train=0
     path_files = os.path.join(os.path.dirname(os.getcwd()),"Donnees_pretraitees","fileset")
 
-    for speaker in train_on:
-        valid_files_names.extend(open(os.path.join(path_files,speaker+"_valid.txt"), "r").read().split())
-        N_train += len(open(os.path.join(path_files,speaker+"_train.txt"), "r").read().split())
 
-    X_valid, Y_valid = load_data(valid_files_names)
-    print("len X_valid",len(X_valid))
 
     n_iteration = int(N_train / batch_size)
 
-    Y_valid = [Y_valid[i][:,:output_dim] for i in range(len(Y_valid))]
 
     test_files_names = []
 
@@ -188,8 +182,8 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
         for ite in range(n_iteration):
             if ite % 10 == 0:
                 print("{} out of {}".format(ite, n_iteration))
-         #   indices = np.random.choice(len(X_train), batch_size, replace=False)
-            files_for_train = load_filenames(train_on,batch_size)
+
+            files_for_train = load_filenames(train_on,batch_size,part="train")
             x,y = load_data(files_for_train)
             y = [y[i][:,:output_dim] for i in range(len(y))]
        #     x, y = X_train[indices], Y_train[indices]
@@ -215,7 +209,10 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
       # loss_control = 0
 
         if epoch%delta_test ==0:  #toutes les delta_test epochs on évalue le modèle sur validation et on sauvegarde le modele si le score est meilleur
-            loss_vali = model.evaluate(X_valid,Y_valid,criterion)
+            files_for_valid = load_filenames(valid_on,batch_size,part="valid")
+            x,y = load_data(files_for_valid)
+            y = [y[i][:,:output_dim] for i in range(len(y))]
+            loss_vali = model.evaluate(x,y,criterion)
             model.all_validation_loss.append(loss_vali)
             model.all_validation_loss += [model.all_validation_loss[-1]] * (epoch+previous_epoch - len(model.all_validation_loss))
             loss_test=0
@@ -304,7 +301,6 @@ if __name__=='__main__':
 
     parser.add_argument('to_plot', metavar='to_plot', type=bool,         help='si true plot les resultats sur le test')
     args = parser.parse_args()
-
     train_on =  sys.argv[1]
     test_on = sys.argv[2]
     n_epochs = int( sys.argv[3] )
