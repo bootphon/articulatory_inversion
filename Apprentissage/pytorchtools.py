@@ -45,7 +45,7 @@ class EarlyStopping:
         path_checkpoint = os.path.join("saved_models",self.speaker)
         if not os.path.exists(path_checkpoint):
             os.makedirs(path_checkpoint)
-        torch.save(model.state_dict(), os.path.join(path_checkpoint,"epoch_"+str(self.epoch)+".pt"))
+      #  torch.save(model.state_dict(), os.path.join(path_checkpoint,"epoch_"+str(self.epoch)+".pt"))
         torch.save(model.state_dict(), os.path.join(path_checkpoint,self.speaker+".pt"))
 
         self.val_loss_min = val_loss
