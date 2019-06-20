@@ -84,7 +84,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
     hidden_dim = 300
     input_dim = 429
     beta_param = [0.9 , 0.999]
-    batch_size = 10
+    batch_size = 5
 
     print("batch size",batch_size)
     #X_train, X_valid, Y_train, Y_valid = train_test_split(X_train, Y_train, test_size=pourcent_valid, random_state=1)
@@ -184,9 +184,8 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
 
     for epoch in range(n_epochs):
         for ite in range(n_iteration):
-            if ite % 10 == 0:
-                print("{} out of {}".format(ite, n_iteration))
-
+          #  if ite % 10 == 0:
+           #     print("{} out of {}".format(ite, n_iteration))
             files_for_train = load_filenames(train_on,batch_size,part="train")
             x,y = load_data(files_for_train)
             y = [y[i][:,:output_dim] for i in range(len(y))]
@@ -203,14 +202,13 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             optimizer.step()
             model.all_training_loss.append(loss.item())
             torch.cuda.empty_cache()
-        change_lr_frq = 5
+
+        change_lr_frq = 3
         if epoch%change_lr_frq== 0 :
             print("change learning rate",)
             for g in optimizer.param_groups:
                 g['lr'] = g['lr'] /10
                 print(g["lr"])
-    #   loss_memory = loss_control
-      # loss_control = 0
 
         if epoch%delta_test ==0:  #toutes les delta_test epochs on évalue le modèle sur validation et on sauvegarde le modele si le score est meilleur
             files_for_valid = load_filenames(train_on,batch_size,part="valid")
