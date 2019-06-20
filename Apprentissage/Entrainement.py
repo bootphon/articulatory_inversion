@@ -125,6 +125,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
 
     else :
         print("premiere fois que ce modèle est crée")
+
 # except :
     #   print('first time, intialisation with Xavier weight...')
        #torch.nn.init.xavier_uniform(my_bilstm.lstm_layer.weight)
@@ -189,6 +190,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
 
 
     n_iteration = int(N_train / batch_size)
+    n_iteration = 1
     n_iteration_validation = int(N_valid/batch_size)
     n_iteration_test = int(N_test/batch_size)
 
@@ -204,8 +206,11 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             y = [y[i][:,:output_dim] for i in range(len(y))]
        #     x, y = X_train[indices], Y_train[indices]
             x, y = model.prepare_batch(x, y)
-
+         #   print("0", torch.isnan(x).sum(),torch.isnan(y).sum())
             y_pred = model(x).double()
+          #  print("1", torch.isnan(y_pred).sum())
+          #  print(y_pred)
+
             if cuda_avail:
                 y_pred = y_pred.cuda()
             y = y.double()
@@ -233,7 +238,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             if loss_vali > model.all_validation_loss[-1]:
                 print("decrease learning rate")
                 for param_group in optimizer.param_groups:
-                    param_group['lr'] = param_group['lr'] / 5
+                    param_group['lr'] = param_group['lr'] / 2
                     print(param_group["lr"])
 
 

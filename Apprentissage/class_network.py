@@ -74,9 +74,15 @@ class my_bilstm(torch.nn.Module):
         return x, y
 
     def forward(self, x):
+      #  print("x",torch.isnan(x).sum())
         dense_out =  torch.nn.functional.relu(self.first_layer(x))
+      #  print("dense out",torch.isnan(dense_out).sum())
         dense_out_2 = torch.nn.functional.relu(self.second_layer(dense_out))
+      #  print("dense out 2",torch.isnan(dense_out_2).sum())
+
         lstm_out, hidden_dim = self.lstm_layer(dense_out_2)
+       # print("lstm out",torch.isnan(lstm_out).sum())
+
       #  lstm_out, hidden_dim = self.lstm_layer_2(lstm_out)
         lstm_out=torch.nn.functional.relu(lstm_out)
         y_pred = self.readout_layer(lstm_out)
