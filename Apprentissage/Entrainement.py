@@ -138,7 +138,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
         a, b, c = previous_losses[0, :], previous_losses[1, :], previous_losses[2, :]
         if len(a) == len(b) == len(c):
             model.all_training_loss = list(a)
-            model.all_validation_loss_loss = list(b)
+            model.all_validation_loss = list(b)
             model.all_test_loss = list(c)
             previous_epoch = len(a)
     except :
