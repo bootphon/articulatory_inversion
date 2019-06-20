@@ -60,26 +60,28 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
     model = model.double()
 
    # try :
-    if os.path.exists(os.path.join(folder_weights, name_file +".txt")):
-        if not cuda_avail:
-            device = torch.device('cpu')
-            loaded_state = torch.load(os.path.join(folder_weights, name_file +".txt"), map_location=device)
+    file_weights = os.path.join(folder_weights, name_file +".txt")
+    if not os.path.exists(file_weights):
+        print("premiere fois que ce modèle est crée")
+        file_weights = os.path.join(folder_weights,"modele_preentrainement.txt")
 
-        else :
-            loaded_state = torch.load(os.path.join(folder_weights, name_file +".txt"))
-
-        model_dict = model.state_dict()
-        loaded_state = {k: v for k, v in loaded_state.items() if k in model_dict} #only layers param that are in our current model
-        print("before ",len(loaded_state),loaded_state.keys())
-
-        loaded_state= {k:v for k,v in loaded_state.items() if loaded_state[k].shape==model_dict[k].shape } #only if layers have correct shapes
-        print("after",len(loaded_state),loaded_state.keys())
-        model_dict.update(loaded_state)
-        model.load_state_dict(model_dict)
-      #  model.all_training_loss=[]
+    if not cuda_avail:
+        device = torch.device('cpu')
+        loaded_state = torch.load(file_weights, map_location=device)
 
     else :
-        print("premiere fois que ce modèle est crée")
+        loaded_state = torch.load( file_weights )
+
+    model_dict = model.state_dict()
+    loaded_state = {k: v for k, v in loaded_state.items() if k in model_dict} #only layers param that are in our current model
+    print("before ",len(loaded_state),loaded_state.keys())
+
+    loaded_state= {k:v for k,v in loaded_state.items() if loaded_state[k].shape==model_dict[k].shape } #only if layers have correct shapes
+    print("after",len(loaded_state),loaded_state.keys())
+    model_dict.update(loaded_state)
+    model.load_state_dict(model_dict)
+  #  model.all_training_loss=[]
+
 
     previous_epoch = 0
 #    try :
@@ -249,7 +251,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
      #     ,axis=0 )
 
 
-    np.save(os.path.join(folder_weights,"all_losses.npy"),all_losses)
+   # np.save(os.path.join(folder_weights,"all_losses.npy"),all_losses)
 
 if __name__=='__main__':
     import argparse
