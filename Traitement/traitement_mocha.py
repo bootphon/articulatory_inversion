@@ -1,12 +1,14 @@
-### Lecture des données EMA pour le corpus MOCHA. On ne conserve que les données concercnant les articulateurs indiqués
-### dans articulators cest a dire 6 articulateurs en 2Dimensions.
-### on normalise on soustrayant pour chaque articulateur sa position moyenne et en divisant par sa std
-### il semble qu'un articulateur reste à la même position (li_x) voir si on le garde quand meme.
-### il n'y au aucune valeur manquante donc pas besoin d'interpolation.
-### revoir la longueur de col names
 
 
-# A RENOMMER TRAITEMENT_MOCHA !! LE LARYNX ICI
+"""
+Module pour traiter les données du corpus mocha, pour les deux locuteurs (fsew0 et msak0)
+On filtre sur les 6 articulateurs indiqués .
+Enleve les silences en début et fin.
+Resample ema pour avoir 1 position par articulateur pour chaque frame mfcc
+On ne normalise pas par rapport au locuteur mais on stocke l'écart type et la moyenne pour chaque coefficient,
+ainsi il est possible de normaliser par la suite
+"""
+
 import os
 import time
 from os.path import dirname
@@ -17,13 +19,14 @@ import matplotlib.pyplot as plt
 import scipy.interpolate
 from Traitement.add_dynamic_features import get_delta_features
 import librosa
+from Apprentissage.utils import low_pass_filter_weight
 
 def traitement_general_mocha(N=all):
 
     root_path = dirname(dirname(os.path.realpath(__file__)))
     path_files_treated = os.path.join(root_path, "Donnees_pretraitees")
     order = 5
-    cutoff = 20
+
     sampling_rate_ema = 500
     articulators = [
         'tt_x', 'tt_y', 'td_x', 'td_y', 'tb_x', 'tb_y', 'li_x', 'li_y',
@@ -63,10 +66,12 @@ def traitement_general_mocha(N=all):
             ema_data = np.fromfile(ema_annotation, "float32").reshape(n_frames, n_columns + 2)
             cols_index = [column_names.index(col) for col in articulators]
 
-            ema_data = ema_data[:, cols_index]/1000
+            ema_data = ema_data[:, cols_index]
+            ema_data = ema_data/100 #met en mm, initallement en 10^-1m
             ind_1, ind_2 = [articulators.index("ul_y"), articulators.index("ll_y")]
-            lip_aperture = (ema_data[:,ind_1] - ema_data[:,ind_2]).reshape(len(ema_data),1)
-            ema_data = np.insert(ema_data,[1],lip_aperture, axis=1)
+            lip_aperture = ema_data[:,ind_1] - ema_data[:,ind_2] # upperlip_y - lowerlip_y
+            ema_data = np.insert(ema_data,-2,1, axis=1)
+            ema_data[:,-2] = lip_aperture
 
             #dabord enlever les nan avant de lisser etsous echantillonner
             # donnees en milimètres
@@ -159,23 +164,26 @@ def traitement_general_mocha(N=all):
     hop_time = 10  # en ms
     hop_length = int((hop_time * sampling_rate_mfcc) / 1000)
     frame_length = int((frame_time * sampling_rate_mfcc) / 1000)
-    cutoff=20
+
+    #nyq = 0.5 * sampling_rate_mfcc #250
+    #fc = cutoff / nyq #20/250=0.08
     #2*cutoff/sampling_rate_ema = 2*20/500 = 40/500 = 4/50 = 4*2/100 = 0.08
-    filt_b, filt_a = scipy.signal.butter(order, 0.2, btype='lowpass', analog=False) #fs=sampling_rate_ema)
-    filt_b_ema, filt_a_ema = scipy.signal.butter(order, 0.08, btype='lowpass', analog=False) #fs=sampling_rate_ema)
+    #filt_b, filt_a = scipy.signal.butter(order, fc, btype='lowpass', analog=False) #fs=sampling_rate_ema)
+    #nyq = 0.5 * sampling_rate_ema  # 8000
+    #fc = cutoff / nyq  # 20/8000=0.0025
+    #filt_b_ema, filt_a_ema = scipy.signal.butter(order, fc, btype='lowpass', analog=False) #fs=sampling_rate_ema)
+    cutoff = 30
+    weights = low_pass_filter_weight(cut_off=cutoff, sampling_rate=sampling_rate_ema)
 
     for k in range(2) :
-
         speaker = speakers[k]
         path_files = os.path.join(root_path, "Donnees_brutes\Donnees_breakfast\mocha\\" + speaker)
-
         EMA_files = sorted([name[:-4] for name in os.listdir(path_files) if name.endswith('.ema')])
         cols_index = None
         n_columns = 20
         wav_files = sorted([name[:-4] for name in os.listdir(path_files) if name.endswith('.wav')])
-        if N == all:
+        if N == "All":
             N = len(wav_files)
-
         ALL_EMA= np.zeros((1, n_col_ema))
         ALL_MFCC = np.zeros((1, n_col_mfcc))
         for i in range(N):
@@ -190,14 +198,8 @@ def traitement_general_mocha(N=all):
 
             # filtre passe bas : a cause du bruit il est utile de lisser un peu les donnée ema a 20Hz pas tres utile pour ce corpus
 
-            filtered_data_ema = np.concatenate([np.expand_dims(scipy.signal.filtfilt(filt_b_ema, filt_a_ema, channel), 1)
-                                            for channel in ema.T], axis=1)
-
-            filtered_data_mfcc = np.concatenate([np.expand_dims(scipy.signal.filtfilt(filt_b, filt_a, channel), 1)
-                                                for channel in mfcc.T], axis=1)
-
-            ema = np.reshape(filtered_data_ema, ema.shape)
-            mfcc = np.reshape(filtered_data_mfcc, mfcc.shape)
+     #       filtered_data_ema = np.concatenate([np.expand_dims(scipy.signal.filtfilt(filt_b_ema, filt_a_ema, channel), 1)
+      #                                      for channel in ema.T], axis=1)
 
             np.save(os.path.join(root_path, "Donnees_pretraitees","mocha_"+speaker,"ema", EMA_files[i]),ema)
             np.save(os.path.join(root_path, "Donnees_pretraitees","mocha_"+speaker,"mfcc", wav_files[i]),mfcc)
@@ -210,20 +212,19 @@ def traitement_general_mocha(N=all):
 
         std_ema = np.std(ALL_EMA, axis=0)
         mean_ema = np.mean(ALL_EMA,axis=0)
-
         std_mfcc  = np.std(ALL_MFCC,axis=0)
         mean_mfcc = np.mean(ALL_MFCC,axis=0)
+        np.save("std_ema_"+speaker, std_ema)
+        np.save("mean_ema_"+speaker, mean_ema)
+        np.save("std_mfcc_"+speaker, std_mfcc)
+        np.save("mean_mfcc_"+speaker, mean_mfcc)
+        print(std_ema,"std ema")
 
-        np.save("std_ema_arti_mocha",std_ema)
-
-        path_files = os.path.join(root_path, "Donnees_brutes\Donnees_breakfast\mocha\\" + speakers[k])
-        EMA_files = sorted([name[:-4] for name in os.listdir(path_files) if name.endswith('.ema')])
-
+        #path_files = os.path.join(root_path, "Donnees_brutes\Donnees_breakfast\mocha\\" + speakers[k])
+        #EMA_files = sorted([name[:-4] for name in os.listdir(path_files) if name.endswith('.ema')])
         for i in range(N):
             ema = np.load(os.path.join(root_path, "Donnees_pretraitees","mocha_"+speaker,"ema", EMA_files[i]+".npy"))
-            ema = (ema - mean_ema)
-            ema = ema/std_ema
-            ema_without_lar = ema[:,:-2]
+            ema = (ema - mean_ema)/std_ema
 
             mfcc = np.load(os.path.join(root_path, "Donnees_pretraitees","mocha_"+speaker,"mfcc", EMA_files[i]+".npy"))
             mfcc = (mfcc - mean_mfcc) / std_mfcc
@@ -231,10 +232,28 @@ def traitement_general_mocha(N=all):
             np.save(os.path.join(root_path, "Donnees_pretraitees", "mocha_" + speaker, "ema", EMA_files[i]), ema)
             np.save(os.path.join(root_path, "Donnees_pretraitees", "mocha_" + speaker, "mfcc", wav_files[i]), mfcc)
 
-            ALL_EMA = np.concatenate((ALL_EMA, ema), axis=0)
+            #plt.plot(ema[:,0])
+            ema_filtered = np.concatenate([np.expand_dims(np.convolve(channel, weights, mode='same'), 1)
+                                           for channel in ema.T], axis=1)
+
+            difference = len(ema_filtered) - len(ema)
+            halfdif = int(difference / 2)
+            if difference < 0:  # sequence filtree moins longue que l'originale
+                ema_filtered = np.pad(ema_filtered, (halfdif, difference - halfdif), "edge")
+            elif difference > 0:
+                ema_filtered = ema_filtered[halfdif:-(difference - halfdif)]
+            if len(ema_filtered) != len(ema):  # sequence filtree plus longue que loriginale
+                print("pbm shape", len(ema_filtered), len(y))
+            np.save(os.path.join(root_path, "Donnees_pretraitees", "mocha_" + speaker, "ema_filtered", EMA_files[i]), ema_filtered)
 
 
+#   ema = np.reshape(filtered_data_ema, filtered_data_ema.shape)
+            #plt.plot(ema[:,0])
+            #plt.legend(['before filtering','after filtering'])
+            #plt.show()
+       #     mfcc = np.reshape(filtered_data_mfcc, filtered_data_mfcc.shape)
+         #   np.save(os.path.join(root_path, "Donnees_pretraitees", "mocha_" + speaker, "ema", EMA_files[i]), ema)
+          #  np.save(os.path.join(root_path, "Donnees_pretraitees", "mocha_" + speaker, "mfcc", wav_files[i]), mfcc)
+           # ALL_EMA = np.concatenate((ALL_EMA, ema), axis=0)
 
-
-
-traitement_general_mocha(N=10)
+traitement_general_mocha(N="All")

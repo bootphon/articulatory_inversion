@@ -1,7 +1,8 @@
 """ Lecture des données EMA pour le corpus MNGU0. On ne conserve que les données concernant les articulateurs indiqués
  dans articulators cest a dire 6 articulateurs en 2Dimensions.
  on ajoute une colonne correspondant à l'ouverture des lèvres, cest donc la 13ème colonne
- on normalise on soustrayant pour chaque articulateur sa position moyenne et en divisant par sa std
+ on ne normalise pas les données mais on conserve la std et mean des mfcc et ema pour pouvoir normaliser par la suiite)
+
 """
 import os
 import time
@@ -12,14 +13,16 @@ import matplotlib.pyplot as plt
 import scipy.interpolate
 from Traitement.add_dynamic_features import get_delta_features
 import librosa
+from Apprentissage.utils import low_pass_filter_weight
 
-def traitement_general_mngu0(N=all):
+
+def traitement_general_mngu0(start,end):
+
 
     root_path = dirname(dirname(os.path.realpath(__file__)))
     path_files_annotation = os.path.join(root_path, "Donnees_brutes\Donnees_breakfast\MNGU0\phone_labels")
 
     sampling_rate_ema = 200
-
     #articulators in the same order that those of MOCHA
     articulators = [
         'T1_py','T1_pz','T3_py','T3_pz','T2_py','T2_pz',
@@ -33,7 +36,7 @@ def traitement_general_mngu0(N=all):
     n_columns = 87
     window=5
     path_wav_files = os.path.join(root_path, "Donnees_brutes\Donnees_breakfast\MNGU0\wav")
-    wav_files = sorted([name[:-4] for name in os.listdir(path_wav_files) if name.endswith('.wav')])
+   # wav_files = sorted([name[:-4] for name in os.listdir(path_wav_files) if name.endswith('.wav')])
     sampling_rate_mfcc = 16000
     frame_time = 25
     hop_time = 10  # en ms
@@ -41,10 +44,8 @@ def traitement_general_mngu0(N=all):
     frame_length = int((frame_time * sampling_rate_mfcc) / 1000)
     n_coeff = 13
     n_col_mfcc = n_coeff*(2*window+1)*3
-
-    EMA_files = sorted([name[:-4] for name in os.listdir(path_ema_files) if name.endswith('.ema')])
-    if N == all:
-        N = len(wav_files)
+    if end == "All":
+        end = len(EMA_files)
     def first_step_ema_data(i):
         """
         :param i: index de l'uttérence (ie numero de phrase) dont les données EMA seront extraites
@@ -70,8 +71,10 @@ def traitement_general_mngu0(N=all):
             ema_data = np.fromfile(ema_annotation, "float32").reshape(n_frames, n_columns + 2)
             cols_index = [column_names.index(col) for col in articulators]
             ema_data = ema_data[:, cols_index]
+            ema_data = ema_data*100  #données initiales en 10^-5m on les met en millimètre
             ind_1, ind_2 = [articulators.index("upperlip_pz"), articulators.index("lowerlip_pz")]
-            lip_aperture = (ema_data[:, ind_1] - ema_data[:, ind_2]).reshape(len(ema_data), 1)
+            lip_aperture = (ema_data[:, ind_1] - ema_data[:, ind_2]).reshape(len(ema_data),1)
+
             ema_data = np.concatenate((ema_data, lip_aperture), axis=1)
             #dabord enlever les nan avant de lisser et sous echantillonner
             if np.isnan(ema_data).sum() != 0:
@@ -92,7 +95,7 @@ def traitement_general_mngu0(N=all):
            En sortie nparray de dimension (K',13*3)=(K',39). Ou K' dépend de la longueur de la phrase
            ( Un frame toutes les 10ms, donc K' ~ duree_en_sec/0.01 )
            """
-        path_wav = os.path.join(path_wav_files, wav_files[i] + '.wav')
+        path_wav = os.path.join(path_wav_files, EMA_files[i] + '.wav')
         data, sr = librosa.load(path_wav, sr=sampling_rate_mfcc)  # chargement de données
 
         mfcc = librosa.feature.mfcc(y=data, sr=sampling_rate_mfcc, n_mfcc=n_coeff,
@@ -117,7 +120,7 @@ def traitement_general_mngu0(N=all):
         """
 
         #remove blanks at the beginning and the end, en sortie autant de lignes pour les deux
-        path_annotation = os.path.join(path_files_annotation, wav_files[i] + '.lab')
+        path_annotation = os.path.join(path_files_annotation, EMA_files[i] + '.lab')
         with open(path_annotation) as file:
             while next(file) != '#\n':
                 pass
@@ -136,30 +139,32 @@ def traitement_general_mngu0(N=all):
         #sous echantillonnage de EMA pour synchro avec WAV
         n_frames_wanted = mfcc.shape[0]
         ema = scipy.signal.resample(ema, num=n_frames_wanted)
-
         #  padding de sorte que l'on intègre les dépendences temporelles : on apprend la trame du milieu
         # mais on ajoute des trames précédent et suivant pour ajouter de l'informatio temporelle
         padding = np.zeros((window, mfcc.shape[1]))
         frames = np.concatenate([padding, mfcc, padding])
         full_window = 1 + 2 * window
         mfcc=  np.concatenate(  [frames[i:i + len(mfcc)] for i in range(full_window)], axis=1)
-
         return ema,mfcc
 
     ALL_EMA = np.zeros((1,n_col_ema))
     ALL_MFCC = np.zeros((1,n_col_mfcc))
+    cutoff = 25
+    weights = low_pass_filter_weight(cut_off=cutoff, sampling_rate=sampling_rate_ema)
 
     #traitement uttérance par uttérance des phrases
-    for i in range(N):
+    for i in range(start,end):
         if i%100 ==0:
-            print(i," out of ",N)
+            print(i," out of ",end)
         ema = first_step_ema_data(i)
         mfcc = first_step_wav_data(i)
         ema, mfcc = second_step_data(i, ema, mfcc)
+       #  print("second step",ema.shape,mfcc.shape)
+
         if ema.shape[0] != mfcc.shape[0]:
             print("probleme de shape")
         np.save(os.path.join(root_path, "Donnees_pretraitees\MNGU0\ema", EMA_files[i]),ema) #sauvegarde temporaire pour la récup après
-        np.save(os.path.join(root_path, "Donnees_pretraitees\MNGU0\mfcc", wav_files[i]),mfcc) #sauvegarde temporaire pour la récup après
+        np.save(os.path.join(root_path,  "Donnees_pretraitees\MNGU0\mfcc", EMA_files[i]),mfcc) #sauvegarde temporaire pour la récup après
         ALL_EMA = np.concatenate((ALL_EMA,ema),axis=0)
         ALL_MFCC = np.concatenate((ALL_MFCC,mfcc),axis=0)
 
@@ -174,42 +179,56 @@ def traitement_general_mngu0(N=all):
     mean_ema = np.mean(ALL_EMA, axis=0)
     std_ema = np.std(ALL_EMA, axis=0)
     np.save("std_ema_MNGU0",std_ema)
+    np.save("mean_ema_MNGU0",mean_ema)
+    np.save("std_mfcc_MNGU0", std_mfcc)
+    np.save("mean_mfcc_MNGU0", mean_mfcc)
+
+
+    print("std ema",std_ema)
 
     # construction du filtre passe bas que lon va appliquer à chaque frame mfcc et trajectoire d'articulateur
     # la fréquence de coupure réduite de 0.1 a été choisi manuellement pour le moment, et il se trouve qu'on
     # n'a pas besoin d'un filtre différent pour mfcc et ema
-    order = 5
-    cutoff = 20
-    filt_b, filt_a = scipy.signal.butter(order, 0.1, btype='lowpass', analog=False) #fs=sampling_rate_ema)
+   # order = 5
+   # filt_b, filt_a = scipy.signal.butter(order, 0.1, btype='lowpass', analog=False) #fs=sampling_rate_ema)
 
-    for i in range(N):
-        if i%100 ==0:
-            print(i," out of ",N)
+    for i in range(start,end):
+
         ema = np.load(os.path.join(root_path, "Donnees_pretraitees\MNGU0\ema", EMA_files[i]+".npy"))
         ema = (ema - mean_ema) /std_ema
 
-        filtered_data_ema = np.concatenate([np.expand_dims(scipy.signal.filtfilt(filt_b, filt_a, channel), 1)
-                                        for channel in ema.T], axis=1)
-        ema = np.reshape(filtered_data_ema, ema.shape)
+        mfcc = np.load(os.path.join(root_path, "Donnees_pretraitees\MNGU0\mfcc", EMA_files[i] + ".npy"))
+        mfcc = (mfcc - mean_mfcc) / std_mfcc
+        np.save(os.path.join(root_path, "Donnees_pretraitees\MNGU0\ema", EMA_files[i]), ema)
+        np.save(os.path.join(root_path, "Donnees_pretraitees\MNGU0\mfcc", EMA_files[i]),mfcc)
 
-        mfcc = np.load(os.path.join(root_path, "Donnees_pretraitees\MNGU0\mfcc", wav_files[i]+".npy"))
-        mfcc = (mfcc - mean_mfcc)/std_mfcc
+        ema_filtered = np.concatenate([np.expand_dims(np.convolve(channel, weights, mode='same'), 1)
+                              for channel in ema.T], axis=1)
 
-        filtered_data_mfcc = np.concatenate([np.expand_dims(scipy.signal.filtfilt(filt_b, filt_a, channel), 1)
-                                        for channel in mfcc.T], axis=1)
-        mfcc = np.reshape(filtered_data_mfcc, mfcc.shape)
+        difference = len(ema_filtered) - len(ema)
+        halfdif = int(difference / 2)
+        if difference < 0:  # sequence filtree moins longue que l'originale
+            ema_filtered = np.pad(ema_filtered, (halfdif, difference - halfdif), "edge")
+        elif difference > 0:
+            ema_filtered = ema_filtered[halfdif:-(difference - halfdif)]
+        if len(ema_filtered) != len(ema):  # sequence filtree plus longue que loriginale
+            print("pbm shape", len(ema_filtered), len(y))
+        np.save(os.path.join(root_path, "Donnees_pretraitees\MNGU0\ema_filtered", EMA_files[i]),ema_filtered)
 
-        np.save(os.path.join(root_path, "Donnees_pretraitees\MNGU0\ema", EMA_files[i]),ema)
-        np.save(os.path.join(root_path, "Donnees_pretraitees\MNGU0\mfcc", wav_files[i]),mfcc)
-
+        #if mfcc.shape[0]!=ema.shape[0]:
+         #   print("PBM DE SHAPE",i,EMA_files[i])
+           # print(len(mfcc),len(ema))
+          #  diff = len(ema) - len(mfcc)
+           # ema = ema[:-diff, :]
+        #np.save(os.path.join(root_path, "Donnees_pretraitees\MNGU0\ema_", EMA_files[i]),ema)
+      #  np.save(os.path.join(root_path, "Donnees_pretraitees\MNGU0\mfcc", EMA_files[i]),mfcc)
     #path_mfcc_mngu0 = os.path.join(path_files_treated,"MNGU0_mfcc.npy")
     #np.save(path_mfcc_mngu0, ALL_MFCC)
 
     #path_ema_mngu0 = os.path.join(path_files_treated,"MNGU0_ema.npy")
     #np.save(path_ema_mngu0, ALL_EMA)
 
-
-traitement_general_mngu0(5)
+traitement_general_mngu0(start=0,end="All")
 
 
 
