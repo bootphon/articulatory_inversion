@@ -44,9 +44,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
         suff = suff + "_modele_filtered"
     name_file = "train_" + "_".join(train_on) + "_test_" + "_".join(test_on) +suff
     print("name file : ",name_file)
-    folder_weights = os.path.join("saved_models", name_file)
-    if not os.path.exists(folder_weights):
-        os.makedirs(folder_weights)
+
 
     hidden_dim = 300
     input_dim = 429
@@ -61,7 +59,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
     model = model.double()
 
    # try :
-    file_weights = os.path.join(folder_weights, name_file +".txt")
+    file_weights = os.path.join("saved_models", name_file +".txt")
     if not os.path.exists(file_weights):
         print("premiere fois que ce modèle est crée")
         file_weights = os.path.join("saved_models","modele_preentrainement.txt")
@@ -221,8 +219,8 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             break
 
     if n_epochs>0:
-        model.load_state_dict(torch.load(os.path.join(folder_weights,name_file+'.pt')))
-        torch.save(model.state_dict(), os.path.join( folder_weights,name_file+".txt"))
+        model.load_state_dict(torch.load(os.path.join("saved_models",name_file+'.pt')))
+        torch.save(model.state_dict(), os.path.join( "saved_models",name_file+".txt"))
 
     if test_on != [""]:
         for speaker in test_on:
