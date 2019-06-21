@@ -90,7 +90,7 @@ models = ["train_fsew0_msak0_test_fsew0_msak0_data_filtered_modele_filtered",
           ]
 print(sys.argv)
 start = int(sys.argv[1])
-Nmax = int(sys.argv[2])
+Nmax = sys.argv[2]
 model = int(sys.argv[3])
 
 
