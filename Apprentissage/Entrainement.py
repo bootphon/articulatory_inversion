@@ -102,7 +102,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
 
     print("previous epoch  :", previous_epoch)
     if cuda_avail:
-        model = model.cuda()
+        model = model.cuda(device=cuda2)
         torch.backends.cuda.cufft_plan_cache.max_size
 
 
