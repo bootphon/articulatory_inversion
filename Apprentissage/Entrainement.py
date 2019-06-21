@@ -67,10 +67,11 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
         file_weights = os.path.join("saved_models","modele_preentrainement.txt")
 
     if not cuda_avail:
-        
+
         loaded_state = torch.load(file_weights, map_location=torch.device('cpu'))
 
     else :
+        cuda2 = torch.device('cuda:1')
         loaded_state = torch.load( file_weights , map_location= cuda2 )
 
     model_dict = model.state_dict()
@@ -102,7 +103,6 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
     print("previous epoch  :", previous_epoch)
     if cuda_avail:
         model = model.cuda()
-        cuda2 = torch.device('cuda:1')
         torch.backends.cuda.cufft_plan_cache.max_size
 
 
