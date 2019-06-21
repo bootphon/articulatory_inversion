@@ -69,6 +69,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
     if not cuda_avail:
         device = torch.device('cpu')
         loaded_state = torch.load(file_weights, map_location=device)
+        torch.backends.cuda.cufft_plan_cache.max_size
 
     else :
         loaded_state = torch.load( file_weights )
@@ -160,6 +161,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             y_pred = model(x).double()
           #  print("1", torch.isnan(y_pred).sum())
           #  print(y_pred)
+            torch.cuda.empty_cache()
 
             if cuda_avail:
                 y_pred = y_pred.cuda()
