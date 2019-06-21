@@ -103,8 +103,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
     print("previous epoch  :", previous_epoch)
     if cuda_avail:
         model = model.cuda()
-        os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-        os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+        cuda2 = torch.device('cuda:2')
 
 
     def criterion_old(y,y_pred): # (L,K,13)
@@ -164,7 +163,8 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             torch.cuda.empty_cache()
 
             if cuda_avail:
-                y_pred = y_pred.cuda()
+                #y_pred = y_pred.cuda()
+                y_pred = y_pred.to(device=cuda2)
             y = y.double()
             optimizer.zero_grad()
             loss = criterion(y,y_pred)

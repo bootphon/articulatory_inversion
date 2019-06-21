@@ -54,6 +54,8 @@ class my_bilstm(torch.nn.Module):
         self.lowpass = None
         self.init_filter_layer()
         self.cuda_avail = cuda_avail
+        if self.cuda_avail:
+            self.cuda2 = torch.device('cuda:2')
 
     def prepare_batch(self, x, y):
         max_length = np.max([len(phrase) for phrase in x])
@@ -68,7 +70,8 @@ class my_bilstm(torch.nn.Module):
 
         y = new_y.view((B, max_length, self.output_dim))
         if self.cuda_avail :
-            x,y=x.cuda(),y.cuda()
+          #  x,y=x.cuda(),y.cuda()
+            x,y = x.to(device=self.cuda2),y.to(device=self.cuda2)
 
         return x, y
 
@@ -214,7 +217,8 @@ class my_bilstm(torch.nn.Module):
         x_temp, y_temp = self.prepare_batch(x_valid, y_valid) #add zero to have correct size
         y_pred = self(x_temp).double()
         if self.cuda_avail:
-            y_pred = y_pred.cuda()
+            y_pred = y_pred.to(device=self.cuda2)
+
         y_temp = y_temp.double()
         loss = criterion( y_temp,y_pred).item()
         return loss
@@ -236,7 +240,7 @@ class my_bilstm(torch.nn.Module):
                 y = Y_test[i].reshape((L, self.output_dim))                     #y (L,13)
                 y_torch = torch.from_numpy(y).double().reshape(1,L,self.output_dim) #y (1,L,13)
                 if self.cuda_avail:
-                    x_torch = x_torch.cuda()
+                    x_torch = x_torch.to(device=self.cuda2)
 
 
                 y_pred_torch = self(x_torch).double() #sortie y_pred (1,L,13)
