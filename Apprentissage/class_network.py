@@ -161,9 +161,9 @@ class my_bilstm(torch.nn.Module):
         # self.cutoff.requires_grad = True
         window_size = 5
         C_in = 1
-        # stride=1
-        padding = 5 # int(0.5*((C_in-1)*stride-C_in+window_size))+23
-        lowpass = torch.nn.Conv1d(C_in, self.output_dim, window_size, stride=1, padding=padding,              bias=False)
+        stride=1
+        padding = int(0.5*((C_in-1)*stride-C_in+window_size))+23
+        lowpass = torch.nn.Conv1d(C_in, self.output_dim, window_size, stride=1, padding=padding, bias=False)
         weight_init = get_filter_weights_en_dur()
         weight_init = weight_init.view((1, 1, -1))
         lowpass.weight = torch.nn.Parameter(weight_init)
@@ -183,6 +183,10 @@ class my_bilstm(torch.nn.Module):
           #  print("traj arti shape",traj_arti.shape)
             traj_arti_smoothed = self.lowpass(traj_arti)  # prend que une seule dimension
             difference = int((L-traj_arti_smoothed.shape[2])/ 2)
+            if difference != 0:
+                print("PAS MEME SHAPE AVANT ET APRES FILTRAGE !")
+                print("init L",L)
+                print("after smoothed ",traj_arti_smoothed.shape[2])
             if difference>0: #si la traj smoothed est plus petite que L on rajoute le meme dernier élément
                 traj_arti_smoothed = torch.nn.ReplicationPad1d(difference)(traj_arti_smoothed)
             elif difference < 0:  # si la traj smoothed est plus petite que L on rajoute le meme dernier élément
@@ -227,11 +231,14 @@ class my_bilstm(torch.nn.Module):
         loss_test= 0
         for i in range(len(X_test)):
                 L = len(X_test[i])
+
                 x_torch = torch.from_numpy(X_test[i]).view(1,L,self.input_dim)  #x (1,L,429)
                 y = Y_test[i].reshape((L, self.output_dim))                     #y (L,13)
                 y_torch = torch.from_numpy(y).double().reshape(1,L,self.output_dim) #y (1,L,13)
                 if self.cuda_avail:
                     x_torch = x_torch.cuda()
+
+
                 y_pred_torch = self(x_torch).double() #sortie y_pred (1,L,13)
                 if self.cuda_avail:
                     y_pred_torch = y_pred_torch.cpu()

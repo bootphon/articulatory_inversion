@@ -141,7 +141,6 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
 
 
     n_iteration = int(N_train / batch_size)
-
     n_iteration_validation = int(N_valid/batch_size)
     n_iteration_test = int(N_test/batch_size)
     patience_temp =0
