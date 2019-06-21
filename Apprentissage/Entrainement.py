@@ -67,12 +67,11 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
         file_weights = os.path.join("saved_models","modele_preentrainement.txt")
 
     if not cuda_avail:
-        device = torch.device('cpu')
-        loaded_state = torch.load(file_weights, map_location=device)
-        torch.backends.cuda.cufft_plan_cache.max_size
+        
+        loaded_state = torch.load(file_weights, map_location=torch.device('cpu'))
 
     else :
-        loaded_state = torch.load( file_weights )
+        loaded_state = torch.load( file_weights , map_location= cuda2 )
 
     model_dict = model.state_dict()
     loaded_state = {k: v for k, v in loaded_state.items() if k in model_dict} #only layers param that are in our current model
@@ -104,6 +103,8 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
     if cuda_avail:
         model = model.cuda()
         cuda2 = torch.device('cuda:1')
+        torch.backends.cuda.cufft_plan_cache.max_size
+
 
 
     def criterion_old(y,y_pred): # (L,K,13)
