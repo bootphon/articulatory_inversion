@@ -87,6 +87,7 @@ def prediction_ZS(name_model,Nmax = 20,start=0):
         #np.save(os.path.join(path_prediction_ema, "X_ZS"), X_ZS)
 
 models = ["train_fsew0_msak0_test_fsew0_msak0_data_filtered_modele_filtered",
+ "train_fsew0_msak0_MNGU0_test_fsew0_msak0_MNGU0_data_filtered_modele_filtered"
           ]
 print(sys.argv)
 start = int(sys.argv[1])
