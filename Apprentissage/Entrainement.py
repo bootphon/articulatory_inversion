@@ -103,7 +103,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
     print("previous epoch  :", previous_epoch)
     if cuda_avail:
         model = model.cuda()
-        cuda2 = torch.device('cuda:2')
+        cuda2 = torch.device('cuda:1')
 
 
     def criterion_old(y,y_pred): # (L,K,13)
