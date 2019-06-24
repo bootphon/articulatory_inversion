@@ -20,7 +20,7 @@ def traitement_general_mngu0(start,end):
 
 
     root_path = dirname(dirname(os.path.realpath(__file__)))
-    path_files_annotation = os.path.join(root_path, "Donnees_brutes\Donnees_breakfast\MNGU0\phone_labels")
+    path_files_annotation = os.path.join(root_path, "Donnees_brutes\MNGU0\phone_labels")
 
     sampling_rate_ema = 200
     #articulators in the same order that those of MOCHA
@@ -30,12 +30,12 @@ def traitement_general_mngu0(start,end):
         'lowerlip_py','lowerlip_pz']
 
     n_col_ema = len(articulators)+1 #lip aperture
-    path_ema_files = os.path.join(root_path, "Donnees_brutes\Donnees_breakfast\MNGU0\ema")
+    path_ema_files = os.path.join(root_path, "Donnees_brutes\MNGU0\ema")
     EMA_files = sorted([name[:-4] for name in os.listdir(path_ema_files) if name.endswith('.ema')])
     cols_index = None
     n_columns = 87
     window=5
-    path_wav_files = os.path.join(root_path, "Donnees_brutes\Donnees_breakfast\MNGU0\wav")
+    path_wav_files = os.path.join(root_path, "Donnees_brutes\MNGU0\wav")
    # wav_files = sorted([name[:-4] for name in os.listdir(path_wav_files) if name.endswith('.wav')])
     sampling_rate_mfcc = 16000
     frame_time = 25

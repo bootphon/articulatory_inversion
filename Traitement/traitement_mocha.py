@@ -45,7 +45,7 @@ def traitement_general_mocha(N=all):
          (fréquence d'échantillonnage de 200Hz donc K = 200*durée_en_sec)
         """
 
-        path_files = os.path.join(root_path, "Donnees_brutes\Donnees_breakfast\mocha\\" + speaker)
+        path_files = os.path.join(root_path, "Donnees_brutes\mocha\\" + speaker)
         EMA_files = sorted([name[:-4] for name in os.listdir(path_files) if name.endswith('.ema')])
         path_ema_file = os.path.join(path_files, EMA_files[i] + ".ema")
         N= len(wav_files)
@@ -94,7 +94,7 @@ def traitement_general_mocha(N=all):
          En sortie nparray de dimension (K',13*3)=(K',39). Ou K' dépend de la longueur de la phrase
          ( Un frame toutes les 10ms, donc K' ~ duree_en_sec/0.01 )
          """
-        path_files = os.path.join(root_path, "Donnees_brutes\Donnees_breakfast\mocha\\" + speaker)
+        path_files = os.path.join(root_path, "Donnees_brutes\mocha\\" + speaker)
         wav_files = sorted([name[:-4] for name in os.listdir(path_files) if name.endswith('.wav')])
         path_wav = os.path.join(path_files, wav_files[i] + '.wav')
         data, sr = librosa.load(path_wav, sr=sampling_rate_mfcc)  # chargement de données
@@ -123,7 +123,7 @@ def traitement_general_mocha(N=all):
               """
 
 
-        path_files = os.path.join(root_path, "Donnees_brutes\Donnees_breakfast\mocha\\" + speaker)
+        path_files = os.path.join(root_path, "Donnees_brutes\mocha\\" + speaker)
         wav_files = sorted([name[:-4] for name in os.listdir(path_files) if name.endswith('.wav')])
         path_annotation = os.path.join(path_files, wav_files[i] + '.lab')
         with open(path_annotation) as file:
@@ -177,7 +177,7 @@ def traitement_general_mocha(N=all):
 
     for k in range(2) :
         speaker = speakers[k]
-        path_files = os.path.join(root_path, "Donnees_brutes\Donnees_breakfast\mocha\\" + speaker)
+        path_files = os.path.join(root_path, "Donnees_brutes\mocha\\" + speaker)
         EMA_files = sorted([name[:-4] for name in os.listdir(path_files) if name.endswith('.ema')])
         cols_index = None
         n_columns = 20
@@ -220,9 +220,7 @@ def traitement_general_mocha(N=all):
         np.save("mean_mfcc_"+speaker, mean_mfcc)
         print(std_ema,"std ema")
 
-        #path_files = os.path.join(root_path, "Donnees_brutes\Donnees_breakfast\mocha\\" + speakers[k])
-        #EMA_files = sorted([name[:-4] for name in os.listdir(path_files) if name.endswith('.ema')])
-        for i in range(N):
+       for i in range(N):
             ema = np.load(os.path.join(root_path, "Donnees_pretraitees","mocha_"+speaker,"ema", EMA_files[i]+".npy"))
             ema = (ema - mean_ema)/std_ema
 
