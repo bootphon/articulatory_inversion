@@ -105,21 +105,24 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
 
 
 
-    def criterion_old(y,y_pred): # (L,K,13)
+    def criterion(y,y_pred): # (L,K,13)
         y_1 = y - torch.mean(y,dim=1,keepdim=True)  # (L,K,13) - (L,1,13) ==> utile ? normalement proche de 0
         y_pred_1 = y_pred - torch.mean(y_pred,dim=1,keepdim=True)
 
         nume=  torch.sum(y_1* y_pred_1,dim=1,keepdim=True) # y*y_pred multi terme à terme puis on somme pour avoir (L,1,13)
       #pour chaque trajectoire on somme le produit de la vriae et de la predite
         deno =  torch.sqrt(torch.sum(y_1 ** 2,dim=1,keepdim=True)) * torch.sqrt(torch.sum(y_pred_1 ** 2,dim=1,keepdim=True))# use Pearson correlation
+        # deno zero veut dire ema constant à 0 on remplace par des 1
+        deno = torch.max(deno,torch.tensor(0.01,dtype=torch.float64))
         loss = nume/deno
+
     #    if torch.isnan(loss).sum()>0 :
      #       print(" deno vaut surement 0 ",deno[deno==0].shape)
-        loss[torch.isnan(loss)] = 1
+
         loss = torch.sum(loss)
         return -loss
 
-    criterion = torch.nn.MSELoss(reduction='sum')
+ #   criterion = torch.nn.MSELoss(reduction='sum')
 
     optimizer = torch.optim.Adam(model.parameters(), lr=lr ) #, betas = beta_param)
 
@@ -209,6 +212,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
 
             loss_vali = loss_vali / n_iteration_validation
             model.all_validation_loss.append(loss_vali)
+            model.all_training_loss.append(loss)
             #model.all_validation_loss += [model.all_validation_loss[-1]] * (epoch+previous_epoch - len(model.all_validation_loss))
             loss_test=0
            # if test_on != [""]:
@@ -224,14 +228,13 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             print("test loss ", loss_test)
             torch.cuda.empty_cache()
 
-
         if early_stopping.early_stop:
             print("Early stopping")
             break
 
-    #if n_epochs>0:
-    #    model.load_state_dict(torch.load(os.path.join("saved_models",name_file+'.pt')))
-   #     torch.save(model.state_dict(), os.path.join( "saved_models",name_file+".txt"))
+    if n_epochs>0:
+        model.load_state_dict(torch.load(os.path.join("saved_models",name_file+'.pt')))
+        torch.save(model.state_dict(), os.path.join( "saved_models",name_file+".txt"))
 
     if test_on != [""]:
         for speaker in test_on:
