@@ -54,53 +54,37 @@ Après avoir fait trourner "traitement_mocha","traitement_mngu0", et "traitement
  1 fichier .NPY pour les mfcc, et 1 fichier .NPY pour les données EMA (sauf pour ZS2017)
 
 
-AVANT : 
-Une fois ce prétraitement à l'échelle de la phrase effectué, on construit les np array qui constitueront les  données du modèle.
-Pour nous X (features) sont les MFCC, et Y (target) sont les EMA.
-Pour chaque locuteur (MNGU0,fsew0,msak0) on concatène les features et target pour chaque phrase  et créons un fichier  npy X_speaker que nous enregistrons.
-Nous faisons bien attention à ce que la ligne i du X corresponde bien à la même phrase que la ligne i du Y.
-Pour celà nous parcourons les noms des fichiers .EMA puis cherchons l'équivalent dans les fichiers MFCC. 
+###  Create filesets
 
-Un ajustement a été fait pour que la différence entre les longueurs des phrases ne soit pas trop grande. 
-Les phrases MNGU0 peuvent être très longues (jusqu'à 1500 frames mfcc) alors que les autres sont toujours moins que 600 frames.
-On découpe en deux les phrases MNGU0 supérieur à 600 frames.
-
-APRES : 
-Nos données sont trop lourdes pour être chargées toutes en même temps dans un grand fichier .npy . Nous nous contentons de 3 fichiers npy par phrase (1 fichier pour les mfcc, 1 fichier pour les ema, 1 fichier pour les ema filtrées)
+Ce script contient une fonction "get_fileset_names(speaker)" qui choisi aléatoirement 70% des phrases du speaker pour en faire le train set, 10% pour le validation set, et 20% le test set.
+Le script sauvegarde trois fichier train_speaker.txt , test_speaker.txt, valid_speaker.txt avec la liste des noms de fichiers correspondant. 
 
 
-AVANT A SUPPRIMER [
-### Création des filesets
-
-Pour créer les fileset (input et target du modèle), nous créons pour chaque locuteur deux listes X_locuteur, Y_locuteur. Les éléments de la liste sont des matrices (K,429) et (K,13).
-Dans le script create_filesets.py, la fonction create_fileset(speaker) crée 2 nparray X_speaker et Y_speaker et les enregistre dans inversion_articulatoire/Donnees_pretraitees/filesets_non_decoupes.
-
-Pour chaque des locuteurs on découpe en test et train, avec 20% dans le test set. Puis comme précisé plus haut nous découpons en deux les phrases avec plus de 500 frames mfcc.
-Pour chaque locuteur on sauvegarde la partie train et test dans un np array (X_train_locuteur, X_test_locuteur, Y_train_locuteur, Y_test_locuteur), dans inversion_articulatoire/Donnees_pretraitees/fileset
-]
 
 ### Apprentissage
 
 Les modèles créés se trouvent ici.
 
 Pour le moment le modèle général bilstm se trouve dans "class_network.py".
-La fonction d'entrainement est dans "Entrainement.py", et l'utilisateur peut choisir si il entraine sur un speaker ou tous. 
-Si il y a un seul speaker alors le découpage test/train/valid se fait sur le moment, puisque c'est un entraînement temporaire.
-Nous voulons infine entraîner un modèle sur l'ensemble des deux speaker fsew0 et MNGU0.
-Si l'utilisateur précise que "speaker = both" alors le modèle utilise le découpage train/test qui est toujours le même.
+La fonction d'entrainement est dans "Entrainement.py", l'utilisateur peut choisir : 
+ - sur quel(s) speaker(s) il entraîne le  modèle (le validation set sera celui correspondant au(x) speaker(s) sur lesquels on apprend)
+ - sur quel(s) speaker(s) il teste le modèle.
+- le nombre d'épochs
+- la fréquence à laquelle on évalue le score sur le validation set
+- la patience (ie combien d'épochs d'overfitting consécutives avant d'arrêter l'apprentissage)
+- le learning rate
+- si on veut que les données (d'apprentissage et de test) soient filtrées
+- si on veut que le modèle lisse les données avec une couche de convolution aux poids ajustés.
+- si on veut sauvegarder des  graphes de trajectoires originales et prédites par le modèle sur le test set.
 
 
+Dans notre code nous avons choisi qu'une epoch correspond à un nombre d'itérations de telle sorte que toutes les phrases aient été prises en compte ( 1 epoch = (n_phrase/batch_size) itération).
+A chaque itération on selectionne aléatoirement &batchsize phrases. Si il y a plusieurs speakers sur lesquels apprendre, alors la probabilité de tirer une phrase d'un speaker est proportionnelle au nombre de 
+phrases prononcées par ce speaker. Le script qui retourne les phrases sélectionnées se trouve dans Apprentissage\utils.py, et s'appelle load_filenames(train_on,batch_size,part) où part est train valid ou test.
+Dans ce même script utils.py la fonction "load_data(filenames, filtered=False)" retourne (x,y) deux listes contenant les mfcc/ema correspondant à chacun des filenames.
 
-Pour le moment il n'y a qu'un seul script : model.py.
 Dans ce script est crée la classe "my_bilstm" qui est codée en pytorch.
 Elle contient une couche dense à 300 neurones, puis une couche Bi lstm à 300 neurones dans chaque direction.
-Le lissage n'est pas contenu dans le réseau lui même, mais est effectué lorsqu'il s'agit de calculer l'erreur de prédiction sur le validation set ou test set.
-Pour l'erreur de prédiction sur le validation set, on la calcul sur les prédictions et vraies trajectoires normalisées.
-Ceci est dû au fait que dans la validation set nous ne savons pas quel échantillon provient de quel set. Nous pourrions cependant normaliser nos données sur l'ensemble des corpus.
-Mais il faudrait vérifier que les moments sont assez homogène d'un corpus à l'autre.
-En revanche pour le test set on utilise 
-
-
 
 
 
