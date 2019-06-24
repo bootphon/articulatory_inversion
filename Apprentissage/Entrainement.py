@@ -108,17 +108,18 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
     def criterion_old(y,y_pred): # (L,K,13)
         y_1 = y - torch.mean(y,dim=1,keepdim=True)  # (L,K,13) - (L,1,13) ==> utile ? normalement proche de 0
         y_pred_1 = y_pred - torch.mean(y_pred,dim=1,keepdim=True)
+
         nume=  torch.sum(y_1* y_pred_1,dim=1,keepdim=True) # y*y_pred multi terme à terme puis on somme pour avoir (L,1,13)
       #pour chaque trajectoire on somme le produit de la vriae et de la predite
         deno =  torch.sqrt(torch.sum(y_1 ** 2,dim=1,keepdim=True)) * torch.sqrt(torch.sum(y_pred_1 ** 2,dim=1,keepdim=True))# use Pearson correlation
         loss = nume/deno
+    #    if torch.isnan(loss).sum()>0 :
+     #       print(" deno vaut surement 0 ",deno[deno==0].shape)
         loss[torch.isnan(loss)] = 1
         loss = torch.sum(loss)
         return -loss
 
     criterion = torch.nn.MSELoss(reduction='sum')
-
-
 
     optimizer = torch.optim.Adam(model.parameters(), lr=lr ) #, betas = beta_param)
 
@@ -138,7 +139,6 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
 
     print('N_train',N_train)
 
-
     n_iteration = int(N_train / batch_size)
     n_iteration_validation = int(N_valid/batch_size)
     n_iteration_test = int(N_test/batch_size)
@@ -152,11 +152,16 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
            #     print("{} out of {}".format(ite, n_iteration))
             files_for_train = load_filenames(train_on,batch_size,part="train")
             x,y = load_data(files_for_train,filtered=data_filtered)
+
             y = [y[i][:,:output_dim] for i in range(len(y))]
-       #     x, y = X_train[indices], Y_train[indices]
+
+        #     x, y = X_train[indices], Y_train[indices]
             x, y = model.prepare_batch(x, y)
-         #   print("0", torch.isnan(x).sum(),torch.isnan(y).sum())
+#            print("A,B", torch.isnan(x).sum(), torch.isnan(y).sum())
+
+        #   print("0", torch.isnan(x).sum(),torch.isnan(y).sum())
             y_pred = model(x).double()
+ #           print("C",torch.isnan(y_pred).sum())
           #  print("1", torch.isnan(y_pred).sum())
           #  print(y_pred)
             torch.cuda.empty_cache()
@@ -166,10 +171,16 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
                 y_pred = y_pred.to(device=cuda2)
             y = y.double()
             optimizer.zero_grad()
+
+        #    print("D,E", torch.isnan(model.first_layer.weight.sum()))
             loss = criterion(y,y_pred)
+         #   print("loss ",loss.item())
             loss.backward()
             optimizer.step()
-          #  model.all_training_loss.append(loss.item())
+          #  print("ll",x.grad)
+           # print("G", torch.isnan(model.first_layer.weight.sum()))
+
+        #  model.all_training_loss.append(loss.item())
             torch.cuda.empty_cache()
 
        # change_lr_frq = 3
@@ -218,9 +229,9 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             print("Early stopping")
             break
 
-    if n_epochs>0:
-        model.load_state_dict(torch.load(os.path.join("saved_models",name_file+'.pt')))
-        torch.save(model.state_dict(), os.path.join( "saved_models",name_file+".txt"))
+    #if n_epochs>0:
+    #    model.load_state_dict(torch.load(os.path.join("saved_models",name_file+'.pt')))
+   #     torch.save(model.state_dict(), os.path.join( "saved_models",name_file+".txt"))
 
     if test_on != [""]:
         for speaker in test_on:
