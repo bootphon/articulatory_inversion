@@ -24,7 +24,7 @@ print(sys.argv)
 
 
 def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, output_dim=13,data_filtered=False,
-                modele_filtered=False,to_plot=False): #,norma=True):
+                modele_filtered=False,to_plot=False,loss="rmse"): #,norma=True):
 
 
 
@@ -42,6 +42,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
     if modele_filtered:
         print("MODELE FILTERED")
         suff = suff + "_modele_filtered"
+    suff = suff + "_loss_"+loss
     name_file = "train_" + "_".join(train_on) + "_test_" + "_".join(test_on) +suff
     print("name file : ",name_file)
 
@@ -105,7 +106,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
 
 
 
-    def criterion(y,y_pred): # (L,K,13)
+    def criterion_pearson(y,y_pred): # (L,K,13)
         y_1 = y - torch.mean(y,dim=1,keepdim=True)  # (L,K,13) - (L,1,13) ==> utile ? normalement proche de 0
         y_pred_1 = y_pred - torch.mean(y_pred,dim=1,keepdim=True)
 
@@ -128,7 +129,11 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
         loss = torch.sum(loss)
         return -loss
 
- #   criterion = torch.nn.MSELoss(reduction='sum')
+    criterion_rmse = torch.nn.MSELoss(reduction='sum')
+    if loss == "pearson":
+        criterion = criterion_pearson
+    elif loss == "rmse":
+        criterion = criterion_rmse
 
     optimizer = torch.optim.Adam(model.parameters(), lr=lr ) #, betas = beta_param)
 
@@ -307,6 +312,9 @@ if __name__=='__main__':
     #                    help='')
 
     parser.add_argument('to_plot', metavar='to_plot', type=bool,         help='si true plot les resultats sur le test')
+    parser.add_argument('loss', metavar='loss', type=str,
+                        help='rmse ou pearson')
+
     args = parser.parse_args()
     train_on =  sys.argv[1]
     test_on = sys.argv[2]
@@ -320,6 +328,7 @@ if __name__=='__main__':
 
    # norma = bool(sys.argv[8])
     to_plot = sys.argv[10].lower()=="true"
+    loss = sys.argv[11]
 
     train_model(train_on = train_on,test_on = test_on ,n_epochs=n_epochs,delta_test=delta_test,patience=patience,
-                lr = lr,output_dim=output_dim,data_filtered=data_filtered,modele_filtered=   modele_filtered,to_plot=to_plot) #,norma=norma)
+                lr = lr,output_dim=output_dim,data_filtered=data_filtered,modele_filtered=   modele_filtered,to_plot=to_plot,loss=loss) #,norma=norma)
