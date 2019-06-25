@@ -57,16 +57,17 @@ def load_data(files_names,filtered=False):
     folder = os.path.join(os.path.dirname(os.getcwd()), "Donnees_pretraitees")
     x = []
     y = []
+    speakers = ["fsew0","msak0","MNGU0","F1","M1","F5"]
     suff = ""
     if filtered :
         suff = "_filtered"
     for file_name in files_names :
-        speaker = file_name[0:5]
+        speaker = [s  for s in speakers if s.lower() in file_name][0] #normalement un seul speaker dans le nom du fichier
         speaker_2=speaker
         if speaker in ["fsew0","msak0"]:
             speaker_2 = "mocha_"+speaker
-        if speaker.lower() == "mngu0":
-            speaker_2 = "MNGU0"
+        if speaker in ["F1", "M1","F5"]:
+            speaker_2 = "usc_timit_" + speaker
         files_path = os.path.join(folder,speaker_2)
         the_ema_file = np.load(os.path.join(os.path.join(files_path, "ema"+suff), file_name + ".npy"))
         the_mfcc_file = np.load(os.path.join(os.path.join(files_path, "mfcc"), file_name+ ".npy"))
