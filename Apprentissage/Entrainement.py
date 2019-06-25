@@ -75,10 +75,8 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
 
     model_dict = model.state_dict()
     loaded_state = {k: v for k, v in loaded_state.items() if k in model_dict} #only layers param that are in our current model
-    print("before ",len(loaded_state),loaded_state.keys())
 
     loaded_state= {k:v for k,v in loaded_state.items() if loaded_state[k].shape==model_dict[k].shape } #only if layers have correct shapes
-    print("after",len(loaded_state),loaded_state.keys())
     model_dict.update(loaded_state)
     model.load_state_dict(model_dict)
   #  model.all_training_loss=[]
@@ -157,6 +155,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
     n_iteration_test = int(N_test/batch_size)
     patience_temp =0
 
+
     test_files_names = []
 
     for epoch in range(n_epochs):
@@ -166,17 +165,14 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             files_for_train = load_filenames(train_on,batch_size,part="train")
             x,y = load_data(files_for_train,filtered=data_filtered)
 
-
             y = [y[i][:,:output_dim] for i in range(len(y))]
 
         #     x, y = X_train[indices], Y_train[indices]
             x, y = model.prepare_batch(x, y)
-#            print("A,B", torch.isnan(x).sum(), torch.isnan(y).sum())
 
-        #   print("0", torch.isnan(x).sum(),torch.isnan(y).sum())
+
             y_pred = model(x).double()
- #           print("C",torch.isnan(y_pred).sum())
-          #  print("1", torch.isnan(y_pred).sum())
+
           #  print(y_pred)
             torch.cuda.empty_cache()
 
@@ -188,7 +184,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
 
         #    print("D,E", torch.isnan(model.first_layer.weight.sum()))
             loss = criterion(y,y_pred)
-         #   print("loss ",loss.item())
+
             loss.backward()
             optimizer.step()
           #  print("ll",x.grad)
@@ -250,7 +246,12 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             x, y = load_data(files_for_test,filtered=data_filtered)
             y = [y[i][:, :output_dim] for i in range(len(y))]
             print("evaluation on speaker {}".format(speaker))
-            std_speaker=  np.load(os.path.join(root_folder, "Traitement", "std_ema_" + speaker + ".npy"))
+            speaker_2 = speaker
+
+            if speaker in ["F1", "M1", "F5"]:
+                speaker_2 = "usc_timit_" + speaker
+
+            std_speaker=  np.load(os.path.join(root_folder, "Traitement", "std_ema_" + speaker_2 + ".npy"))
             std_speaker=std_speaker[:output_dim]
 
             model.evaluate_on_test(criterion=criterion,verbose=True, X_test=x, Y_test=y,
@@ -261,7 +262,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
                 x_brut, y_brut = load_data(files_for_test, filtered=False)
                 y_brut = [y_brut[i][:, :output_dim] for i in range(len(y_brut))]
                 model.evaluate_on_test(criterion=criterion, verbose=True, X_test=x_brut, Y_test=y_brut,
-                                   to_plot=to_plot, std_ema=std_speaker, suffix=speaker)
+                                   to_plot=False, std_ema=std_speaker, suffix=speaker)
 
 # length_expected = len(model.all_training_loss)
     #print("lenght exp", length_expected)
