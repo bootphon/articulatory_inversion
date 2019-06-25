@@ -113,7 +113,11 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
       #pour chaque trajectoire on somme le produit de la vriae et de la predite
         deno =  torch.sqrt(torch.sum(y_1 ** 2,dim=1,keepdim=True)) * torch.sqrt(torch.sum(y_pred_1 ** 2,dim=1,keepdim=True))# use Pearson correlation
         # deno zero veut dire ema constant à 0 on remplace par des 1
+        minim = torch.tensor(0.01,dtype=torch.float64)
+        if cuda_avail:
+            minim = minim.to(device=cuda2)
         deno = torch.max(deno,torch.tensor(0.01,dtype=torch.float64))
+
         loss = nume/deno
 
     #    if torch.isnan(loss).sum()>0 :
