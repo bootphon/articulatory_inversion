@@ -160,6 +160,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             files_for_train = load_filenames(train_on,batch_size,part="train")
             x,y = load_data(files_for_train,filtered=data_filtered)
 
+
             y = [y[i][:,:output_dim] for i in range(len(y))]
 
         #     x, y = X_train[indices], Y_train[indices]
@@ -254,7 +255,16 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             model.evaluate_on_test(criterion=criterion,verbose=True, X_test=x, Y_test=y,
                                    to_plot=to_plot, std_ema=std_speaker, suffix=speaker)
 
-   # length_expected = len(model.all_training_loss)
+
+            if data_filtered:
+                print("----evaluation with data NON filtetered----")
+                x_brut, y_brut = load_data(files_for_test, filtered=False)
+                y_brut = [y_brut[i][:, :output_dim] for i in range(len(y_brut))]
+                model.evaluate_on_test(criterion=criterion, verbose=True, X_test=x_brut, Y_test=y_brut,
+                                   to_plot=to_plot, std_ema=std_speaker, suffix=speaker)
+
+
+# length_expected = len(model.all_training_loss)
     #print("lenght exp", length_expected)
  #   try :
   #      model.all_validation_loss += [model.all_validation_loss[-1]] * (length_expected - len(model.all_validation_loss))
