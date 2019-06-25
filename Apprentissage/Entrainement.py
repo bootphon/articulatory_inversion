@@ -116,6 +116,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
         minim = torch.tensor(0.01,dtype=torch.float64)
         if cuda_avail:
             minim = minim.to(device=cuda2)
+            deno = deno.to(device=cuda2)
         deno = torch.max(deno,minim)
 
         loss = nume/deno
@@ -145,7 +146,6 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
         N_test =+len(open(os.path.join(path_files,speaker+"_test.txt"), "r").read().split())
 
     print('N_train',N_train)
-
     n_iteration = int(N_train / batch_size)
     n_iteration_validation = int(N_valid/batch_size)
     n_iteration_test = int(N_test/batch_size)
@@ -187,18 +187,14 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             optimizer.step()
           #  print("ll",x.grad)
            # print("G", torch.isnan(model.first_layer.weight.sum()))
-
         #  model.all_training_loss.append(loss.item())
             torch.cuda.empty_cache()
-
        # change_lr_frq = 3
        # if epoch%change_lr_frq== 0 :
         #    print("change learning rate",)
 
         if epoch%delta_test ==0:  #toutes les delta_test epochs on évalue le modèle sur validation et on sauvegarde le modele si le score est meilleur
-
             loss_vali = 0
-
             for ite_valid in range(n_iteration_validation):
                 files_for_valid = load_filenames(train_on,batch_size,part="valid")
                 x,y = load_data(files_for_valid,filtered=data_filtered)
@@ -213,7 +209,6 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
                             param_group['lr'] = param_group['lr'] / 2
                             print(param_group["lr"])
                             patience_temp=0
-
 
             loss_vali = loss_vali / n_iteration_validation
             model.all_validation_loss.append(loss_vali)
@@ -255,14 +250,12 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             model.evaluate_on_test(criterion=criterion,verbose=True, X_test=x, Y_test=y,
                                    to_plot=to_plot, std_ema=std_speaker, suffix=speaker)
 
-
             if data_filtered:
                 print("----evaluation with data NON filtetered----")
                 x_brut, y_brut = load_data(files_for_test, filtered=False)
                 y_brut = [y_brut[i][:, :output_dim] for i in range(len(y_brut))]
                 model.evaluate_on_test(criterion=criterion, verbose=True, X_test=x_brut, Y_test=y_brut,
                                    to_plot=to_plot, std_ema=std_speaker, suffix=speaker)
-
 
 # length_expected = len(model.all_training_loss)
     #print("lenght exp", length_expected)
@@ -279,7 +272,6 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
    #     np.array(model.all_validation_loss),
     #  np.array(model.all_test_loss) )
      #     ,axis=0 )
-
 
    # np.save(os.path.join(folder_weights,"all_losses.npy"),all_losses)
 
