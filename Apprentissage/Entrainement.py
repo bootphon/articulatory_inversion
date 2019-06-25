@@ -117,6 +117,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
         if cuda_avail:
             minim = minim.to(device=cuda2)
             deno = deno.to(device=cuda2)
+            nume = nume.to(device=cuda2)
         deno = torch.max(deno,minim)
 
         loss = nume/deno
