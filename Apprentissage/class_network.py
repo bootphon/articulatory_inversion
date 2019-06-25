@@ -32,9 +32,9 @@ class my_bilstm(torch.nn.Module):
         self.lstm_layer = torch.nn.LSTM(input_size=hidden_dim,
                                         hidden_size=hidden_dim, num_layers=1,
                                         bidirectional=True)
-        self.lstm_layer_2= torch.nn.LSTM(input_size=hidden_dim*2,
-                                        hidden_size=hidden_dim, num_layers=1,
-                                        bidirectional=True)
+     #   self.lstm_layer_2= torch.nn.LSTM(input_size=hidden_dim*2,
+      #                                  hidden_size=hidden_dim, num_layers=1,
+       #                                 bidirectional=True)
         self.readout_layer = torch.nn.Linear(hidden_dim *2 , output_dim)
         self.batch_size = batch_size
         self.sigmoid = torch.nn.Sigmoid()
@@ -83,7 +83,10 @@ class my_bilstm(torch.nn.Module):
       #  print("dense out 2",torch.isnan(dense_out_2).sum())
 
         lstm_out, hidden_dim = self.lstm_layer(dense_out_2)
-       # print("lstm out",torch.isnan(lstm_out).sum())
+
+        lstm_out = torch.nn.functional.relu(lstm_out)
+
+    # print("lstm out",torch.isnan(lstm_out).sum())
 
         lstm_out, hidden_dim = self.lstm_layer_2(lstm_out)
         lstm_out=torch.nn.functional.relu(lstm_out)
