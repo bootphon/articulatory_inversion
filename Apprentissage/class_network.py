@@ -6,6 +6,7 @@ from scipy.signal import butter, lfilter, freqz
 import time
 import math
 from scipy.stats import pearsonr
+import matplotlib.pyplot as plt
 from os.path import dirname
 import numpy as np
 from scipy import signal
@@ -80,7 +81,6 @@ class my_bilstm(torch.nn.Module):
         lstm_out = torch.nn.functional.relu(lstm_out)
         lstm_out, hidden_dim = self.lstm_layer_2(lstm_out)
         lstm_out=torch.nn.functional.relu(lstm_out)
-
         y_pred = self.readout_layer(lstm_out)
         if self.modele_filtered :
             y_pred = self.filter_layer(y_pred)

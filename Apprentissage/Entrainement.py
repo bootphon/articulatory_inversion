@@ -72,12 +72,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
         cuda2 = torch.device('cuda:1')
         loaded_state = torch.load( file_weights , map_location= cuda2 )
 
-    model_dict = model.state_dict()
-    loaded_state = {k: v for k, v in loaded_state.items() if k in model_dict} #only layers param that are in our current model
 
-    loaded_state= {k:v for k,v in loaded_state.items() if loaded_state[k].shape==model_dict[k].shape } #only if layers have correct shapes
-    model_dict.update(loaded_state)
-    model.load_state_dict(model_dict)
   #  model.all_training_loss=[]
 
 
