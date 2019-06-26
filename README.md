@@ -78,13 +78,18 @@ La fonction d'entrainement est dans "Entrainement.py", l'utilisateur peut choisi
 - si on veut sauvegarder des  graphes de trajectoires originales et prédites par le modèle sur le test set.
 
 
+
 Dans notre code nous avons choisi qu'une epoch correspond à un nombre d'itérations de telle sorte que toutes les phrases aient été prises en compte ( 1 epoch = (n_phrase/batch_size) itération).
 A chaque itération on selectionne aléatoirement &batchsize phrases. Si il y a plusieurs speakers sur lesquels apprendre, alors la probabilité de tirer une phrase d'un speaker est proportionnelle au nombre de 
 phrases prononcées par ce speaker. Le script qui retourne les phrases sélectionnées se trouve dans Apprentissage\utils.py, et s'appelle load_filenames(train_on,batch_size,part) où part est train valid ou test.
 Dans ce même script utils.py la fonction "load_data(filenames, filtered=False)" retourne (x,y) deux listes contenant les mfcc/ema correspondant à chacun des filenames.
 
 Dans ce script est crée la classe "my_bilstm" qui est codée en pytorch.
-Elle contient une couche dense à 300 neurones, puis une couche Bi lstm à 300 neurones dans chaque direction.
+Elle contient deux couches denses à 300 neurones, puis deux couche Bi lstm à 300 neurones dans chaque direction, ensuite il y a une couche convolutionnelle optionnelle qui agit comme un filtre passe bas à fréquence 30Hz si les données
+étaient échantillonnées à une fréquence précise (précisée par l'utilisateur ou par défaut 200Hz). Ceci peut poser problème quand nos données d'apprentissages ne sont pas toutes échantillonées à la même fréquence.
+Les poids de la convolution sont pour le moment fixés de la manière suivante : on veut que la sortie soit temporelle convoluée avec une séquence dont la TF est une porte entre 0 et f_cutoff. Il s'agirait d'un sinus cardinal à support infini. 
+Comme notre entrée est à support fini on rogne le support du sinus cardinal en le multipliant en temporel avec une fenêtre de Hanning.
+Pour le moment les poids de la convolutions sont fixés [à suivre : faire varier fc, ou même un fc par articulateur].
 
 
 
