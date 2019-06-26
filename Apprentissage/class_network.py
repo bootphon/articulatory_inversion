@@ -9,7 +9,7 @@ from scipy.stats import pearsonr
 from os.path import dirname
 import numpy as np
 from scipy import signal
-fimport scipy
+import scipy
 from torch.autograd import Variable
 
 try :
