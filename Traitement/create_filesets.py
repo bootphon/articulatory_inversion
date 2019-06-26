@@ -14,7 +14,7 @@ donnees_path = os.path.join(root_folder, "Donnees_pretraitees")
 fileset_path = os.path.join(donnees_path, "fileset")
 fileset_path_non_decoupes = os.path.join(donnees_path, "fileset_non_decoupes")
 
-def create_fileset(speaker):
+def create_fileset_OLD(speaker):
     """
     :param speaker: pour le moment fsew0,msak0 ou MNGU0
     :return: rien
@@ -27,8 +27,13 @@ def create_fileset(speaker):
     speaker_2 = speaker
     if speaker in ["msak0","fsew0"]:
         speaker_2 = "mocha_"+speaker
+
+    if speaker in ["F1", "F5","M1"]:
+        speaker_2 = "usc_timit_" + speaker
+
     X = []
     Y = []
+
 
     files_path =  os.path.join(donnees_path,speaker_2)
     #EMA_files_path  = os.path.join(donnees_path,speaker_2,"ema")
@@ -47,13 +52,6 @@ def create_fileset(speaker):
             print("cant find this mfcc file : {)".format(EMA_files_names[i]))
 
 #        print("1",len(the_ema_file))
-        std_ema = np.load(os.path.join(root_folder, "Traitement", "std_ema_" + speaker + ".npy"))
-        mean_ema = np.load(os.path.join(root_folder, "Traitement", "mean_ema_" + speaker + ".npy"))
-        std_mfcc = np.load(os.path.join(root_folder, "Traitement", "std_mfcc_" + speaker + ".npy"))
-        mean_mfcc = np.load(os.path.join(root_folder, "Traitement", "mean_mfcc_" + speaker + ".npy"))
-
-        the_ema_file = (the_ema_file-mean_ema)/std_ema
-        the_mfcc_file = (the_mfcc_file-mean_mfcc)/std_mfcc
         while len(the_ema_file)>max_lenght+30:
             k+=1
             #print("before",the_ema_file.shape)
@@ -94,6 +92,9 @@ def get_fileset_names(speaker):
     if speaker in ["msak0","fsew0"]:
         speaker_2 = "mocha_"+speaker
 
+    elif speaker in ["F1", "F5", "M1"]:
+        speaker_2 = "usc_timit_" + speaker
+
     files_path =  os.path.join(donnees_path,speaker_2)
     EMA_files_names = [name[:-4] for name in os.listdir(os.path.join(files_path,"ema")) if name.endswith('.npy') ]
     N = len(EMA_files_names)
@@ -118,9 +119,12 @@ def get_fileset_names(speaker):
     outF.write('\n'.join(valid_files) + '\n')
     outF.close()
 
-get_fileset_names("msak0")
-get_fileset_names("fsew0")
+#get_fileset_names("msak0")
+#get_fileset_names("fsew0")
 get_fileset_names("MNGU0")
+#get_fileset_names("F1")
+#get_fileset_names("F5")
+#get_fileset_names("M1")
 
 #create_fileset("fsew0")
 #create_fileset("msak0")
