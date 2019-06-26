@@ -46,7 +46,6 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
     name_file = "train_" + "_".join(train_on) + "_test_" + "_".join(test_on) +suff
     print("name file : ",name_file)
 
-
     hidden_dim = 300
     input_dim = 429
     batch_size = 10
