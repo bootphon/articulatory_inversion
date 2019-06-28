@@ -112,7 +112,6 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             deno = deno.to(device=cuda2)
             nume = nume.to(device=cuda2)
         deno = torch.max(deno,minim)
-
         loss = nume/deno
 
     #    if torch.isnan(loss).sum()>0 :
@@ -126,7 +125,6 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
         criterion = criterion_pearson
     elif loss == "rmse":
         criterion = criterion_rmse
-
     optimizer = torch.optim.Adam(model.parameters(), lr=lr ) #, betas = beta_param)
 
     plt.ioff()
@@ -142,7 +140,6 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
 
     for speaker in test_on:
         N_test =+len(open(os.path.join(path_files,speaker+"_test.txt"), "r").read().split())
-
     print('N_train',N_train)
     n_iteration = int(N_train / batch_size)
     n_iteration_validation = int(N_valid/batch_size)
@@ -248,14 +245,14 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             std_speaker=std_speaker[:output_dim]
 
             model.evaluate_on_test(criterion=criterion,verbose=True, X_test=x, Y_test=y,
-                                   to_plot=to_plot, std_ema=std_speaker, suffix=speaker)
+                                   to_plot=to_plot, std_ema=max(std_speaker), suffix=speaker)
 
             if data_filtered:
                 print("----evaluation with data NON filtetered----")
                 x_brut, y_brut = load_data(files_for_test, filtered=False)
                 y_brut = [y_brut[i][:, :output_dim] for i in range(len(y_brut))]
                 model.evaluate_on_test(criterion=criterion, verbose=True, X_test=x_brut, Y_test=y_brut,
-                                   to_plot=False, std_ema=std_speaker, suffix=speaker)
+                                   to_plot=False, std_ema=max(std_speaker), suffix=speaker)
 
 # length_expected = len(model.all_training_loss)
     #print("lenght exp", length_expected)
