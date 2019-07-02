@@ -1,8 +1,8 @@
 import torch
-from Apprentissage.utils import load_filenames, load_data
+from utils import load_filenames, load_data
 import numpy as np
 import os
-from Apprentissage.pytorchtools import EarlyStopping
+from pytorchtools import EarlyStopping
 import math
 root_folder = os.path.dirname(os.getcwd())
 import matplotlib.pyplot as plt
@@ -309,5 +309,4 @@ if __name__=='__main__':
 
     args = parser.parse_args()
     n_epochs = sys.argv[1]
-
     train_learn_velum(n_epochs=n_epochs)
