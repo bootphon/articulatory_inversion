@@ -258,10 +258,12 @@ def train_learn_velum(n_epochs=10,patience=5):
         minim = torch.tensor(0.01, dtype=torch.float64)
 
 
-        
+
         deno = torch.max(deno, minim)
         loss = nume / deno
-        return loss
+        loss = torch.sum(loss)
+
+        return -loss
     criterion = criterion_pearson
 
     speakers= ["fsew0","msak0","faet0","mjjn0","ffes0"]
