@@ -226,7 +226,7 @@ class learn_velum(torch.nn.Module):
             plt.close('all')
 
 
-def train_learn_velum(n_epochs=10):
+def train_learn_velum(n_epochs=10,patience=5):
     input_dim = 429
     output_dim = 2
     hidden_dim = 200
@@ -240,7 +240,7 @@ def train_learn_velum(n_epochs=10):
     optimizer = torch.optim.Adam(model.parameters(), lr=lr )
     criterion = torch.nn.MSELoss(reduction='sum')
     speakers= ["fsew0","msak0","faet0","mjjn0","ffes0"]
-    patience= 1
+
     early_stopping = EarlyStopping(name_file, patience=patience, verbose=True )
     N= 460 * len(speakers)  # velum for mocha whith 460 sentences
     n_iterations = int(N*0.8/batch_size)
@@ -308,6 +308,10 @@ if __name__=='__main__':
     parser.add_argument('n_epochs', metavar='n_epochs', type=int,
                         help='nombre depochs')
 
+    parser.add_argument('patience', metavar='patience', type=int,
+                        help='patience')
+
     args = parser.parse_args()
     n_epochs = int(sys.argv[1])
-    train_learn_velum(n_epochs=n_epochs)
+    patience = int(sys.argv[2])
+    train_learn_velum(n_epochs=n_epochs,patience=patience)
