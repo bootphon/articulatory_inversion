@@ -59,9 +59,7 @@ class learn_velum(torch.nn.Module):
             new_y[j] = zeropad(torch.from_numpy(y[j])).double()
         x = new_x.view((B, max_length, self.input_dim))
         y = new_y.view((B, max_length, self.output_dim))
-   #     if self.cuda_avail:
-    #        #  x,y=x.cuda(),y.cuda()
-     #       x, y = x.to(device=self.cuda2), y.to(device=self.cuda2)
+
         return x, y
 
     def init_filter_layer(self):
@@ -258,10 +256,9 @@ def train_learn_velum(n_epochs=10,patience=5):
             torch.sum(y_pred_1 ** 2, dim=1, keepdim=True))  # use Pearson correlation
         # deno zero veut dire ema constant à 0 on remplace par des 1
         minim = torch.tensor(0.01, dtype=torch.float64)
-        if cuda_avail:
-            minim = minim.to(device=cuda2)
-            deno = deno.to(device=cuda2)
-            nume = nume.to(device=cuda2)
+
+
+        
         deno = torch.max(deno, minim)
         loss = nume / deno
         return loss
