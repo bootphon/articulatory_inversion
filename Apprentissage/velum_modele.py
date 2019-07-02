@@ -1,8 +1,8 @@
 import torch
-from utils import load_filenames, load_data
+from Apprentissage.utils import load_filenames, load_data
 import numpy as np
 import os
-from pytorchtools import EarlyStopping
+from Apprentissage.pytorchtools import EarlyStopping
 import math
 root_folder = os.path.dirname(os.getcwd())
 import matplotlib.pyplot as plt
@@ -12,10 +12,14 @@ class learn_velum(torch.nn.Module):
         super(learn_velum, self).__init__()
         self.first_layer = torch.nn.Linear(input_dim, hidden_dim)
         self.hidden_layer = torch.nn.Linear(hidden_dim, hidden_dim)
-        self.readout_layer = torch.nn.Linear(hidden_dim, output_dim)
+        self.readout_layer = torch.nn.Linear(hidden_dim*2, output_dim)
         self.input_dim = input_dim
         self.output_dim = output_dim
         self.hidden_dim = hidden_dim
+        self.lstm_layer =   torch.nn.LSTM(input_size=hidden_dim,
+                                        hidden_size=hidden_dim, num_layers=1,
+                                        bidirectional=True)
+
         self.name_file = name_file
         self.cutoff=30
         self.sampling_rate=200
@@ -24,16 +28,24 @@ class learn_velum(torch.nn.Module):
     def forward(self,x):
         x_1 = torch.nn.functional.relu(self.first_layer(x))
         x_2 = torch.nn.functional.relu(self.hidden_layer(x_1))
-        y = self.readout_layer(x_2)
+        x_3,sr =self.lstm_layer(x_2)
+        x_3 = torch.nn.functional.relu(x_3)
+        y = self.readout_layer(x_3)
         y_smoothed = self.filter_layer(y)
         return y_smoothed
 
     def prepare_batch(self, x, y):
         max_length = np.max([len(phrase) for phrase in x])
         B = len(x)  # often batch size but not for validation
+
         new_x = torch.zeros((B, max_length, self.input_dim), dtype=torch.double)
         new_y = torch.zeros((B, max_length, self.output_dim), dtype=torch.double)
         for j in range(B):
+            if len(x[j]) != len(y[j]):
+                print("error size with ",j)
+                print("mfcc",len(x[j]))
+                print("ema",len(y[j]))
+
             zeropad = torch.nn.ZeroPad2d((0, 0, 0, max_length - len(x[j])))
             new_x[j] = zeropad(torch.from_numpy(x[j])).double()
             new_y[j] = zeropad(torch.from_numpy(y[j])).double()
@@ -216,27 +228,25 @@ class learn_velum(torch.nn.Module):
 def train_learn_velum(n_epochs=10):
     input_dim = 429
     output_dim = 2
-    hidden_dim = 10
+    hidden_dim = 200
     lr=0.001
     name_file = "modele_velum"
 
     model = learn_velum(hidden_dim,input_dim,output_dim,name_file).double()
     model_dict = model.state_dict()
-
-
     batch_size=10
     data_filtered=True
     optimizer = torch.optim.Adam(model.parameters(), lr=lr )
     criterion = torch.nn.MSELoss(reduction='sum')
-    speakers=  ["fsew0","msak0"]
-    patience= 6
-    early_stopping = EarlyStopping(name_file, patience=patience, verbose=True)
+    speakers= ["fsew0","msak0","faet0","mjjn0","ffes0"]
+    patience= 1
+    early_stopping = EarlyStopping(name_file, patience=patience, verbose=True )
     N= 460 * len(speakers)  # velum for mocha whith 460 sentences
     n_iterations = int(N*0.8/batch_size)
+    n_iterations = 1
     n_iterations_valid = int(N*0.2/batch_size)
     delta_test=1
-    file_weights = os.path.join("saved_models", name_file +".txt")
-
+    file_weights = os.path.join("saved_models", "modele_velum.txt")
     loaded_state = torch.load(file_weights, map_location=torch.device('cpu'))
     loaded_state = {k: v for k, v in loaded_state.items() if
                     k in model_dict}  # only layers param that are in our current model
@@ -249,6 +259,7 @@ def train_learn_velum(n_epochs=10):
     for epoch in range(n_epochs):
         for ite in range(n_iterations) :
             files_for_train = load_filenames(speakers, batch_size, part="train")
+
             x, y = load_data(files_for_train, filtered=data_filtered)
             y = [y[i][:,-2:] for i in range(len(y))]
             x, y = model.prepare_batch(x, y)
@@ -290,10 +301,6 @@ def train_learn_velum(n_epochs=10):
         std_speaker = np.load(os.path.join(root_folder, "Traitement", "std_ema_" + speaker_2 + ".npy"))
         std_speaker = std_speaker[:output_dim]
         model.evaluate_on_test(criterion=criterion, verbose=True, X_test=x, Y_test=y,
-                               to_plot=True, std_ema=std_speaker, suffix=speaker)
+                               to_plot=False, std_ema=max(std_speaker), suffix=speaker)
 
 train_learn_velum(30)
-
-
-
-
