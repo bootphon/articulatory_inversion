@@ -24,7 +24,8 @@ print(sys.argv)
 
 
 def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
-
+    data_filtered=True
+    modele_filtered=True
     train_on = ["MNGU0", "fsew0", "msak0", "F1", "F5", "M1", "M3", "maps0", "faet0", 'mjjn0', "ffes0"]
     train_on.remove(test_on)
 
@@ -240,7 +241,6 @@ if __name__=='__main__':
                         help='number of iterations in a row with decreasing validation score before stopping the train ')
     parser.add_argument('lr', metavar='lr', type=str,
                         help='learning rate of Adam optimizer ')
-
     parser.add_argument('to_plot', metavar='to_plot', type=bool,         help='si true plot les resultats sur le test')
 
     args = parser.parse_args()
