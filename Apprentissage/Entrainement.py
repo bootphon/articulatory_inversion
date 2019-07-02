@@ -23,13 +23,14 @@ fileset_path = os.path.join(root_folder, "Donnees_pretraitees", "fileset")
 print(sys.argv)
 
 
-def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, output_dim=13,data_filtered=False,
+def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09,data_filtered=False,
                 modele_filtered=False,to_plot=False,loss="rmse"): #,norma=True):
 
 
 
     cuda_avail = torch.cuda.is_available()
     print(" cuda ?", cuda_avail)
+    output_dim = 17
 
     train_on = str(train_on[1:-1])
     test_on = str(test_on[1:-1])
@@ -155,11 +156,10 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             files_for_train = load_filenames(train_on,batch_size,part="train")
             x,y = load_data(files_for_train,filtered=data_filtered)
 
-            y = [y[i][:,:output_dim] for i in range(len(y))]
+       #     y = [y[i][:,:output_dim] for i in range(len(y))]
 
         #     x, y = X_train[indices], Y_train[indices]
             x, y = model.prepare_batch(x, y)
-
 
             y_pred = model(x).double()
 
@@ -190,7 +190,7 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
             for ite_valid in range(n_iteration_validation):
                 files_for_valid = load_filenames(train_on,batch_size,part="valid")
                 x,y = load_data(files_for_valid,filtered=data_filtered)
-                y = [y[i][:,:output_dim] for i in range(len(y))]
+            #    y = [y[i][:,:output_dim] for i in range(len(y))]
                 loss_vali+= model.evaluate(x,y,criterion)
             if epoch>0:
                 if loss_vali > model.all_validation_loss[-1]:
@@ -234,44 +234,25 @@ def train_model(train_on ,test_on ,n_epochs ,delta_test ,patience ,lr=0.09, outp
           #  for ite_valid in range(n_iteration_test):
             files_for_test = load_filenames([speaker], N_test, part="test")
             x, y = load_data(files_for_test,filtered=data_filtered)
-            y = [y[i][:, :output_dim] for i in range(len(y))]
+           # y = [y[i][:, :output_dim] for i in range(len(y))]
             print("evaluation on speaker {}".format(speaker))
             speaker_2 = speaker
 
             if speaker in ["F1", "M1", "F5"]:
                 speaker_2 = "usc_timit_" + speaker
 
-            std_speaker=  np.load(os.path.join(root_folder, "Traitement", "std_ema_" + speaker_2 + ".npy"))
-            std_speaker=std_speaker[:output_dim]
+            std_speaker=  np.load(os.path.join(root_folder, "Traitement", "norm_values","std_ema_" + speaker_2 + ".npy"))
+           # std_speaker=std_speaker[:output_dim]
 
             model.evaluate_on_test(criterion=criterion,verbose=True, X_test=x, Y_test=y,
                                    to_plot=to_plot, std_ema=max(std_speaker), suffix=speaker)
 
-            if data_filtered:
-                print("----evaluation with data NON filtetered----")
-                x_brut, y_brut = load_data(files_for_test, filtered=False)
-                y_brut = [y_brut[i][:, :output_dim] for i in range(len(y_brut))]
-                model.evaluate_on_test(criterion=criterion, verbose=True, X_test=x_brut, Y_test=y_brut,
-                                   to_plot=False, std_ema=max(std_speaker), suffix=speaker)
-
-# length_expected = len(model.all_training_loss)
-    #print("lenght exp", length_expected)
- #   try :
-  #      model.all_validation_loss += [model.all_validation_loss[-1]] * (length_expected - len(model.all_validation_loss))
-   #     model.all_training_loss = np.array(model.all_training_loss).reshape(1,length_expected)
-    #    model.all_validation_loss = np.array(model.all_validation_loss).reshape(1,length_expected)
-     #   model.all_test_loss += [model.all_test_loss[-1]] * (length_expected - len(model.all_test_loss))
-      #  model.all_test_loss = np.array(model.all_test_loss).reshape((1, length_expected))
-    #except :
-   #     print("not any train")
-  #  all_losses = np.concatenate(
-  #       ( np.array(model.all_training_loss),
-   #     np.array(model.all_validation_loss),
-    #  np.array(model.all_test_loss) )
-     #     ,axis=0 )
-
-   # np.save(os.path.join(folder_weights,"all_losses.npy"),all_losses)
-
+           # if data_filtered:
+            #    print("----evaluation with data NON filtetered----")
+             #   x_brut, y_brut = load_data(files_for_test, filtered=False)
+               # y_brut = [y_brut[i][:, :output_dim] for i in range(len(y_brut))]
+              #  model.evaluate_on_test(criterion=criterion, verbose=True, X_test=x_brut, Y_test=y_brut,
+               #                    to_plot=False, std_ema=max(std_speaker), suffix=speaker)
 if __name__=='__main__':
     import argparse
     parser = argparse.ArgumentParser(description='Train and save a model.')
@@ -313,7 +294,7 @@ if __name__=='__main__':
     delta_test = int(sys.argv[4])
     patience = int(sys.argv[5])
     lr = float(sys.argv[6])
-    output_dim = int(sys.argv[7])
+  #  output_dim = int(sys.argv[7])
     data_filtered = sys.argv[8].lower() == 'true'
     modele_filtered = sys.argv[9].lower() == 'true'
 
@@ -322,4 +303,4 @@ if __name__=='__main__':
     loss = sys.argv[11]
 
     train_model(train_on = train_on,test_on = test_on ,n_epochs=n_epochs,delta_test=delta_test,patience=patience,
-                lr = lr,output_dim=output_dim,data_filtered=data_filtered,modele_filtered=   modele_filtered,to_plot=to_plot,loss=loss) #,norma=norma)
+                lr = lr,data_filtered=data_filtered,modele_filtered=modele_filtered,to_plot=to_plot,loss=loss) #,norma=norma)
