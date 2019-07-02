@@ -28,6 +28,8 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
     modele_filtered=True
     train_on = ["MNGU0", "fsew0", "msak0", "F1", "F5", "M1", "M3", "maps0", "faet0", 'mjjn0', "ffes0"]
     train_on.remove(test_on)
+    print("train_on :",train_on)
+    print("test on:",test_on)
 
     cuda_avail = torch.cuda.is_available()
     print(" cuda ?", cuda_avail)
