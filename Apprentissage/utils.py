@@ -70,7 +70,7 @@ def load_data(files_names,filtered=True, VT=True):
         if speaker in ["msak0", "fsew0", "maps0", "faet0", "mjjn0", "ffes0"]:
             speaker_2 = "mocha_" + speaker
 
-        if speaker in ["F1", "M1","F5"]:
+        if speaker in ["F1", "M1","F5","M3"]:
             speaker_2 = "usc_timit_" + speaker
         files_path = os.path.join(folder,speaker_2)
         the_ema_file = np.load(os.path.join(files_path, "ema"+suff, file_name + ".npy"))
