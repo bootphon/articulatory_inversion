@@ -1,8 +1,8 @@
 import torch
-from utils import load_filenames, load_data
+from Apprentissage.utils import load_filenames, load_data
 import numpy as np
 import os
-from pytorchtools import EarlyStopping
+from Apprentissage.pytorchtools import EarlyStopping
 import math
 root_folder = os.path.dirname(os.getcwd())
 import sys
@@ -238,7 +238,28 @@ def train_learn_velum(n_epochs=10,patience=5):
     batch_size=10
     data_filtered=True
     optimizer = torch.optim.Adam(model.parameters(), lr=lr )
-    criterion = torch.nn.MSELoss(reduction='sum')
+   # criterion = torch.nn.MSELoss(reduction='sum')
+
+    def criterion_pearson(y, y_pred):  # (L,K,13)
+        y_1 = y - torch.mean(y, dim=1, keepdim=True)  # (L,K,13) - (L,1,13) ==> utile ? normalement proche de 0
+        y_pred_1 = y_pred - torch.mean(y_pred, dim=1, keepdim=True)
+
+        nume = torch.sum(y_1 * y_pred_1, dim=1,
+                         keepdim=True)  # y*y_pred multi terme à terme puis on somme pour avoir (L,1,13)
+        # pour chaque trajectoire on somme le produit de la vriae et de la predite
+        deno = torch.sqrt(torch.sum(y_1 ** 2, dim=1, keepdim=True)) * torch.sqrt(
+            torch.sum(y_pred_1 ** 2, dim=1, keepdim=True))  # use Pearson correlation
+        # deno zero veut dire ema constant à 0 on remplace par des 1
+        minim = torch.tensor(0.01, dtype=torch.float64)
+        if cuda_avail:
+            minim = minim.to(device=cuda2)
+            deno = deno.to(device=cuda2)
+            nume = nume.to(device=cuda2)
+        deno = torch.max(deno, minim)
+        loss = nume / deno
+        return loss
+    criterion = criterion_pearson
+
     speakers= ["fsew0","msak0","faet0","mjjn0","ffes0"]
 
     early_stopping = EarlyStopping(name_file, patience=patience, verbose=True )
