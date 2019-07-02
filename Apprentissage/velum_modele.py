@@ -243,7 +243,6 @@ def train_learn_velum(n_epochs=10):
     early_stopping = EarlyStopping(name_file, patience=patience, verbose=True )
     N= 460 * len(speakers)  # velum for mocha whith 460 sentences
     n_iterations = int(N*0.8/batch_size)
-    n_iterations = 1
     n_iterations_valid = int(N*0.2/batch_size)
     delta_test=1
     file_weights = os.path.join("saved_models", "modele_velum.txt")
@@ -259,7 +258,6 @@ def train_learn_velum(n_epochs=10):
     for epoch in range(n_epochs):
         for ite in range(n_iterations) :
             files_for_train = load_filenames(speakers, batch_size, part="train")
-
             x, y = load_data(files_for_train, filtered=data_filtered)
             y = [y[i][:,-2:] for i in range(len(y))]
             x, y = model.prepare_batch(x, y)
@@ -286,7 +284,6 @@ def train_learn_velum(n_epochs=10):
             print("Early stopping")
             break
 
-
     model.load_state_dict(torch.load(os.path.join("saved_models", name_file + '.pt')))
     torch.save(model.state_dict(), os.path.join("saved_models", name_file + ".txt"))
 
@@ -298,9 +295,19 @@ def train_learn_velum(n_epochs=10):
         speaker_2 = speaker
         if speaker in ["F1", "M1", "F5"]:
             speaker_2 = "usc_timit_" + speaker
-        std_speaker = np.load(os.path.join(root_folder, "Traitement", "std_ema_" + speaker_2 + ".npy"))
+        std_speaker = np.load(os.path.join(root_folder, "Traitement", "norm_values","std_ema_" + speaker_2 + ".npy"))
         std_speaker = std_speaker[:output_dim]
         model.evaluate_on_test(criterion=criterion, verbose=True, X_test=x, Y_test=y,
                                to_plot=False, std_ema=max(std_speaker), suffix=speaker)
 
-train_learn_velum(30)
+
+if __name__=='__main__':
+    import argparse
+    parser = argparse.ArgumentParser(description='Train and save a model.')
+    parser.add_argument('n_epochs', metavar='n_epochs', type=int,
+                        help='nombre depochs')
+
+    args = parser.parse_args()
+    n_epochs = sys.argv[1]
+
+    train_learn_velum(n_epochs=n_epochs)
