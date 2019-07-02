@@ -134,7 +134,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
     n_iteration_validation = int(N_valid/batch_size)
     n_iteration_test = int(N_test/batch_size)
     patience_temp =0
-
+    criterion = criterion_pearson
     test_files_names = []
 
     for epoch in range(n_epochs):
@@ -161,7 +161,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
             optimizer.zero_grad()
 
         #    print("D,E", torch.isnan(model.first_layer.weight.sum()))
-            loss = criterion_pearson(y,y_pred)
+            loss = criterion(y,y_pred)
 
             loss.backward()
             optimizer.step()
