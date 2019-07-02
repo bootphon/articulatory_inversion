@@ -127,8 +127,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
         N_train =+len(open(os.path.join(path_files,speaker+"_train.txt"), "r").read().split())
         N_valid =+len(open(os.path.join(path_files,speaker+"_valid.txt"), "r").read().split())
 
-    for speaker in test_on:
-        N_test =+len(open(os.path.join(path_files,speaker+"_test.txt"), "r").read().split())
+    N_test = 466
     print('N_train',N_train)
     n_iteration = int(N_train / batch_size)
     n_iteration=2
