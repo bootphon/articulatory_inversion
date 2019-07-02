@@ -1,8 +1,15 @@
 import torch
-from Apprentissage.utils import load_filenames, load_data
+try :
+    from Apprentissage.utils import load_filenames, load_data
+    from Apprentissage.pytorchtools import EarlyStopping
+
+except :
+    from utils import load_filenames, load_data
+    from pytorchtools import EarlyStopping
+
+
 import numpy as np
 import os
-from Apprentissage.pytorchtools import EarlyStopping
 import math
 root_folder = os.path.dirname(os.getcwd())
 import sys
