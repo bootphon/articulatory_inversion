@@ -47,7 +47,7 @@ def load_filenames(train_on,batch_size,part="train"):
     return train_files
 
 
-def load_data(files_names,filtered=False):
+def load_data(files_names,filtered=True, VT=True):
     """
 
     :param files_names: liste des n
@@ -57,23 +57,26 @@ def load_data(files_names,filtered=False):
     folder = os.path.join(os.path.dirname(os.getcwd()), "Donnees_pretraitees")
     x = []
     y = []
-    speakers = ["fsew0","msak0","MNGU0","F1","M1","F5"]
+    speakers = ["MNGU0", "fsew0", "msak0", "F1", "F5", "M1", "M3", "maps0", "faet0", 'mjjn0', "ffes0"]
     suff = ""
     if filtered :
         suff = "_filtered"
+    if VT :
+        suff = "_VT"
+
     for file_name in files_names :
         speaker = [s  for s in speakers if s.lower() in file_name][0] #normalement un seul speaker dans le nom du fichier
         speaker_2=speaker
-        if speaker in ["fsew0","msak0"]:
-            speaker_2 = "mocha_"+speaker
+        if speaker in ["msak0", "fsew0", "maps0", "faet0", "mjjn0", "ffes0"]:
+            speaker_2 = "mocha_" + speaker
+
         if speaker in ["F1", "M1","F5"]:
             speaker_2 = "usc_timit_" + speaker
         files_path = os.path.join(folder,speaker_2)
-        the_ema_file = np.load(os.path.join(os.path.join(files_path, "ema"+suff), file_name + ".npy"))
-        the_mfcc_file = np.load(os.path.join(os.path.join(files_path, "mfcc"), file_name+ ".npy"))
+        the_ema_file = np.load(os.path.join(files_path, "ema"+suff, file_name + ".npy"))
+        the_mfcc_file = np.load(os.path.join(files_path, "mfcc", file_name+ ".npy"))
         x.append(the_mfcc_file)
         y.append(the_ema_file)
-
     return x , y
 
 
