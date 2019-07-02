@@ -309,5 +309,5 @@ if __name__=='__main__':
                         help='nombre depochs')
 
     args = parser.parse_args()
-    n_epochs = sys.argv[1]
+    n_epochs = int(sys.argv[1])
     train_learn_velum(n_epochs=n_epochs)
