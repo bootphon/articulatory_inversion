@@ -239,7 +239,7 @@ def train_learn_velum(n_epochs=10,patience=5):
     batch_size=10
     data_filtered=True
     optimizer = torch.optim.Adam(model.parameters(), lr=lr )
-   # criterion = torch.nn.MSELoss(reduction='sum')
+    criterion_rmse = torch.nn.MSELoss(reduction='sum')
 
     def criterion_pearson(y, y_pred):  # (L,K,13)
         y_1 = y - torch.mean(y, dim=1, keepdim=True)  # (L,K,13) - (L,1,13) ==> utile ? normalement proche de 0
@@ -247,23 +247,16 @@ def train_learn_velum(n_epochs=10,patience=5):
 
         nume = torch.sum(y_1 * y_pred_1, dim=1,
                          keepdim=True)  # y*y_pred multi terme à terme puis on somme pour avoir (L,1,13)
-        # pour chaque trajectoire on somme le produit de la vriae et de la predite
         deno = torch.sqrt(torch.sum(y_1 ** 2, dim=1, keepdim=True)) * torch.sqrt(
             torch.sum(y_pred_1 ** 2, dim=1, keepdim=True))  # use Pearson correlation
-        # deno zero veut dire ema constant à 0 on remplace par des 1
         minim = torch.tensor(0.01, dtype=torch.float64)
-
-
-
         deno = torch.max(deno, minim)
         loss = nume / deno
         loss = torch.sum(loss)
 
         return -loss
     criterion = criterion_pearson
-
     speakers= ["fsew0","msak0","faet0","ffes0"]
-
     early_stopping = EarlyStopping(name_file, patience=patience, verbose=True )
     N= 460 * len(speakers)  # velum for mocha whith 460 sentences
     n_iterations = int(N*0.8/batch_size)
@@ -295,7 +288,7 @@ def train_learn_velum(n_epochs=10,patience=5):
 
         if epoch%delta_test == 0:
             loss_vali = 0
-            for ite_valid in range(n_iteration_validation):
+            for ite_valid in range(n_iterations_valid):
                 files_for_valid = load_filenames(train_on, batch_size, part=["valid"])
                 x, y = load_data(files_for_valid, filtered=data_filtered)
                 y = [y[i][:, :-2] for i in range(len(y))]
