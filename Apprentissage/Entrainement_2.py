@@ -65,16 +65,16 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
     model_dict = model.state_dict()
     loaded_state = {k: v for k, v in loaded_state.items() if
                     k in model_dict}  # only layers param that are in our current model
-    print("before ", len(loaded_state), loaded_state.keys())
+    #print("before ", len(loaded_state), loaded_state.keys())
     loaded_state = {k: v for k, v in loaded_state.items() if
                     loaded_state[k].shape == model_dict[k].shape}  # only if layers have correct shapes
-    print("after", len(loaded_state), loaded_state.keys())
+    #print("after", len(loaded_state), loaded_state.keys())
     model_dict.update(loaded_state)
     model.load_state_dict(model_dict)
 
-    previous_epoch = 0
+  #  previous_epoch = 0
 
-    print("previous epoch  :", previous_epoch)
+  #  print("previous epoch  :", previous_epoch)
     if cuda_avail:
         model = model.cuda(device=cuda2)
         torch.backends.cuda.cufft_plan_cache.max_size
@@ -108,8 +108,10 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
     path_files = os.path.join(os.path.dirname(os.getcwd()),"Donnees_pretraitees","fileset")
 
     for speaker in train_on:
+        print(speaker)
         N_train =+len(open(os.path.join(path_files,speaker+"_train.txt"), "r").read().split())
         N_valid =+len(open(os.path.join(path_files,speaker+"_valid.txt"), "r").read().split())
+        print(N_train)
 
 
     N_test = 466
