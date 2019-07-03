@@ -56,6 +56,16 @@ def load_filenames(train_on,batch_size,part=["train"]):
             train_files.extend([train_speaker[i] for i in index])
     return train_files
 
+def load_filenames_deter(train_on,part=["train"]):
+    path_files = os.path.join(os.path.dirname(os.getcwd()),"Donnees_pretraitees","fileset")
+
+    filenames = []
+    for speaker in train_on:
+        for p in part:
+            names = open(os.path.join( path_files , speaker + "_" + p + ".txt"), "r").read().split()
+            filenames = filenames + names
+    return filenames
+
 
 def load_data(files_names,filtered=True, VT=True):
     """
@@ -89,8 +99,11 @@ def load_data(files_names,filtered=True, VT=True):
         y.append(the_ema_file)
     return x , y
 
-speakers =  ["MNGU0","fsew0","msak0","F1","F5","M1","M3","maps0","faet0",'mjjn0',"ffes0"]
-
+#speakers =  ["MNGU0","fsew0","msak0","F1","F5","M1","M3","maps0","faet0",'mjjn0',"ffes0"]
+#files_for_train = load_filenames(speakers, 30, part=["train"])
+#x, y = load_data(files_for_train, filtered=1,VT=False)
+#for i in range(30):
+ #   print(files_for_train[i],x[i].shape,y[i].shape)
 
 #filenames = load_filenames(["fsew0","msak0","MNGU0"],10)
 #x,y = load_data(filenames)
