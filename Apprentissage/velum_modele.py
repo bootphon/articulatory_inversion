@@ -287,7 +287,7 @@ def train_learn_velum(n_epochs=10,patience=5):
         for ite in range(n_iterations) :
 
             files_for_train = load_filenames(speakers, batch_size, part=["train"])
-            print(files_for_train)
+          
             x, y = load_data(files_for_train, filtered=data_filtered)
             y = [y[i][:,-2:] for i in range(len(y))]
             x, y = model.prepare_batch(x, y)
