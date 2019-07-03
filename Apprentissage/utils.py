@@ -11,7 +11,7 @@ import os
 from os.path import dirname
 from numpy.random import choice
 
-def load_filenames(train_on,batch_size,part="train"):
+def load_filenames(train_on,batch_size,part=["train"]):
     """
 
     :param train_on:  liste des locuteurs sur lesquels on apprend (parmis "fsew0","msak0","MNGU0")
@@ -25,22 +25,32 @@ def load_filenames(train_on,batch_size,part="train"):
     path_files = os.path.join(os.path.dirname(os.getcwd()),"Donnees_pretraitees","fileset")
 
     if len(train_on)==1:
-        files = open(os.path.join(path_files,train_on[0]+"_"+part+".txt"), "r").read().split()
+        files = []
+        for p in part :
+            files = files + open(os.path.join(path_files,train_on[0]+"_"+p+".txt"), "r").read().split()
         index = np.random.choice(len(files),batch_size)
         train_files = [files[i] for i in index]
     else :
         proba_speakers = {}
         total_number=0
         for speaker in train_on:
-            train_speaker = open(os.path.join(path_files,speaker+"_"+part+".txt"), "r").read().split()
-            proba_speakers[speaker] = len(train_speaker)
-            total_number+=len(train_speaker)
+            N_speaker = 0
+            for p in part :
+                train_speaker = open(os.path.join(path_files,speaker+"_"+p+".txt"), "r").read().split()
+                N_speaker = N_speaker + len(train_speaker)
+
+            total_number += N_speaker
+            proba_speakers[speaker] = N_speaker
+
         for speaker in train_on:
             proba_speakers[speaker] = proba_speakers[speaker]/total_number
+
         speaker_files_chosen = choice(train_on,  batch_size, p=list(proba_speakers.values()))
         train_files=[]
         for speaker in train_on:
-            train_speaker = open(os.path.join(path_files, speaker + "_"+part+".txt"), "r").read().split()
+            train_speaker = []
+            for p in part :
+                train_speaker =  train_speaker + open(os.path.join(path_files, speaker + "_"+p+".txt"), "r").read().split()
             n_train = list(speaker_files_chosen).count(speaker)
             index = np.random.choice(len(train_speaker), n_train)
             train_files.extend([train_speaker[i] for i in index])
@@ -79,12 +89,13 @@ def load_data(files_names,filtered=True, VT=True):
         y.append(the_ema_file)
     return x , y
 
-
+speakers =  ["MNGU0","fsew0","msak0","F1","F5","M1","M3","maps0","faet0",'mjjn0',"ffes0"]
 
 
 #filenames = load_filenames(["fsew0","msak0","MNGU0"],10)
 #x,y = load_data(filenames)
 #print(x[0].shape,y[0].shape)
+
 def chirp(f0, f1, T, fs):
     # f0 is the lower bound of the frequency range, in Hz
     # f1 is the upper bound of the frequency range, in Hz
