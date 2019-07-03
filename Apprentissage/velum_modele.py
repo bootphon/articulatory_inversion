@@ -29,7 +29,7 @@ class learn_velum(torch.nn.Module):
                                         bidirectional=True)
 
         self.name_file = name_file
-        self.cutoff=30
+        self.cutoff=20
         self.sampling_rate=200
         self.init_filter_layer()
 
@@ -76,7 +76,6 @@ class learn_velum(torch.nn.Module):
             if not N % 2:
                 N += 1  # Make sure that N is odd.
             n = torch.arange(N).double()
-
             alpha = torch.mul(fc, 2 * (n - (N - 1) / 2)).double()
             # print("1",alpha)
             h = torch.div(torch.sin(alpha), alpha)
@@ -266,7 +265,7 @@ def train_learn_velum(n_epochs=10,patience=5):
         return -loss
     criterion = criterion_pearson
 
-    speakers= ["fsew0","msak0","faet0","mjjn0","ffes0"]
+    speakers= ["fsew0","msak0","faet0","ffes0"]
 
     early_stopping = EarlyStopping(name_file, patience=patience, verbose=True )
     N= 460 * len(speakers)  # velum for mocha whith 460 sentences
@@ -285,6 +284,7 @@ def train_learn_velum(n_epochs=10,patience=5):
 
     for epoch in range(n_epochs):
         for ite in range(n_iterations) :
+
             files_for_train = load_filenames(speakers, batch_size, part=["train"])
             x, y = load_data(files_for_train, filtered=data_filtered)
             y = [y[i][:,-2:] for i in range(len(y))]
@@ -299,7 +299,7 @@ def train_learn_velum(n_epochs=10,patience=5):
         if epoch%delta_test == 0:
             loss_vali = 0
             files_for_valid = load_filenames(speakers, int(N*0.2), part=["valid"])
-            x, y = load_data(files_for_valid, filtered=data_filtered)
+            x, y = load_data(files_for_valid, filtered=data_filtered,VT=False)
             y = [y[i][:, -2:] for i in range(len(y))]
             loss_vali = model.evaluate(x, y, criterion)
             early_stopping(loss_vali, model)
