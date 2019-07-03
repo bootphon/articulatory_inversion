@@ -289,7 +289,7 @@ def train_learn_velum(n_epochs=10,patience=5):
         if epoch%delta_test == 0:
             loss_vali = 0
             for ite_valid in range(n_iterations_valid):
-                files_for_valid = load_filenames(train_on, batch_size, part=["valid"])
+                files_for_valid = load_filenames(speakers, batch_size, part=["valid"])
                 x, y = load_data(files_for_valid, filtered=data_filtered)
                 y = [y[i][:, :-2] for i in range(len(y))]
                 loss_vali += model.evaluate(x, y, criterion)
