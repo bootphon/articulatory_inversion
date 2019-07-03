@@ -84,6 +84,8 @@ class my_bilstm(torch.nn.Module):
         y_pred = self.readout_layer(lstm_out)
         if self.modele_filtered :
             y_pred = self.filter_layer(y_pred)
+       # if self.output_dim == 17 : #si toutes les arti a changer si on en rajoute
+      #      y_pred[:,:,14] = torch.nn.functional.softmax(y_pred[:,:,14]) #voicing est un nombre binaire, et cest le 14eme arti
         return y_pred
 
     def init_filter_layer(self):
@@ -269,8 +271,8 @@ class my_bilstm(torch.nn.Module):
         if verbose :
             rmse_per_arti_mean = np.mean(all_diff,axis=0)*std_ema
             rmse_per_arti_std = np.std(all_diff,axis=0)*std_ema
-            print("rmse final : ", np.mean(rmse_per_arti_mean))
-            print("rmse mean per arti : \n", rmse_per_arti_mean)
+      #      print("rmse final : ", np.mean(rmse_per_arti_mean))
+       #     print("rmse mean per arti : \n", rmse_per_arti_mean)
         #    print("rmse std per arti : \n", rmse_per_arti_std)
 
             pearson_per_arti_mean = np.mean(all_pearson, axis=0)
