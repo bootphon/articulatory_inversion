@@ -56,6 +56,7 @@ class my_bilstm(torch.nn.Module):
         self.cuda_avail = cuda_avail
         if self.cuda_avail:
             self.cuda2 = torch.device('cuda:1')
+        self.epoch_ref = 0
 
     def prepare_batch(self, x, y):
         max_length = np.max([len(phrase) for phrase in x])
