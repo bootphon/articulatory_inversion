@@ -27,10 +27,9 @@ class learn_velum(torch.nn.Module):
         self.lstm_layer =   torch.nn.LSTM(input_size=hidden_dim,
                                         hidden_size=hidden_dim, num_layers=1,
                                         bidirectional=True)
-
         self.name_file = name_file
-        self.cutoff=20
-        self.sampling_rate=200
+        self.cutoff=5
+        self.sampling_rate = 500
         self.init_filter_layer()
 
     def forward(self,x):
@@ -45,7 +44,6 @@ class learn_velum(torch.nn.Module):
     def prepare_batch(self, x, y):
         max_length = np.max([len(phrase) for phrase in x])
         B = len(x)  # often batch size but not for validation
-
         new_x = torch.zeros((B, max_length, self.input_dim), dtype=torch.double)
         new_y = torch.zeros((B, max_length, self.output_dim), dtype=torch.double)
         for j in range(B):
@@ -53,7 +51,6 @@ class learn_velum(torch.nn.Module):
                 print("error size with ",j)
                 print("mfcc",len(x[j]))
                 print("ema",len(y[j]))
-
             zeropad = torch.nn.ZeroPad2d((0, 0, 0, max_length - len(x[j])))
             new_x[j] = zeropad(torch.from_numpy(x[j])).double()
             new_y[j] = zeropad(torch.from_numpy(y[j])).double()
@@ -286,7 +283,6 @@ def train_learn_velum(n_epochs=10,patience=5):
         for ite in range(n_iterations) :
 
             files_for_train = load_filenames(speakers, batch_size, part=["train"])
-
             x, y = load_data(files_for_train, filtered=data_filtered)
             y = [y[i][:,-2:] for i in range(len(y))]
             x, y = model.prepare_batch(x, y)
@@ -299,10 +295,13 @@ def train_learn_velum(n_epochs=10,patience=5):
 
         if epoch%delta_test == 0:
             loss_vali = 0
-            files_for_valid = load_filenames(speakers, int(N*0.2), part=["valid"])
-            x, y = load_data(files_for_valid, filtered=data_filtered,VT=False)
-            y = [y[i][:, -2:] for i in range(len(y))]
-            loss_vali = model.evaluate(x, y, criterion)
+            for ite_valid in range(n_iteration_validation):
+                files_for_valid = load_filenames(train_on, batch_size, part=["valid"])
+                x, y = load_data(files_for_valid, filtered=data_filtered)
+                y = [y[i][:, :-2] for i in range(len(y))]
+                loss_vali += model.evaluate(x, y, criterion)
+            loss_vali = loss_vali / n_iteration_validation
+
             early_stopping(loss_vali, model)
 
             print("epoch : {}".format(epoch))
