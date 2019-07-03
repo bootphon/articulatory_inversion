@@ -186,7 +186,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
             model.all_training_loss.append(loss)
             #model.all_test_loss += [model.all_test_loss[-1]] * (epoch+previous_epoch - len(model.all_test_loss))
             print("\n ---------- epoch" + str(epoch) + " ---------")
-            early_stopping.epoch = previous_epoch+epoch
+            #early_stopping.epoch = previous_epoch+epoch
             early_stopping(loss_vali, model)
             print("train loss ", loss.item())
             print("valid loss ", loss_vali)
