@@ -126,8 +126,8 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
         for ite in range(n_iteration):
           #  if ite % 10 == 0:
            #     print("{} out of {}".format(ite, n_iteration))
-            files_for_train = load_filenames(train_on,batch_size,part="train")
-            files_for_train = files_for_train+load_filenames(train_on, batch_size, part="test") #on ne va pas tester sur ces speakers
+            files_for_train = load_filenames(train_on,batch_size,part=["train","test"])
+             #on ne va pas tester sur ces speakers
 
             x,y = load_data(files_for_train,filtered=data_filtered)
 
@@ -162,7 +162,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
         if epoch%delta_test ==0:  #toutes les delta_test epochs on évalue le modèle sur validation et on sauvegarde le modele si le score est meilleur
             loss_vali = 0
             for ite_valid in range(n_iteration_validation):
-                files_for_valid = load_filenames(train_on,batch_size,part="valid")
+                files_for_valid = load_filenames(train_on,batch_size,part=["valid"])
                 x,y = load_data(files_for_valid,filtered=data_filtered)
             #    y = [y[i][:,:output_dim] for i in range(len(y))]
                 loss_vali+= model.evaluate(x,y,criterion)
@@ -202,9 +202,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
         model.load_state_dict(torch.load(os.path.join("saved_models",name_file+'.pt')))
         torch.save(model.state_dict(), os.path.join( "saved_models",name_file+".txt"))
 
-    files_for_test = load_filenames([test_on], N_test, part="train")
-    files_for_test = files_for_test + load_filenames([test_on], N_test, part="valid")
-    files_for_test = files_for_test + load_filenames([test_on], N_test, part="test")
+    files_for_test = load_filenames([test_on], N_test, part=["train","valid","test"])
 
     x, y = load_data(files_for_test)
     print("evaluation on speaker {}".format(test_on))
