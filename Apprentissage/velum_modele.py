@@ -286,6 +286,7 @@ def train_learn_velum(n_epochs=10,patience=5):
         for ite in range(n_iterations) :
 
             files_for_train = load_filenames(speakers, batch_size, part=["train"])
+            print(files_for_train)
             x, y = load_data(files_for_train, filtered=data_filtered)
             y = [y[i][:,-2:] for i in range(len(y))]
             x, y = model.prepare_batch(x, y)
@@ -328,18 +329,15 @@ def train_learn_velum(n_epochs=10,patience=5):
         model.evaluate_on_test(criterion=criterion, verbose=True, X_test=x, Y_test=y,
                                to_plot=True, std_ema=max(std_speaker), suffix=speaker)
 
-
-
 if __name__=='__main__':
     import argparse
     parser = argparse.ArgumentParser(description='Train and save a model.')
-    parser.add_argument('n_epochs', metavar='n_epochs', type=int,
-                        help='nombre depochs')
-
-    parser.add_argument('patience', metavar='patience', type=int,
-                        help='patience')
+    parser.add_argument('n_epochs', metavar='n_epochs', type=int, help='nombre depochs')
+    parser.add_argument('patience', metavar='patience', type=int,   help='patience')
 
     args = parser.parse_args()
     n_epochs = int(sys.argv[1])
     patience = int(sys.argv[2])
     train_learn_velum(n_epochs=n_epochs,patience=patience)
+
+
