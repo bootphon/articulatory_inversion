@@ -267,6 +267,7 @@ def train_learn_velum(n_epochs=10,patience=5):
 
     speakers= ["fsew0","msak0","faet0","ffes0"]
     speakers = ["faet0","ffes0"]
+    speakers=  ["faet0"]
 
     early_stopping = EarlyStopping(name_file, patience=patience, verbose=True )
     N= 460 * len(speakers)  # velum for mocha whith 460 sentences
@@ -287,7 +288,7 @@ def train_learn_velum(n_epochs=10,patience=5):
         for ite in range(n_iterations) :
 
             files_for_train = load_filenames(speakers, batch_size, part=["train"])
-          
+
             x, y = load_data(files_for_train, filtered=data_filtered)
             y = [y[i][:,-2:] for i in range(len(y))]
             x, y = model.prepare_batch(x, y)
