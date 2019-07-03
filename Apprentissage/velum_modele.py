@@ -191,14 +191,14 @@ class learn_velum(torch.nn.Module):
                 y_torch = torch.from_numpy(y).double().reshape(1,L,self.output_dim) #y (1,L,13)
                 y_pred_torch = self(x_torch).double() #sortie y_pred (1,L,13)
                 y_pred = y_pred_torch.detach().numpy().reshape((L, self.output_dim))  # y_pred (L,13)
-                the_loss = criterion(y_torch, y_pred_torch)  #loss entre données de taillees  (1,L,13)
-                loss_test += the_loss.item()
+                #the_loss = criterion(y_torch, y_pred_torch)  #loss entre données de taillees  (1,L,13)
+                #loss_test += the_loss.item()
                 if i in indices_to_plot:
                     self.plot_results(y, y_pred, suffix=suffix + str(i))
 
-                rmse = np.sqrt(np.mean(np.square(y - y_pred), axis=0))  # calcule du rmse à la main
-                rmse = np.reshape(rmse, (1,self.output_dim)) #dénormalisation et taille (1,13)
-                all_diff = np.concatenate((all_diff, rmse))
+                #rmse = np.sqrt(np.mean(np.square(y - y_pred), axis=0))  # calcule du rmse à la main
+               # rmse = np.reshape(rmse, (1,self.output_dim)) #dénormalisation et taille (1,13)
+              #  all_diff = np.concatenate((all_diff, rmse))
 
                 pearson = [0]*self.output_dim
                 for i in range(self.output_dim):
@@ -207,12 +207,12 @@ class learn_velum(torch.nn.Module):
                 pearson[np.isnan(pearson)] = 1
                 all_pearson = np.concatenate((all_pearson,pearson))
 
-        all_diff = all_diff[1:] #remove first row of zeros #all the errors per arti and per sample
+     #   all_diff = all_diff[1:] #remove first row of zeros #all the errors per arti and per sample
         all_pearson=all_pearson[1:]
         if verbose :
             rmse_per_arti_mean = np.mean(all_diff,axis=0)*std_ema
-            print("rmse final : ", np.mean(rmse_per_arti_mean))
-            print("rmse mean per arti : \n", rmse_per_arti_mean)
+         #   print("rmse final : ", np.mean(rmse_per_arti_mean))
+          #  print("rmse mean per arti : \n", rmse_per_arti_mean)
             pearson_per_arti_mean = np.mean(all_pearson, axis=0)
             print("pearson final : ", np.mean(pearson_per_arti_mean))
             print("pearson mean per arti : \n", pearson_per_arti_mean)
@@ -326,7 +326,8 @@ def train_learn_velum(n_epochs=10,patience=5):
         std_speaker = np.load(os.path.join(root_folder, "Traitement", "norm_values","std_ema_" + speaker_2 + ".npy"))
         std_speaker = std_speaker[:output_dim]
         model.evaluate_on_test(criterion=criterion, verbose=True, X_test=x, Y_test=y,
-                               to_plot=False, std_ema=max(std_speaker), suffix=speaker)
+                               to_plot=True, std_ema=max(std_speaker), suffix=speaker)
+
 
 
 if __name__=='__main__':
