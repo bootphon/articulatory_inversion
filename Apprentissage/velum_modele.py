@@ -285,7 +285,7 @@ def train_learn_velum(n_epochs=10,patience=5):
 
     for epoch in range(n_epochs):
         for ite in range(n_iterations) :
-            files_for_train = load_filenames(speakers, batch_size, part="train")
+            files_for_train = load_filenames(speakers, batch_size, part=["train"])
             x, y = load_data(files_for_train, filtered=data_filtered)
             y = [y[i][:,-2:] for i in range(len(y))]
             x, y = model.prepare_batch(x, y)
@@ -298,7 +298,7 @@ def train_learn_velum(n_epochs=10,patience=5):
 
         if epoch%delta_test == 0:
             loss_vali = 0
-            files_for_valid = load_filenames(speakers, int(N*0.2), part="valid")
+            files_for_valid = load_filenames(speakers, int(N*0.2), part=["valid"])
             x, y = load_data(files_for_valid, filtered=data_filtered)
             y = [y[i][:, -2:] for i in range(len(y))]
             loss_vali = model.evaluate(x, y, criterion)
@@ -316,7 +316,7 @@ def train_learn_velum(n_epochs=10,patience=5):
     torch.save(model.state_dict(), os.path.join("saved_models", name_file + ".txt"))
 
     for speaker in speakers:
-        files_for_test = load_filenames([speaker], int(0.2*N), part="test")
+        files_for_test = load_filenames([speaker], int(0.2*N), part=["test"])
         x, y = load_data(files_for_test, filtered=data_filtered)
         y = [y[i][:, -2:] for i in range(len(y))]
         print("evaluation on speaker {}".format(speaker))
