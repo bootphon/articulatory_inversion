@@ -109,8 +109,8 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
 
     for speaker in train_on:
         print(speaker)
-        N_train =+len(open(os.path.join(path_files,speaker+"_train.txt"), "r").read().split())
-        N_valid =+len(open(os.path.join(path_files,speaker+"_valid.txt"), "r").read().split())
+        N_train = N_train + len(open(os.path.join(path_files,speaker+"_train.txt"), "r").read().split())
+        N_valid = N_valid + len(open(os.path.join(path_files,speaker+"_valid.txt"), "r").read().split())
         print(N_train)
 
 
