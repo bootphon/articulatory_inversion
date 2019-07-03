@@ -118,6 +118,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
     print('N_train',N_train)
     n_iteration = int(N_train / batch_size)
     n_iteration_validation = int(N_valid/batch_size)
+    n_iteration_validation = 50
     n_iteration_test = int(N_test/batch_size)
     patience_temp =0
     test_files_names = []
