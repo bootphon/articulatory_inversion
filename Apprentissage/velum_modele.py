@@ -215,7 +215,7 @@ class learn_velum(torch.nn.Module):
           #  print("rmse mean per arti : \n", rmse_per_arti_mean)
             pearson_per_arti_mean = np.mean(all_pearson, axis=0)
             print("pearson final : ", np.mean(pearson_per_arti_mean))
-            print("pearson mean per arti : \n", pearson_per_arti_mean)
+           # print("pearson mean per arti : \n", pearson_per_arti_mean)
 
     def plot_results(self, y, y_pred, suffix=""):
         plt.figure()
