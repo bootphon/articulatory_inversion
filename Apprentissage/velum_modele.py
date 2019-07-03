@@ -293,7 +293,7 @@ def train_learn_velum(n_epochs=10,patience=5):
                 x, y = load_data(files_for_valid, filtered=data_filtered)
                 y = [y[i][:, -2:] for i in range(len(y))]
                 loss_vali += model.evaluate(x, y, criterion)
-            loss_vali = loss_vali / n_iteration_validation
+            loss_vali = loss_vali / n_iterations_valid
 
             early_stopping(loss_vali, model)
 
