@@ -6,10 +6,10 @@ import torch
 import os
 import sys
 from sklearn.model_selection import train_test_split
-from utils import load_filenames, load_data
+from utils import load_filenames, load_data, load_filenames_deter
 from pytorchtools import EarlyStopping
 import time
-
+import random
 from os.path import dirname
 import numpy as np
 from scipy import signal
@@ -27,7 +27,6 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
     data_filtered=True
     modele_filtered=True
     train_on = ["MNGU0", "fsew0", "msak0", "F1", "F5", "M1", "M3", "maps0", "faet0", 'mjjn0', "ffes0"]
-    train_on = ["fsew0", "msak0", "F1", "F5", "M1", "M3", "maps0", "faet0", 'mjjn0', "ffes0"]
 
     train_on.remove(test_on)
     print("train_on :",train_on)
@@ -115,30 +114,28 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
         N_valid = N_valid + len(open(os.path.join(path_files,speaker+"_valid.txt"), "r").read().split())
         print(N_train)
 
+    files_for_train = load_filenames_deter(train_on, part=["train", "test"])
+    files_for_valid = load_filenames_deter(train_on, part=["valid"])
+    files_for_test = load_filenames_deter(test_on, part=["train", "valid", "test"])
 
-    N_test = 466
+    N_test = len(files_for_test)
     print('N_train',N_train)
     n_iteration = int(N_train / batch_size)
-    n_iteration = 50
     n_iteration_validation = int(N_valid/batch_size)
     n_iteration_test = int(N_test/batch_size)
     patience_temp =0
     test_files_names = []
 
+
+
     for epoch in range(n_epochs):
+        random.shuffle(files_for_train)
+
         for ite in range(n_iteration):
-          #  if ite % 10 == 0:
-           #     print("{} out of {}".format(ite, n_iteration))
-            files_for_train = load_filenames(train_on,batch_size,part=["train","test"])
-             #on ne va pas tester sur ces speakers
-
-            x,y = load_data(files_for_train,filtered=data_filtered)
-
-       #     y = [y[i][:,:output_dim] for i in range(len(y))]
-
-        #     x, y = X_train[indices], Y_train[indices]
+            if ite % 1 == 0:
+                print("{} out of {}".format(ite, n_iteration))
+            x,y = load_data(files_for_train[ite:ite+batch_size],filtered=data_filtered)
             x, y = model.prepare_batch(x, y)
-          #  print("before forward xshape",x.shape)
             y_pred = model(x).double()
           #  print(y_pred)
             torch.cuda.empty_cache()
@@ -163,9 +160,11 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
 
         if epoch%delta_test ==0:  #toutes les delta_test epochs on évalue le modèle sur validation et on sauvegarde le modele si le score est meilleur
             loss_vali = 0
+            random.shuffle(files_for_valid)
+
             for ite_valid in range(n_iteration_validation):
-                files_for_valid = load_filenames(train_on,batch_size,part=["valid"])
-                x,y = load_data(files_for_valid,filtered=data_filtered)
+
+                x,y = load_data(files_for_valid[ite_valid,ite_valid+batch_size],filtered=data_filtered)
             #    y = [y[i][:,:output_dim] for i in range(len(y))]
                 loss_vali+= model.evaluate(x,y,criterion)
             if epoch>0:
@@ -204,9 +203,9 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
         model.load_state_dict(torch.load(os.path.join("saved_models",name_file+'.pt')))
         torch.save(model.state_dict(), os.path.join( "saved_models",name_file+".txt"))
 
-    files_for_test = load_filenames([test_on], N_test, part=["train","valid","test"])
-
+    random.shuffle(files_for_test)
     x, y = load_data(files_for_test)
+
     print("evaluation on speaker {}".format(test_on))
     speaker_2 = test_on
     if test_on in ["F1", "M1", "F5","M3"]:
