@@ -32,7 +32,7 @@ class learn_velum(torch.nn.Module):
         self.cutoff=30
         self.sampling_rate = 500
         self.init_filter_layer()
-        self.all_validation_loss = None
+        self.all_validation_loss = []
 
     def forward(self,x):
         x_1 = torch.nn.functional.relu(self.first_layer(x))
