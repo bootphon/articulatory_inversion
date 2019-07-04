@@ -276,7 +276,6 @@ def train_learn_velum(n_epochs=10,patience=5):
 
     files_for_train = load_filenames_deter(speakers, part=["train"])
     files_for_valid = load_filenames_deter(speakers, part=["valid"])
-    files_for_test = load_filenames_deter(speakers, part=["test"])
 
     random.shuffle(files_for_train)
     for epoch in range(n_epochs):
@@ -315,6 +314,7 @@ def train_learn_velum(n_epochs=10,patience=5):
     torch.save(model.state_dict(), os.path.join("saved_models", name_file + ".txt"))
 
     for speaker in speakers:
+        files_for_test = load_filenames_deter([speaker], part=["test"])
         x, y = load_data(files_for_test, filtered=data_filtered,VT=False)
         y = [y[i][:, -2:] for i in range(len(y))]
         print("evaluation on speaker {}".format(speaker))
