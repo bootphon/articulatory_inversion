@@ -62,45 +62,6 @@ class learn_velum(torch.nn.Module):
         return x, y
 
     def init_filter_layer(self):
-        def get_filter_weights():
-            # print(cutoff)
-            cutoff = torch.tensor(self.cutoff, dtype=torch.float64).view(1, 1)
-            fc = torch.div(cutoff,
-                           self.sampling_rate)  # Cutoff frequency as a fraction of the sampling rate (in (0, 0.5)).
-            # print("0",fc)
-            if fc > 0.5:
-                raise Exception("La frequence de coupure doit etre au moins deux fois la frequence dechantillonnage")
-            b = 0.08  # Transition band, as a fraction of the sampling rate (in (0, 0.5)).
-            N = int(np.ceil((4 / b)))  # le window
-            if not N % 2:
-                N += 1  # Make sure that N is odd.
-            n = torch.arange(N).double()
-            alpha = torch.mul(fc, 2 * (n - (N - 1) / 2)).double()
-            # print("1",alpha)
-            h = torch.div(torch.sin(alpha), alpha)
-            h[torch.isnan(h)] = 1
-            # print("2",h)
-            #        h = np.sinc(2 * fc * (n - (N - 1) / 2))  # Compute sinc filter.
-            beta = n * 2 * math.pi * (N - 1)
-
-            """ n = torch.from_numpy(np.arange(N) ) # int of [0,N]
-        h = np.sinc(2 * fc * (n - (N - 1) / 2))  # Compute sinc filter.
-        h = torch.from_numpy(h)
-        w = 0.5 * (1 - np.cos(2 * np.pi * n / (N - 1)))  # Compute hanning window.
-        h = h * w  # Multiply sinc filter with window.
-       """
-            # print("2.5",beta)
-            w = 0.5 * (1 - torch.cos(beta))  # Compute hanning window.
-            # print("3",w)
-            h = torch.mul(h, w)  # Multiply sinc filter with window.
-            h = torch.div(h, torch.sum(h))
-            # print("4",h)
-            # h.require_grads = True
-            #  self.cutoff = Variable(cutoff, requires_grad=True)
-            #   self.cutoff.require_grads = True
-            #   self.cutoff.retain_grad()
-            #  h = torch.cat([h]*self.output_dim,0)
-            return h
 
         def get_filter_weights_en_dur():
             fc = self.cutoff / self.sampling_rate
@@ -112,22 +73,14 @@ class learn_velum(torch.nn.Module):
             if not N % 2:
                 N += 1  # Make sure that N is odd.
             n = np.arange(N)
-            # print("1",n)
-            h = np.sinc(fc * 2 * (n - (N - 1) / 2))
-            # print("2",h)
-            w = 0.5 * (1 - np.cos(n * 2 * math.pi / (N - 1)))  # Compute hanning window.
-            # print("3",w)
 
+            h = np.sinc(fc * 2 * (n - (N - 1) / 2))
+            w = 0.5 * (1 - np.cos(n * 2 * math.pi / (N - 1)))  # Compute hanning window.
             h = h * w
-            # print("4",h)
             h = h / np.sum(h)
-            #            print("5",h)
 
             return torch.tensor(h)
 
-        # print("1",self.cutoff)
-        # self.cutoff = torch.nn.parameter.Parameter(torch.Tensor(self.cutoff))
-        # self.cutoff.requires_grad = True
         window_size = 5
         C_in = 1
         stride = 1
@@ -138,9 +91,6 @@ class learn_velum(torch.nn.Module):
         lowpass.weight = torch.nn.Parameter(weight_init)
         lowpass = lowpass.double()
         self.lowpass = lowpass
-        # print("lowpasse ",self.lowpass.weight)
-
-        # self.lowpass.require_grads=True
 
     def filter_layer(self, y):
         B = len(y)  # batch size
@@ -189,14 +139,9 @@ class learn_velum(torch.nn.Module):
                 y_torch = torch.from_numpy(y).double().reshape(1,L,self.output_dim) #y (1,L,13)
                 y_pred_torch = self(x_torch).double() #sortie y_pred (1,L,13)
                 y_pred = y_pred_torch.detach().numpy().reshape((L, self.output_dim))  # y_pred (L,13)
-                #the_loss = criterion(y_torch, y_pred_torch)  #loss entre données de taillees  (1,L,13)
-                #loss_test += the_loss.item()
                 if i in indices_to_plot:
                     self.plot_results(y, y_pred, suffix=suffix + str(i))
 
-                #rmse = np.sqrt(np.mean(np.square(y - y_pred), axis=0))  # calcule du rmse à la main
-               # rmse = np.reshape(rmse, (1,self.output_dim)) #dénormalisation et taille (1,13)
-              #  all_diff = np.concatenate((all_diff, rmse))
 
                 pearson = [0]*self.output_dim
                 for i in range(self.output_dim):
@@ -205,12 +150,8 @@ class learn_velum(torch.nn.Module):
                 pearson[np.isnan(pearson)] = 1
                 all_pearson = np.concatenate((all_pearson,pearson))
 
-     #   all_diff = all_diff[1:] #remove first row of zeros #all the errors per arti and per sample
         all_pearson=all_pearson[1:]
         if verbose :
-            rmse_per_arti_mean = np.mean(all_diff,axis=0)*std_ema
-         #   print("rmse final : ", np.mean(rmse_per_arti_mean))
-          #  print("rmse mean per arti : \n", rmse_per_arti_mean)
             pearson_per_arti_mean = np.mean(all_pearson, axis=0)
             print("pearson final : ", np.mean(pearson_per_arti_mean))
            # print("pearson mean per arti : \n", pearson_per_arti_mean)
@@ -235,7 +176,6 @@ def train_learn_velum(n_epochs=10,patience=5):
     hidden_dim = 200
     lr=0.001
     name_file = "modele_velum"
-
     model = learn_velum(hidden_dim,input_dim,output_dim,name_file).double()
     model_dict = model.state_dict()
     batch_size=10
@@ -259,12 +199,9 @@ def train_learn_velum(n_epochs=10,patience=5):
         return -loss
     criterion = criterion_pearson
     speakers= ["fsew0","msak0","faet0","ffes0"]
-    speakers= ["faet0","ffes0"]
 
     early_stopping = EarlyStopping(name_file, patience=patience, verbose=True )
     N= 460 * len(speakers)  # velum for mocha whith 460 sentences
-    n_iterations = int(N*0.8/batch_size)
-    n_iterations_valid = int(N*0.2/batch_size)
     delta_test=1
     file_weights = os.path.join("saved_models", "modele_velum.txt")
     loaded_state = torch.load(file_weights, map_location=torch.device('cpu'))
@@ -275,11 +212,13 @@ def train_learn_velum(n_epochs=10,patience=5):
                     loaded_state[k].shape == model_dict[k].shape}  # only if layers have correct shapes
     model_dict.update(loaded_state)
     model.load_state_dict(model_dict)
-
     files_for_train = load_filenames_deter(speakers, part=["train"])
     files_for_valid = load_filenames_deter(speakers, part=["valid"])
     random.shuffle(files_for_train)
     patience_temp = 0
+    n_iterations = int(len(files_for_train)/batch_size)
+    n_iterations_valid = int(len(files_for_valid)/ batch_size)
+
     for epoch in range(n_epochs):
         for ite in range(n_iterations) :
             x, y = load_data(files_for_train[ite:ite + batch_size], filtered=data_filtered, VT=False)
@@ -335,7 +274,7 @@ def train_learn_velum(n_epochs=10,patience=5):
         std_speaker = np.load(os.path.join(root_folder, "Traitement", "norm_values","std_ema_" + speaker_2 + ".npy"))
         std_speaker = std_speaker[:output_dim]
         model.evaluate_on_test(criterion=criterion, verbose=True, X_test=x, Y_test=y,
-                               to_plot=True, std_ema=max(std_speaker), suffix=speaker)
+                               to_plot=False, std_ema=max(std_speaker), suffix=speaker)
 
 if __name__=='__main__':
     import argparse
