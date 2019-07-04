@@ -132,7 +132,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
         random.shuffle(files_for_train)
 
         for ite in range(n_iteration):
-            if ite % 1 == 0:
+            if ite % 50 == 0:
                 print("{} out of {}".format(ite, n_iteration))
             x,y = load_data(files_for_train[ite:ite+batch_size],filtered=data_filtered)
             x, y = model.prepare_batch(x, y)
