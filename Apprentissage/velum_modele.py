@@ -274,7 +274,7 @@ def train_learn_velum(n_epochs=10,patience=5):
         std_speaker = np.load(os.path.join(root_folder, "Traitement", "norm_values","std_ema_" + speaker_2 + ".npy"))
         std_speaker = std_speaker[:output_dim]
         model.evaluate_on_test(criterion=criterion, verbose=True, X_test=x, Y_test=y,
-                               to_plot=False, std_ema=max(std_speaker), suffix=speaker)
+                               to_plot=True, std_ema=max(std_speaker), suffix=speaker)
 
 if __name__=='__main__':
     import argparse
