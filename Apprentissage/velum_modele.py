@@ -258,6 +258,8 @@ def train_learn_velum(n_epochs=10,patience=5):
         return -loss
     criterion = criterion_pearson
     speakers= ["fsew0","msak0","faet0","ffes0"]
+    speakers= ["faet0","ffes0"]
+
     early_stopping = EarlyStopping(name_file, patience=patience, verbose=True )
     N= 460 * len(speakers)  # velum for mocha whith 460 sentences
     n_iterations = int(N*0.8/batch_size)
@@ -273,10 +275,8 @@ def train_learn_velum(n_epochs=10,patience=5):
     model_dict.update(loaded_state)
     model.load_state_dict(model_dict)
 
-
     files_for_train = load_filenames_deter(speakers, part=["train"])
     files_for_valid = load_filenames_deter(speakers, part=["valid"])
-
     random.shuffle(files_for_train)
     for epoch in range(n_epochs):
         for ite in range(n_iterations) :
@@ -322,6 +322,7 @@ def train_learn_velum(n_epochs=10,patience=5):
 
     for speaker in speakers:
         files_for_test = load_filenames_deter([speaker], part=["test"])
+      #  print(files_for_test)
         x, y = load_data(files_for_test, filtered=data_filtered,VT=False)
         y = [y[i][:, -2:] for i in range(len(y))]
         print("evaluation on speaker {}".format(speaker))
@@ -331,7 +332,7 @@ def train_learn_velum(n_epochs=10,patience=5):
         std_speaker = np.load(os.path.join(root_folder, "Traitement", "norm_values","std_ema_" + speaker_2 + ".npy"))
         std_speaker = std_speaker[:output_dim]
         model.evaluate_on_test(criterion=criterion, verbose=True, X_test=x, Y_test=y,
-                               to_plot=False, std_ema=max(std_speaker), suffix=speaker)
+                               to_plot=True, std_ema=max(std_speaker), suffix=speaker)
 
 if __name__=='__main__':
     import argparse
