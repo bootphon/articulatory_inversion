@@ -32,6 +32,7 @@ class learn_velum(torch.nn.Module):
         self.cutoff=30
         self.sampling_rate = 500
         self.init_filter_layer()
+        self.all_validation_loss = None
 
     def forward(self,x):
         x_1 = torch.nn.functional.relu(self.first_layer(x))
@@ -308,6 +309,7 @@ def train_learn_velum(n_epochs=10,patience=5):
                             print(param_group["lr"])
                             patience_temp=0
             early_stopping(loss_vali, model)
+            model.all_validation_loss.append(loss_vali)
 
             print("epoch : {}".format(epoch))
             print("loss train : {}".format(loss.item()))
