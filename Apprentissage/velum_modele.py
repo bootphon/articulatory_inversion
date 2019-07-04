@@ -29,7 +29,7 @@ class learn_velum(torch.nn.Module):
                                         hidden_size=hidden_dim, num_layers=1,
                                         bidirectional=True)
         self.name_file = name_file
-        self.cutoff=5
+        self.cutoff=30
         self.sampling_rate = 500
         self.init_filter_layer()
 
@@ -262,7 +262,6 @@ def train_learn_velum(n_epochs=10,patience=5):
     N= 460 * len(speakers)  # velum for mocha whith 460 sentences
     n_iterations = int(N*0.8/batch_size)
     n_iterations_valid = int(N*0.2/batch_size)
-    n_iterations=n_iterations_valid=1
     delta_test=1
     file_weights = os.path.join("saved_models", "modele_velum.txt")
     loaded_state = torch.load(file_weights, map_location=torch.device('cpu'))
