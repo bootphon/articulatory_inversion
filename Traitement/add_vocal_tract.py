@@ -1,11 +1,17 @@
 
+import os,sys,inspect
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0,parentdir)
 import os
 import librosa
 import numpy as np
 import scipy
 import torch
-from Apprentissage.velum_modele import learn_velum
-
+try :
+    from Apprentissage.velum_modele import learn_velum
+except :
+    from velum_modele import learn_velum
 import matplotlib.pyplot as plt
 articulators = [
         'tt_x', 'tt_y', 'td_x', 'td_y', 'tb_x', 'tb_y', 'li_x', 'li_y',
@@ -115,6 +121,7 @@ def add_vocal_tract(speaker):
         np.save(os.path.join(root_folder, "Donnees_pretraitees", speaker_2, "ema_VT",EMA_files_names[i]),ema)
 
 speakers = ["MNGU0","fsew0","msak0","F1","F5","M1","M3","maps0","faet0",'mjjn0',"ffes0"]
+speakers= ["fsew0"]
 
 for sp in speakers :
     add_vocal_tract(sp)
