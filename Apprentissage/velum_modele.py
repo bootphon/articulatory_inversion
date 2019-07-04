@@ -1,15 +1,16 @@
 import torch
 try :
-    from Apprentissage.utils import load_filenames, load_data
+    from Apprentissage.utils import load_filenames, load_data,load_filenames_deter
     from Apprentissage.pytorchtools import EarlyStopping
 
 except :
-    from utils import load_filenames, load_data
+    from utils import load_filenames, load_data,load_filenames_deter
     from pytorchtools import EarlyStopping
 
 
 import numpy as np
 import os
+import random
 import math
 root_folder = os.path.dirname(os.getcwd())
 import sys
@@ -261,6 +262,7 @@ def train_learn_velum(n_epochs=10,patience=5):
     N= 460 * len(speakers)  # velum for mocha whith 460 sentences
     n_iterations = int(N*0.8/batch_size)
     n_iterations_valid = int(N*0.2/batch_size)
+    n_iterations=n_iterations_valid=1
     delta_test=1
     file_weights = os.path.join("saved_models", "modele_velum.txt")
     loaded_state = torch.load(file_weights, map_location=torch.device('cpu'))
@@ -272,11 +274,15 @@ def train_learn_velum(n_epochs=10,patience=5):
     model_dict.update(loaded_state)
     model.load_state_dict(model_dict)
 
+
+    files_for_train = load_filenames_deter(speakers, part=["train"])
+    files_for_valid = load_filenames_deter(speakers, part=["valid"])
+    files_for_test = load_filenames_deter(speakers, part=["test"])
+
+    random.shuffle(files_for_train)
     for epoch in range(n_epochs):
         for ite in range(n_iterations) :
-
-            files_for_train = load_filenames(speakers, batch_size, part=["train"])
-            x, y = load_data(files_for_train, filtered=data_filtered)
+            x, y = load_data(files_for_train[ite:ite + batch_size], filtered=data_filtered, VT=False)
             y = [y[i][:,-2:] for i in range(len(y))]
             x, y = model.prepare_batch(x, y)
             y_pred = model(x).double()
@@ -287,10 +293,11 @@ def train_learn_velum(n_epochs=10,patience=5):
             optimizer.step()
 
         if epoch%delta_test == 0:
+            random.shuffle(files_for_valid)
+
             loss_vali = 0
             for ite_valid in range(n_iterations_valid):
-                files_for_valid = load_filenames(speakers, batch_size, part=["valid"])
-                x, y = load_data(files_for_valid, filtered=data_filtered)
+                x, y = load_data(files_for_valid[ite_valid:ite_valid + batch_size], filtered=data_filtered,VT=False)
                 y = [y[i][:, -2:] for i in range(len(y))]
                 loss_vali += model.evaluate(x, y, criterion)
             loss_vali = loss_vali / n_iterations_valid
@@ -309,8 +316,7 @@ def train_learn_velum(n_epochs=10,patience=5):
     torch.save(model.state_dict(), os.path.join("saved_models", name_file + ".txt"))
 
     for speaker in speakers:
-        files_for_test = load_filenames([speaker], int(0.2*N), part=["test"])
-        x, y = load_data(files_for_test, filtered=data_filtered)
+        x, y = load_data(files_for_test, filtered=data_filtered,VT=False)
         y = [y[i][:, -2:] for i in range(len(y))]
         print("evaluation on speaker {}".format(speaker))
         speaker_2 = speaker
