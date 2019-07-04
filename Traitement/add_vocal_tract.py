@@ -121,7 +121,8 @@ def add_vocal_tract(speaker):
         np.save(os.path.join(root_folder, "Donnees_pretraitees", speaker_2, "ema_VT",EMA_files_names[i]),ema)
 
 speakers = ["MNGU0","fsew0","msak0","F1","F5","M1","M3","maps0","faet0",'mjjn0',"ffes0"]
-speakers= ["fsew0"]
+speakers = ["fsew0","msak0","faet0","ffes0"]
+
 
 for sp in speakers :
     add_vocal_tract(sp)
