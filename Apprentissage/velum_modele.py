@@ -279,6 +279,7 @@ def train_learn_velum(n_epochs=10,patience=5):
     files_for_train = load_filenames_deter(speakers, part=["train"])
     files_for_valid = load_filenames_deter(speakers, part=["valid"])
     random.shuffle(files_for_train)
+    patience_temp = 0
     for epoch in range(n_epochs):
         for ite in range(n_iterations) :
             x, y = load_data(files_for_train[ite:ite + batch_size], filtered=data_filtered, VT=False)
