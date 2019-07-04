@@ -292,14 +292,21 @@ def train_learn_velum(n_epochs=10,patience=5):
 
         if epoch%delta_test == 0:
             random.shuffle(files_for_valid)
-
             loss_vali = 0
             for ite_valid in range(n_iterations_valid):
                 x, y = load_data(files_for_valid[ite_valid:ite_valid + batch_size], filtered=data_filtered,VT=False)
                 y = [y[i][:, -2:] for i in range(len(y))]
                 loss_vali += model.evaluate(x, y, criterion)
             loss_vali = loss_vali / n_iterations_valid
-
+            if epoch>0:
+                if loss_vali > model.all_validation_loss[-1]:
+                    patience_temp +=1
+                    if patience_temp == 3 :
+                        print("decrease learning rate")
+                        for param_group in optimizer.param_groups:
+                            param_group['lr'] = param_group['lr'] / 2
+                            print(param_group["lr"])
+                            patience_temp=0
             early_stopping(loss_vali, model)
 
             print("epoch : {}".format(epoch))
