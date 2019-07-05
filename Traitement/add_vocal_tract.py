@@ -30,15 +30,11 @@ def add_vocal_tract(speaker):
     def add_lip_aperture(ema):
         ind_1, ind_2 = [articulators.index("ul_y"), articulators.index("ll_y")]
         lip_aperture = ema[:, ind_1] - ema[:, ind_2]  # upperlip_y - lowerlip_y
-        ema = np.insert(ema, 12, 1, axis=1)
-        ema[:, 12] = lip_aperture
-        return ema
+        return lip_aperture
     def add_lip_protrusion(ema):
         ind_1, ind_2 = [articulators.index("ul_x"), articulators.index("ll_x")]
         lip_protrusion = (ema[:, ind_1] + ema[:, ind_2]) / 2
-        ema = np.insert(ema, 13, 1, axis=1)
-        ema[:, 13] = lip_protrusion
-        return ema
+        return lip_protrusion
     def add_voicing(wav,ema,sr):
 
         hop_time = 10 / 1000  # en ms
@@ -47,10 +43,9 @@ def add_vocal_tract(speaker):
         window = scipy.signal.get_window("hanning", N_frames)
         ste = scipy.signal.convolve(wav ** 2, window ** 2, mode="same")
         ste = scipy.signal.resample(ste, num=len(ema))
-        ste = [min(x, 1) for x in ste]
-        ema = np.insert(ema, 13, 1, axis=1)
-        ema[:, 14] = ste
-        return ema
+        ste = [max(min(x, 1),0) for x in ste]
+
+        return ste
 
     def add_velum(mfcc,ema):
         if len(mfcc)!= len(ema):
@@ -64,9 +59,7 @@ def add_vocal_tract(speaker):
         mfcc_2 = torch.from_numpy(mfcc).view((1, len(mfcc), len(mfcc[0])))
         velum_xy = model(mfcc_2).double()
         velum_xy = velum_xy.detach().numpy().reshape((len(mfcc), 2))
-        ema = np.insert(ema, (14,14), 1, axis=1)
-        ema[:, 13:15] = velum_xy
-        return ema
+        return velum_xy
 
     if speaker in ["msak0", "fsew0","maps0","faet0","mjjn0","ffes0"]:
         speaker_2 = "mocha_" + speaker
@@ -82,6 +75,11 @@ def add_vocal_tract(speaker):
         speaker_2 = speaker
         wav_path = os.path.join(root_folder, "Donnees_brutes", speaker,"wav")
         sampling_rate_wav= 16000
+    elif speaker in ["F01", "F02", "F03", "F04", "M01", "M02", "M03", "M04"]:
+        speaker_2 = "Haskins_"+speaker
+        wav_path = os.path.join(root_folder, "Donnees_brutes", "Haskins_IEEE_Rate_Comparison_DB",speaker,"wav")
+        sampling_rate_wav= 44100
+
     mfcc_path = os.path.join(root_folder, "Donnees_pretraitees", speaker_2,"mfcc")
     files_path = os.path.join(root_folder, "Donnees_pretraitees", speaker_2,"ema_filtered")
 
@@ -91,39 +89,67 @@ def add_vocal_tract(speaker):
     EMA_files_names = sorted(
         [name[:-4] for name in os.listdir(files_path) if name.endswith('.npy')])
     N = len(EMA_files_names)
-
     for i in range(N):
 
-        if i%10 ==0:
+        if i%100 ==0:
             print("{} out of {}".format(i, N))
         ema = np.load(os.path.join(files_path,EMA_files_names[i]+".npy"))
-        ema = add_lip_aperture(ema)
-        ema = add_lip_protrusion(ema)
+        lip_aperture = add_lip_aperture(ema)
+        lip_protrusion = add_lip_protrusion(ema)
 
-        if speaker in ["fsew0","msak0","faet0","ffes0"] :
+        if speaker in ["fsew0","msak0","faet0","ffes0"] : # 14 arti de 0 à 13 (2*6 + 2)
             wav,sr = librosa.load(os.path.join(wav_path, EMA_files_names[i] + ".wav"),sr = sampling_rate_wav)
-            ema = add_voicing(wav,ema,sampling_rate_wav)
+            voicing = add_voicing(wav, ema, sampling_rate_wav)
+            ema = np.insert(ema,(12,13,14),0,axis=1)
+            ema[:,12] = lip_aperture
+            ema[:,13] = lip_protrusion
+            ema[:,14] = voicing
 
-        elif speaker in ["MNGU0","maps0","mjjn0"]:
+        elif speaker in ["MNGU0","maps0","mjjn0"]: # 12 arti de 0 à 11
             wav, sr = librosa.load(os.path.join(wav_path, EMA_files_names[i] + ".wav"), sr=sampling_rate_wav)
-            ema = add_voicing(wav, ema, sampling_rate_wav)
-            mfcc = np.load(os.path.join(mfcc_path,EMA_files_names[i]+".npy"))
-            ema = add_velum(mfcc,ema)
+            voicing = add_voicing(wav, ema, sampling_rate_wav)
+            mfcc = np.load(os.path.join(mfcc_path, EMA_files_names[i] + ".npy"))
+
+            velum_xy = add_velum(mfcc,ema)
+            ema  = np.concatenate((ema,np.zeros((len(ema),5))),axis=1)
+            ema[:, 12] = lip_aperture
+            ema[:, 13] = lip_protrusion
+            ema[:, 14] = voicing
+
+            ema[:,15:17] = velum_xy
+
+
 
         elif speaker in ["F1","F5","M1","M3"]:
             wav = np.load(os.path.join(wav_path, EMA_files_names[i] + ".npy"))
             mfcc = np.load(os.path.join(mfcc_path,EMA_files_names[i]+".npy"))
+            ema  = np.concatenate((ema,np.zeros((len(ema),5))),axis=1)
+
             if len(ema)!= len(mfcc):
                 print("pbm shape",len(ema),len(mfcc),EMA_files_names[i])
-            ema = add_voicing(wav,ema,sampling_rate_wav)
-            ema = add_velum(mfcc,ema)
+            voicing = add_voicing(wav,ema,sampling_rate_wav)
+            velum_xy = add_velum(mfcc,ema)
 
-        np.save(os.path.join(root_folder, "Donnees_pretraitees", speaker_2, "ema_VT",EMA_files_names[i]),ema)
+            ema[:, 12] = lip_aperture
+            ema[:, 13] = lip_protrusion
+            ema[:, 14] = voicing
+            ema[:,15:17] = velum_xy
+        elif speaker in  ["F01","F02","F03","F04","M01","M02","M03","M04"] : #haskins
+            wav = np.reshape(np.load(os.path.join(wav_path, EMA_files_names[i] + ".npy")),-1)
+            mfcc = np.load(os.path.join(mfcc_path, EMA_files_names[i] + ".npy"))
+            ema = np.concatenate((ema, np.zeros((len(ema), 5))), axis=1)
+            if len(ema) != len(mfcc):
+                print("pbm shape", len(ema), len(mfcc), EMA_files_names[i])
+            voicing = add_voicing(wav, ema, sampling_rate_wav)
+            velum_xy = add_velum(mfcc, ema)
+            ema[:, 12] = lip_aperture
+            ema[:, 13] = lip_protrusion
+            ema[:, 14] = voicing
+            ema[:, 15:17] = velum_xy
+        np.save(os.path.join(root_folder,"Donnees_pretraitees",speaker_2,"ema_VT",EMA_files_names[i]),ema)
 
-speakers = ["MNGU0","fsew0","msak0","F1","F5","M1","M3","maps0","faet0",'mjjn0',"ffes0"]
-speakers = ["fsew0","msak0","faet0","ffes0"]
-
-
+speakers =  ["F01","F02","F03","F04","M01","M02","M03","M04","F5","M1","M3"
+    ,"maps0","faet0",'mjjn0',"ffes0","MNGU0"]
+#not mngu0
 for sp in speakers :
     add_vocal_tract(sp)
-

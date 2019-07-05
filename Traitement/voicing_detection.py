@@ -73,16 +73,25 @@ def add_voicing(speaker):
         voice_ste = ste_resampled > 0.5
         voice_zero_cross = zero_cross_resampled < 0.3
         plt.plot(ste_resampled)
+        plt.plot(voice_ste)
        # plt.plot(voice_ste)
-        plt.plot(zero_cross_resampled)
+     #   plt.plot(zero_cross_resampled)
       #  plt.plot(voice_zero_cross)
-        plt.legend(["ste","zerocross"])
+        plt.legend(["ste","voicing"])
         plt.xlabel("frame")
-        plt.title("evaluating voicing in speech throught short term energy et zero crossing rate")
+        plt.title(speaker_2+" voicing detection                 ")
         plt.show()
 
 ### pour F1 encore compliqué car 1 wav contient plusieurs phrases qu'il faudrait diviser en phrases, peut être le faire dès le début et
 ### mettre le tout dans données prétraitées
-add_voicing("MNGU0")
-add_voicing("fsew0")
-add_voicing("msak0")
+#add_voicing("MNGU0")
+#add_voicing("fsew0")
+#add_voicing("msak0")
+
+
+def voicing_detection(wav):
+        N_frames = int(len(wav)/hop_length)
+        window = scipy.signal.get_window("hanning", N_frames)
+        ste = scipy.signal.convolve(wav ** 2, window ** 2, mode="same")
+        voice_ste = ste > 0.5
+        return voice_ste

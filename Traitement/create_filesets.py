@@ -34,7 +34,6 @@ def create_fileset_OLD(speaker):
     X = []
     Y = []
 
-
     files_path =  os.path.join(donnees_path,speaker_2)
     #EMA_files_path  = os.path.join(donnees_path,speaker_2,"ema")
     EMA_files_names = sorted([name[:-4] for name in os.listdir(os.path.join(files_path,"ema")) if name.endswith('.npy') ])
@@ -64,7 +63,6 @@ def create_fileset_OLD(speaker):
             the_mfcc_file = the_mfcc_file[to_cut:]
             X.append(the_mfcc_file_part_1)
             Y.append(the_ema_file_part_1)
-
         X.append(the_mfcc_file)
         Y.append(the_ema_file)
     if not os.path.exists(fileset_path):
@@ -77,7 +75,6 @@ def create_fileset_OLD(speaker):
     np.save(os.path.join(fileset_path, "Y_test_" + speaker + ".npy"), Y_test)
     print("FILESET CREATED FOR SPEAKER {}".format(speaker))
 
-
 def get_fileset_names(speaker):
     """
     :param speaker: pour le moment fsew0,msak0 ou MNGU0
@@ -89,14 +86,18 @@ def get_fileset_names(speaker):
     On a donc une liste X et une liste Y, qu'on va diviser en train et test.
     """
     speaker_2 = speaker
-    if speaker in ["msak0","fsew0"]:
+
+    if speaker in ["msak0","fsew0","maps0","faet0","mjjn0","ffes0"]:
         speaker_2 = "mocha_"+speaker
 
-    elif speaker in ["F1", "F5", "M1"]:
+    elif speaker in ["F1", "F5", "M1","M3"]:
         speaker_2 = "usc_timit_" + speaker
 
+    elif speaker in ["F01","F02","F03","F04","M01","M02","M03","M04"]:
+        speaker_2 = "Haskins_" + speaker
+
     files_path =  os.path.join(donnees_path,speaker_2)
-    EMA_files_names = [name[:-4] for name in os.listdir(os.path.join(files_path,"ema")) if name.endswith('.npy') ]
+    EMA_files_names = [name[:-4] for name in os.listdir(os.path.join(files_path,"ema_filtered")) if name.endswith('.npy') ]
     N = len(EMA_files_names)
     shuffle(EMA_files_names)
     pourcent_train = 0.7
@@ -119,12 +120,11 @@ def get_fileset_names(speaker):
     outF.write('\n'.join(valid_files) + '\n')
     outF.close()
 
-#get_fileset_names("msak0")
-#get_fileset_names("fsew0")
-get_fileset_names("MNGU0")
-#get_fileset_names("F1")
-#get_fileset_names("F5")
-#get_fileset_names("M1")
+speakers =  ["F01","F02","F03","F04","M01","M02","M03","M04","F5","M1","M3"
+    ,"maps0","faet0",'mjjn0',"ffes0","MNGU0"]
+for sp in speakers :
+    print("speaker :",sp)
+    get_fileset_names(sp)
 
 #create_fileset("fsew0")
 #create_fileset("msak0")
@@ -145,8 +145,8 @@ def create_fileset_ZS():
 
 #create_fileset_ZS()
 
-
 def filter_filesets(speaker):
+
     Y_test = np.load(os.path.join(fileset_path, "Y_test_" + speaker + ".npy"))
     Y_train = np.load(os.path.join(fileset_path, "Y_train_" + speaker + ".npy"))
 
@@ -160,6 +160,7 @@ def filter_filesets(speaker):
     weights = low_pass_filter_weight(cut_off= cutoff, sampling_rate=sampling_rate)
 
     def filter_seq(y):
+
         filtered_data_ema = np.concatenate([np.expand_dims(np.convolve(channel, weights,mode="same"), 1)
                                        for channel in y.T], axis=1)
         difference = len(filtered_data_ema) - len(y)
