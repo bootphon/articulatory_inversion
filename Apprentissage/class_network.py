@@ -91,11 +91,9 @@ class my_bilstm(torch.nn.Module):
 
     def init_filter_layer(self):
         def get_filter_weights():
-            # print(cutoff)
             cutoff = torch.tensor(self.cutoff, dtype=torch.float64).view(1, 1)
             fc = torch.div(cutoff,
                   self.sampling_rate)  # Cutoff frequency as a fraction of the sampling rate (in (0, 0.5)).
-           # print("0",fc)
             if fc > 0.5:
                 raise Exception("La frequence de coupure doit etre au moins deux fois la frequence dechantillonnage")
             b = 0.08  # Transition band, as a fraction of the sampling rate (in (0, 0.5)).
@@ -103,12 +101,10 @@ class my_bilstm(torch.nn.Module):
             if not N % 2:
                 N += 1  # Make sure that N is odd.
             n = torch.arange(N).double()
-
             alpha = torch.mul(fc, 2 * (n - (N - 1) / 2)).double()
-           # print("1",alpha)
+            minim = torch.tensor(0.01, dtype=torch.float64)
+            alpha = torch.max(alpha,minim)
             h = torch.div(torch.sin(alpha), alpha)
-            h[torch.isnan(h)] = 1
-            #print("2",h)
             #        h = np.sinc(2 * fc * (n - (N - 1) / 2))  # Compute sinc filter.
             beta = n * 2 * math.pi * (N - 1)
 
@@ -141,17 +137,10 @@ class my_bilstm(torch.nn.Module):
             if not N % 2:
                 N += 1  # Make sure that N is odd.
             n = np.arange(N)
-           # print("1",n)
             h = np.sinc(fc*2*(n - (N - 1) / 2))
-           # print("2",h)
             w = 0.5 * (1 - np.cos( n * 2 * math.pi / (N - 1)))  # Compute hanning window.
-           # print("3",w)
-
             h = h*w
-            #print("4",h)
             h = h/np.sum(h)
-#            print("5",h)
-
             return torch.tensor(h)
 
         # print("1",self.cutoff)
@@ -162,7 +151,9 @@ class my_bilstm(torch.nn.Module):
         stride=1
         padding = int(0.5*((C_in-1)*stride-C_in+window_size))+23
         lowpass = torch.nn.Conv1d(C_in, self.output_dim, window_size, stride=1, padding=padding, bias=False)
-        weight_init = get_filter_weights_en_dur()
+    #    weight_init = get_filter_weights_en_dur()
+        weight_init = get_filter_weights()
+
         weight_init = weight_init.view((1, 1, -1))
         lowpass.weight = torch.nn.Parameter(weight_init)
         lowpass = lowpass.double()

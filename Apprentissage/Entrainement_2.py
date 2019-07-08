@@ -31,13 +31,15 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
     train_on =  ["F01","F02","F03","F04","M01","M02","M03","M04","F5","M1","M3"
     ,"maps0","faet0",'mjjn0',"ffes0","MNGU0","fsew0","msak0"]
 
+    train_on =  ["fsew0","msak0"]
+
     train_on.remove(test_on)
     print("train_on :",train_on)
     print("test on:",test_on)
 
     cuda_avail = torch.cuda.is_available()
     print(" cuda ?", cuda_avail)
-    output_dim = 17
+    output_dim = 19
 
     name_file = "test_on_" + test_on
     print("name file : ",name_file)
@@ -125,7 +127,9 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
     N_test = len(files_for_test)
     print('N_train',N_train)
     n_iteration = int(N_train / batch_size)
+    n_iteration = 2
     n_iteration_validation = int(N_valid/batch_size)
+    n_iteration_validation=2
     n_iteration_test = int(N_test/batch_size)
     patience_temp =0
     test_files_names = []
