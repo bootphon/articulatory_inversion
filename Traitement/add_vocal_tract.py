@@ -148,8 +148,16 @@ def add_vocal_tract(speaker):
             ema[:, 15:17] = velum_xy
         np.save(os.path.join(root_folder,"Donnees_pretraitees",speaker_2,"ema_VT",EMA_files_names[i]),ema)
 
-speakers =  ["F01","F02","F03","F04","M01","M02","M03","M04","F5","M1","M3"
-    ,"maps0","faet0",'mjjn0',"ffes0","MNGU0"]
-#not mngu0
-for sp in speakers :
-    add_vocal_tract(sp)
+speakers =  ["F01","F02","F03","F04","M01","M02","M03","M04","F5","F1","M1","M3"
+    ,"maps0","faet0",'mjjn0',"ffes0","MNGU0","fsew0","msak0"]
+
+# 15
+if __name__=='__main__':
+    import argparse
+    parser = argparse.ArgumentParser(description='Train and save a model.')
+    parser.add_argument('ind', metavar='ind', type=int, help='nombre depochs')
+    args = parser.parse_args()
+    ind = int(sys.argv[1])
+
+    add_vocal_tract(speakers[ind])
+
