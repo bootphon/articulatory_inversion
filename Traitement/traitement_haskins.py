@@ -11,9 +11,15 @@ import numpy as np
 import scipy.signal
 import matplotlib.pyplot as plt
 import scipy.interpolate
-from Traitement.add_dynamic_features import get_delta_features
-import librosa
+try :
+    from Traitement.add_dynamic_features import get_delta_features
+
+except :
+    from add_dynamic_features import get_delta_features
+
 from Apprentissage.utils import low_pass_filter_weight
+
+import librosa
 import scipy.io as sio
 import shutil
 import glob
