@@ -46,7 +46,6 @@ def add_vocal_tract(speaker):
         ste = scipy.signal.convolve(wav ** 2, window ** 2, mode="same")
         ste = scipy.signal.resample(ste, num=len(ema))
         ste = [max(min(x, 1), 0) for x in ste]
-
         return ste
 
     def add_TTCL(ema): #tongue tip constriction location in degree
@@ -60,9 +59,7 @@ def add_vocal_tract(speaker):
         return TBCL
 
 
-    def add_velum(mfcc,ema):
-        if len(mfcc)!= len(ema):
-            print("pbm mfcc ema",mfcc.shape,ema.shape)
+    def add_velum(mfcc):
         model = learn_velum(hidden_dim=200, input_dim=429, output_dim=2, name_file="modele_velum").double()
         model_to_load = os.path.join(root_folder, "Apprentissage", "saved_models", "modeles_valides",
                                      "modele_velum.txt")
@@ -123,7 +120,7 @@ def add_vocal_tract(speaker):
             voicing = add_voicing(wav, ema, sampling_rate_wav)
             mfcc = np.load(os.path.join(mfcc_path, EMA_files_names[i] + ".npy"))
 
-            velum_xy = add_velum(mfcc,ema)
+            velum_xy = add_velum(mfcc)
             ema  = np.concatenate((ema,np.zeros((len(ema),7))),axis=1)
 
 
@@ -135,7 +132,7 @@ def add_vocal_tract(speaker):
             if len(ema)!= len(mfcc):
                 print("pbm shape",len(ema),len(mfcc),EMA_files_names[i])
             voicing = add_voicing(wav,ema,sampling_rate_wav)
-            velum_xy = add_velum(mfcc,ema)
+            velum_xy = add_velum(mfcc)
 
         elif speaker in  ["F01","F02","F03","F04","M01","M02","M03","M04"] : #haskins
             wav = np.reshape(np.load(os.path.join(wav_path, EMA_files_names[i] + ".npy")),-1)
@@ -144,7 +141,7 @@ def add_vocal_tract(speaker):
             if len(ema) != len(mfcc):
                 print("pbm shape", len(ema), len(mfcc), EMA_files_names[i])
             voicing = add_voicing(wav, ema, sampling_rate_wav)
-            velum_xy = add_velum(mfcc, ema)
+            velum_xy = add_velum(mfcc)
 
         ema[:, 12] = lip_aperture
         ema[:, 13] = lip_protrusion
