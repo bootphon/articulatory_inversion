@@ -124,6 +124,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
     N_test = len(files_for_test)
     print('N_train',N_train)
     n_iteration = int(N_train / batch_size)
+    n_iteration = 3
     n_iteration_validation = int(N_valid/batch_size)
     n_iteration_test = int(N_test/batch_size)
     patience_temp =0
@@ -167,7 +168,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
 
             for ite_valid in range(n_iteration_validation):
 
-                x,y = load_data(files_for_valid[ite_valid,ite_valid+batch_size],filtered=data_filtered)
+                x,y = load_data(files_for_valid[ite_valid:ite_valid+batch_size],filtered=data_filtered)
             #    y = [y[i][:,:output_dim] for i in range(len(y))]
                 loss_vali+= model.evaluate(x,y,criterion)
             if epoch>0:
