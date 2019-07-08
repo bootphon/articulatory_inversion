@@ -88,7 +88,7 @@ def load_data(files_names,filtered=True, VT=True):
     for file_name in files_names :
         print("filename",file_name)
 
-        speaker = [s  for s in speakers if s.lower() in file_name] # normalement un seul speaker dans le nom du fichier
+        speaker = [s  for s in speakers if s.lower() in file_name.lower()] # normalement un seul speaker dans le nom du fichier
         speaker = speaker[0]
         speaker_2=speaker
         if speaker in ["msak0", "fsew0", "maps0", "faet0", "mjjn0", "ffes0"]:
