@@ -77,7 +77,8 @@ def load_data(files_names,filtered=True, VT=True):
     folder = os.path.join(os.path.dirname(os.getcwd()), "Donnees_pretraitees")
     x = []
     y = []
-    speakers = ["MNGU0", "fsew0", "msak0", "F1", "F5", "M1", "M3", "maps0", "faet0", 'mjjn0', "ffes0"]
+    train_on = ["F01", "F02", "F03", "F04", "M01", "M02", "M03", "M04", "F5", "M1", "M3"
+        , "maps0", "faet0", 'mjjn0', "ffes0", "MNGU0", "fsew0", "msak0"]
     suff = ""
     if filtered :
         suff = "_filtered"
