@@ -16,6 +16,8 @@ from scipy import signal
 import matplotlib.pyplot as plt
 import scipy
 from os import listdir
+from logger import Logger
+
 
 root_folder = os.path.dirname(os.getcwd())
 fileset_path = os.path.join(root_folder, "Donnees_pretraitees", "fileset")
@@ -39,6 +41,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
 
     name_file = "test_on_" + test_on
     print("name file : ",name_file)
+    logger = Logger('./log_' + name_file)
 
     hidden_dim = 300
     input_dim = 429
@@ -194,6 +197,10 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
             print("train loss ", loss.item())
             print("valid loss ", loss_vali)
             print("test loss ", loss_test)
+            logger.scalar_summary('loss_valid', loss_vali,
+                                  model.epoch_ref)
+            logger.scalar_summary('loss_train', loss.item(), model.epoch_ref)
+
             torch.cuda.empty_cache()
 
         if early_stopping.early_stop:
