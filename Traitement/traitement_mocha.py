@@ -36,7 +36,7 @@ def traitement_general_mocha(N=all):
     sampling_rate_ema = 500
     articulators = [
        'tt_x', 'tt_y', 'td_x', 'td_y', 'tb_x', 'tb_y', 'li_x', 'li_y',
-    'ul_x', 'ul_y', 'll_x', 'll_y', 'v_x ', 'v_y ']
+    'ul_x', 'ul_y', 'll_x', 'll_y', 'v_x', 'v_y']
 
     n_col_ema = len(articulators)+1 #plus lip aperture
     def create_missing_dir(speaker):
@@ -79,22 +79,23 @@ def traitement_general_mocha(N=all):
                     column_names[int(col_id.split('_', 1)[-1])] = col_name
 
             ema_data = np.fromfile(ema_annotation, "float32").reshape(n_frames, n_columns + 2)
-            try :
-                cols_index = [column_names.index(col) for col in articulators]
-                ema_data = ema_data[:, cols_index]
-                ema_data = ema_data/100 #met en mm, initallement en 10^-1m
-                if np.isnan(ema_data).sum() != 0:
-                    pritn("nombre de nan ", np.isnan(ema_data).sum())
-                    # Build a cubic spline out of non-NaN values.
-                    spline = scipy.interpolate.splrep(np.argwhere(~np.isnan(ema_data).ravel()),
-                                                      ema_data[~np.isnan(ema_data)], k=3)
-                    # Interpolate missing values and replace them.
-                    for j in np.argwhere(np.isnan(ema_data)).ravel():
-                        ema_data[j] = scipy.interpolate.splev(j, spline)
-                return ema_data
-            except :
-                print("apparemment pas de velum pour le fichier",EMA_files[i])
-                return None
+          #  try :
+
+            cols_index = [column_names.index(col) for col in articulators]
+            ema_data = ema_data[:, cols_index]
+            ema_data = ema_data/100 #met en mm, initallement en 10^-1m
+            if np.isnan(ema_data).sum() != 0:
+                pritn("nombre de nan ", np.isnan(ema_data).sum())
+                # Build a cubic spline out of non-NaN values.
+                spline = scipy.interpolate.splrep(np.argwhere(~np.isnan(ema_data).ravel()),
+                                                  ema_data[~np.isnan(ema_data)], k=3)
+                # Interpolate missing values and replace them.
+                for j in np.argwhere(np.isnan(ema_data)).ravel():
+                    ema_data[j] = scipy.interpolate.splev(j, spline)
+            return ema_data
+      #  except :
+        #     print("apparemment pas de velum pour le fichier",EMA_files[i])
+         #       return None
           #  lip_aperture=upperlip_y - lowerlip_y
           #  ema_data = np.insert(ema_data,-2,1, axis=1)
            # ema_data[:,-2] = lip_aperture
@@ -181,7 +182,7 @@ def traitement_general_mocha(N=all):
     window = 5
     n_coeff = 13
     n_col_mfcc = n_coeff*(2*window+1)*3
-    speakers = ["fsew0","msak0","faet0","falh0","ffes0","mjjn0","maps0"]
+    speakers = ["fsew0","msak0","faet0","falh0","ffes0","mjjn0","maps0","fsew0","msak0"]
 
     sampling_rate_mfcc = 16000
     frame_time = 25
@@ -202,6 +203,7 @@ def traitement_general_mocha(N=all):
 
     for k in range(len(speakers)) :
         speaker = speakers[k]
+        print("SPEAKER : ",speaker)
         if speaker in ["maps0","mjjn0"]:
             articulators = [
                 'tt_x', 'tt_y', 'td_x', 'td_y', 'tb_x', 'tb_y', 'li_x', 'li_y',

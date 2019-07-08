@@ -42,7 +42,7 @@ def traitement_general_haskins(speaker):
         return [debut,fin]
 
 
-    print("GOING TO DO USC TIMIT PRE PROCESS FOR SPEAKER {}".format(speaker))
+    print("GOING TO DO HASKINS PRE PROCESS FOR SPEAKER {}".format(speaker))
     root_path = dirname(dirname(os.path.realpath(__file__)))
 
     sampling_rate_ema = 100 # voir si toujours le même, récupérable dans le fichier .mat
@@ -53,6 +53,7 @@ def traitement_general_haskins(speaker):
     EMA_files = sorted(  [name[:-4] for name in os.listdir(path_files_brutes) if "palate" not in name])
    # EMA_files = [x for x in EMA_files if x not in files_pbm]
     N = len(EMA_files)
+
     xtrm = 3
     frame_time = 25
     hop_time = 10  # en ms
@@ -103,7 +104,6 @@ def traitement_general_haskins(speaker):
         new_order_arti = [order_arti_haskins.index(col) for col in order_arti]
         ema = ema[:,new_order_arti]
 
-
         mfcc = librosa.feature.mfcc(y=wav, sr=sampling_rate_mfcc, n_mfcc=n_coeff,
                                     n_fft=frame_length, hop_length=hop_length).T
         dyna_features = get_delta_features(mfcc)
@@ -144,9 +144,9 @@ def traitement_general_haskins(speaker):
     std_mfcc = np.mean(np.array([np.std(x, axis=0) for x in ALL_MFCC]), axis=0)
     mean_mfcc = np.mean(np.array([np.mean(x, axis=0) for x in ALL_MFCC]), axis=0)
 
-    np.save("norm_values", "moving_average_ema_" + speaker, smoothed_moving_average)
-    np.save("norm_values", "std_ema_" + speaker, std_ema)
-    np.save("norm_values", "mean_ema_" + speaker, mean_ema)
+    np.save(os.path.join("norm_values", "moving_average_ema_" + speaker), smoothed_moving_average)
+    np.save(os.path.join("norm_values", "std_ema_" + speaker), std_ema)
+    np.save(os.path.join("norm_values", "mean_ema_" + speaker), mean_ema)
 
     for i in range(N):
         ema = np.load(os.path.join(path_files_treated, "ema", EMA_files[i]+".npy"))
@@ -169,7 +169,8 @@ def traitement_general_haskins(speaker):
         np.save(os.path.join(path_files_treated, "mfcc", EMA_files[i]), mfcc)
 
 
+
 speakers = ["F01","F02","F03","F04","M01","M02","M03","M04"]
+
 for sp in speakers:
     traitement_general_haskins(sp)
-
