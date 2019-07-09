@@ -80,13 +80,6 @@ def traitement_general_mngu0(N):
             cols_index = [column_names.index(col) for col in articulators]
             ema_data = ema_data[:, cols_index]
             ema_data = ema_data*100  #données initiales en 10^-5m on les met en millimètre
-           # ind_1, ind_2 = [articulators.index("upperlip_pz"), articulators.index("lowerlip_pz")]
-          #  lip_aperture = (ema_data[:, ind_1] - ema_data[:, ind_2]).reshape(len(ema_data),1)
-            #ema_data = np.concatenate((ema_data, lip_aperture), axis=1)
-
-           # ind_1, ind_2 = [articulators.index("upperlip_py"), articulators.index("lowerlip_py")]
-           # lip_protrusion = ((ema_data[:, ind_1] + ema_data[:, ind_2]) / 2).reshape(len(ema_data),1)
-           # ema_data = np.concatenate((ema_data, lip_protrusion), axis=1)
 
             #dabord enlever les nan avant de lisser et sous echantillonner
             if np.isnan(ema_data).sum() != 0:
@@ -175,19 +168,6 @@ def traitement_general_mngu0(N):
 
         if ema.shape[0] != mfcc.shape[0]:
             print("probleme de shape")
-        k = 1
-      #  while len(mfcc) > 500:
-       #     cut = int(len(mfcc)/2)
-        #    ema_1 = ema[:cut]
-         #   mfcc_1 = mfcc[:cut]
-          #  np.save(os.path.join(path_files_treated, "ema", EMA_files[i]+"_"+str(k)), ema_1)
-           # np.save(os.path.join(path_files_treated, "mfcc", EMA_files[i]+"_"+str(k)), mfcc_1)
-            #ema = ema[cut:]
-            #mfcc = mfcc[cut:]
-            #ALL_EMA.append(ema_1)
-            #ALL_MFCC.append(mfcc_1)
-            #k += 1
-
         np.save(os.path.join(path_files_treated,"ema", EMA_files[i]),ema) #sauvegarde temporaire pour la récup après
         np.save(os.path.join(path_files_treated,"mfcc", EMA_files[i]),mfcc) #sauvegarde temporaire pour la récup après
         ALL_EMA.append(ema)
