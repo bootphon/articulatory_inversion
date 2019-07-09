@@ -121,9 +121,9 @@ def traitement_general_usc_timit(speaker,N):
 
     def treat_ema_files(i):
         ema = np.load(os.path.join(path_files_brutes,"mat_cut",EMA_files_2[i]+".npy"))
-        ema = ema / 10  # je pense que les données sont en 10^-4m on les met en mm
+
         if np.isnan(ema).sum() != 0:
-            print("nan")
+            print(np.isnan(ema).sum())
             spline = scipy.interpolate.splrep(np.argwhere(~np.isnan(ema).ravel()),ema[~np.isnan(ema)], k=3)
             for j in np.argwhere(np.isnan(ema)).ravel():
                 ema[j] = scipy.interpolate.splev(j, spline)
@@ -170,19 +170,34 @@ def traitement_general_usc_timit(speaker,N):
 
         ALL_EMA = []
         ALL_MFCC = []
+        ALL_EMA_2 = np.zeros((1,12))
         n_pad = 30
 
         for i in range(len(EMA_files_2)):
-            ema_i = np.load(os.path.join(path_files_treated,"ema",EMA_files_2[i]+".npy"))
-            mfcc_i= np.load(os.path.join(path_files_treated,"mfcc",EMA_files_2[i]+".npy"))
-            n_frames_wanted = len(mfcc_i)
-            ema_i = scipy.signal.resample(ema_i, num=n_frames_wanted)
-            np.save(os.path.join(path_files_treated, "ema", EMA_files_2[i]), ema_i)
+            ema = np.load(os.path.join(path_files_treated,"ema",EMA_files_2[i]+".npy"))
+            mfcc= np.load(os.path.join(path_files_treated,"mfcc",EMA_files_2[i]+".npy"))
+            n_frames_wanted = len(mfcc)
+            ema = scipy.signal.resample(ema, num=n_frames_wanted)
+            np.save(os.path.join(path_files_treated, "ema", EMA_files_2[i]), ema)
 
-            if len(ema_i)!= len(mfcc_i):
-                print("pbmmm ",EMA_files_2[i],len(ema_i),len(mfcc_i))
-            ALL_EMA.append(ema_i)
-            ALL_MFCC.append(mfcc_i)
+            if len(ema)!= len(mfcc):
+                print("pbmmm ",EMA_files_2[i],len(ema),len(mfcc))
+
+            ema_filtered = np.concatenate([np.expand_dims(np.pad(ema[:, k], (n_pad, n_pad), "symmetric"), 1)
+                                           for k in range(ema.shape[1])], axis=1)
+
+            ema_filtered = np.concatenate([np.expand_dims(np.convolve(channel, weights, mode='same'), 1)
+                                           for channel in ema_filtered.T], axis=1)
+            ema_filtered = ema_filtered[n_pad:-n_pad, :]
+
+            np.save(os.path.join(path_files_treated, "ema_filtered", EMA_files_2[i]), ema_filtered)
+            np.save(os.path.join(path_files_treated, "mfcc", EMA_files_2[i]), mfcc)
+
+            ALL_EMA.append(ema)
+            ALL_MFCC.append(mfcc)
+            ALL_EMA_2 = np.concatenate((ALL_EMA_2,ema),axis=0)
+
+
         all_mean_ema = np.array([np.mean(ALL_EMA[i], axis=0) for i in range(len(ALL_EMA))])
         weights_moving_average = low_pass_filter_weight(cut_off=10, sampling_rate=sampling_rate_ema)
         moving_average = np.concatenate([np.expand_dims(np.pad(all_mean_ema[:, k], (n_pad, n_pad), "symmetric"), 1)
@@ -192,19 +207,25 @@ def traitement_general_usc_timit(speaker,N):
              for channel in moving_average.T], axis=1)
         smoothed_moving_average = smoothed_moving_average[n_pad:-n_pad, :]
 
-        std_ema = np.mean(np.array([np.std(x, axis=0) for x in ALL_EMA]), axis=0)
+        #std_ema = np.mean(np.array([np.std(x, axis=0) for x in ALL_EMA]), axis=0)
+        ALL_EMA_2 = ALL_EMA_2[1:,:]
+
+        std_ema = np.std(ALL_EMA_2,axis=0) #facon plus correcte de calculer la std: on veut savoir coombien l'arti varie
+        #sur l'ensemble des phrases
+
         mean_ema = np.mean(np.array([np.mean(x, axis=0) for x in ALL_EMA]), axis=0)
         std_mfcc = np.mean(np.array([np.std(x, axis=0) for x in ALL_MFCC]), axis=0)
         mean_mfcc = np.mean(np.array([np.mean(x, axis=0) for x in ALL_MFCC]), axis=0)
-        np.save("norm_values","moving_average_ema_" + speaker, smoothed_moving_average)
-        np.save("norm_values","std_ema_" + speaker, std_ema)
-        np.save("norm_values","mean_ema_" + speaker, mean_ema)
+        np.save(os.path.join("norm_values","moving_average_ema_" + speaker), smoothed_moving_average)
+        np.save(os.path.join("norm_values","std_ema_" + speaker), std_ema)
+        np.save(os.path.join("norm_values","mean_ema_" + speaker), mean_ema)
+        print("std ema,",std_ema)
+
         return std_ema, mean_ema, smoothed_moving_average, mean_mfcc,std_mfcc
     cutoff=10
     weights = low_pass_filter_weight(cut_off=cutoff, sampling_rate=sampling_rate_ema)
 
     std_ema, mean_ema, smoothed_moving_average, mean_mfcc,std_mfcc = for_normalisation()
-    xtrm = 30
     def normalization_and_lowpass(std_ema, mean_ema, smoothed_moving_average, mean_mfcc,std_mfcc):
         print("cutting files between each sentence - 4 step out of 4 ")
 
@@ -212,34 +233,30 @@ def traitement_general_usc_timit(speaker,N):
             if i % 100 == 0:
                 print("{} out of {}".format(i, len(EMA_files_2)))
             ema = np.load(os.path.join(path_files_treated,"ema",EMA_files_2[i]+".npy"))
+            ema_filtered = np.load(os.path.join(path_files_treated, "ema_filtered", EMA_files_2[i]+".npy"))
+
             mfcc = np.load(os.path.join(path_files_treated,"mfcc",EMA_files_2[i]+".npy"))
 
             if len(ema)!= len(mfcc):
                 print("pbmmm 2",EMA_files_2[i],len(ema),len(mfcc))
             ema = (ema - smoothed_moving_average[i,:] ) / max(std_ema)
-         #   ema = (ema - mean_ema)/max(std_ema)
+            ema_filtered = (ema_filtered - smoothed_moving_average[i, :]) / max(std_ema)
             mfcc = (mfcc-mean_mfcc)/std_mfcc
-
-            ema_filtered = np.concatenate([np.expand_dims(np.pad(ema[:, k], (xtrm, xtrm), "symmetric"), 1)
-                                           for k in range(ema.shape[1])], axis=1)
-
-            ema_filtered = np.concatenate([np.expand_dims(np.convolve(channel, weights, mode='same'), 1)
-                                           for channel in ema_filtered.T], axis=1)
-            ema_filtered = ema_filtered[xtrm:-xtrm, :]
             np.save(os.path.join(path_files_treated, "ema", EMA_files_2[i]), ema)
-
             np.save(os.path.join(path_files_treated, "ema_filtered", EMA_files_2[i]), ema_filtered)
             np.save(os.path.join(path_files_treated, "mfcc", EMA_files_2[i]), mfcc)
+
+
+
 
     normalization_and_lowpass( std_ema, mean_ema, smoothed_moving_average, mean_mfcc,std_mfcc)
 
 N = "All"
 
 speakers = ["F1","F5","M1","M3"]
-
 for sp in speakers :
 #traitement_general_usc_timit(speakers[0],N)
-    traitement_general_usc_timit(sp,N)
+    traitement_general_usc_timit(sp,N=N)
 
 def rename(): #the trans folder of usc timit for the speaker m3 have the wrong name folders (mri instead of ema) the script
     #rename all the trans files for this speaker

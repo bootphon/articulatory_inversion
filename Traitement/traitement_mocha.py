@@ -76,16 +76,14 @@ def traitement_general_mocha(N=all):
                     n_frames = int(line.rsplit(' ', 1)[-1])
                 elif line.startswith('Channel_'):
                     col_id, col_name = line.split(' ', 1)
-                    column_names[int(col_id.split('_', 1)[-1])] = col_name
+                    column_names[int(col_id.split('_', 1)[-1])] = col_name.replace(" ","") #v_x has sometimes a space
 
             ema_data = np.fromfile(ema_annotation, "float32").reshape(n_frames, n_columns + 2)
-          #  try :
-
             cols_index = [column_names.index(col) for col in articulators]
             ema_data = ema_data[:, cols_index]
             ema_data = ema_data/100 #met en mm, initallement en 10^-1m
             if np.isnan(ema_data).sum() != 0:
-                pritn("nombre de nan ", np.isnan(ema_data).sum())
+                print("nombre de nan ", np.isnan(ema_data).sum())
                 # Build a cubic spline out of non-NaN values.
                 spline = scipy.interpolate.splrep(np.argwhere(~np.isnan(ema_data).ravel()),
                                                   ema_data[~np.isnan(ema_data)], k=3)
@@ -93,20 +91,8 @@ def traitement_general_mocha(N=all):
                 for j in np.argwhere(np.isnan(ema_data)).ravel():
                     ema_data[j] = scipy.interpolate.splev(j, spline)
             return ema_data
-      #  except :
-        #     print("apparemment pas de velum pour le fichier",EMA_files[i])
-         #       return None
-          #  lip_aperture=upperlip_y - lowerlip_y
-          #  ema_data = np.insert(ema_data,-2,1, axis=1)
-           # ema_data[:,-2] = lip_aperture
 
-           # ind_1, ind_2 = [articulators.index("ul_x"), articulators.index("ll_x")]
-           # lip_protrusion = (ema_data[:, ind_1] + ema_data[:, ind_2]) / 2
-           # ema_data = np.insert(ema_data, -2, 1, axis=1)
-           # ema_data[:, -2] = lip_protrusion
 
-            #dabord enlever les nan avant de lisser etsous echantillonner
-            # donnees en milimètres
 
     def first_step_wav_data(i,speaker):
         """
@@ -181,8 +167,10 @@ def traitement_general_mocha(N=all):
 
     window = 5
     n_coeff = 13
-    n_col_mfcc = n_coeff*(2*window+1)*3
-    speakers = ["fsew0","msak0","faet0","falh0","ffes0","mjjn0","maps0","fsew0","msak0"]
+
+    sp_with_velum =["fsew0","msak0","faet0","falh0","ffes0"]
+    speakers = ["fsew0","msak0","faet0","falh0","ffes0","mjjn0","maps0"]
+    speakers = ["maps0"]
 
     sampling_rate_mfcc = 16000
     frame_time = 25
@@ -200,7 +188,7 @@ def traitement_general_mocha(N=all):
 
     cutoff = 30
     weights = low_pass_filter_weight(cut_off=cutoff, sampling_rate=sampling_rate_ema)
-
+    xtrm = 30
     for k in range(len(speakers)) :
         speaker = speakers[k]
         print("SPEAKER : ",speaker)
@@ -222,26 +210,42 @@ def traitement_general_mocha(N=all):
             N = len(EMA_files)
         ALL_EMA= []
         ALL_MFCC =[]
+        if speaker in sp_with_velum:
+            ALL_EMA_2 = np.zeros((1,14))
+        else :
+            ALL_EMA_2 = np.zeros((1,12))
 
         for i in range(N):
             if i%50 ==0:
                 print(i," out of ",N)
 
             ema = first_step_ema_data(i,speaker)   # recup ema de occurence i, conserve colonnes utiles, interpole données manquantes, filtre passe bas pour lisser
-
             mfcc = first_step_wav_data(i,speaker) #recup MFCC de occurence i,  calcule 13 plus grands mfcc sur chaque trame, calcule les delta et deltadelta
             ema, mfcc = second_step_data(i, ema, mfcc,speaker) # enleve les silences en début et fin, ajoute trames alentours pour mfcc, normalise (ema par arti, mfcc en tout)
+
             if ema.shape[0] != mfcc.shape[0]:
                 print("probleme de shape")
 
             np.save(os.path.join(root_path, "Donnees_pretraitees","mocha_"+speaker,"ema", EMA_files[i]),ema)
             np.save(os.path.join(root_path, "Donnees_pretraitees","mocha_"+speaker,"mfcc", wav_files[i]),mfcc)
 
+            ema_filtered = np.concatenate([np.expand_dims(np.pad(ema[:, k], (xtrm, xtrm), "symmetric"), 1)
+                                           for k in range(ema.shape[1])], axis=1)
+
+            ema_filtered = np.concatenate([np.expand_dims(np.convolve(channel, weights, mode='same'), 1)
+                                           for channel in ema_filtered.T], axis=1)
+            ema_filtered = ema_filtered[xtrm:-xtrm, :]
+            if len(ema_filtered) != len(ema):  # sequence filtree plus longue que loriginale
+                print("pbm shape", len(ema_filtered), len(ema))
+            np.save(os.path.join(root_path, "Donnees_pretraitees", "mocha_" + speaker, "ema_filtered", EMA_files[i]),
+                    ema_filtered)
+
             ALL_EMA.append(ema)
             ALL_MFCC.append(mfcc)
+            ALL_EMA_2 = np.concatenate((ALL_EMA_2,ema),axis=0)
 
         all_mean_ema = np.array([np.mean(ALL_EMA[i], axis=0) for i in range(len(ALL_EMA))])
-        xtrm = 30
+
         weights_moving_average = low_pass_filter_weight(cut_off=10, sampling_rate=sampling_rate_ema)
         moving_average = np.concatenate([np.expand_dims(np.pad(all_mean_ema[:, k], (xtrm, xtrm), "symmetric"), 1)
                                          for k in range(all_mean_ema.shape[1])], axis=1)
@@ -250,10 +254,15 @@ def traitement_general_mocha(N=all):
         smoothed_moving_average = smoothed_moving_average[xtrm:-xtrm, :]
 
 
-        std_ema = np.mean(  np.array([ np.std(x,axis=0) for x in ALL_EMA])  ,axis=0)
+        #std_ema =  np.mean( np.array([ np.std(x,axis=0) for x in ALL_EMA]) ,axis=0)
+        ALL_EMA_2 = ALL_EMA_2[1:, :]
+
+        std_ema = np.std(ALL_EMA_2,   axis=0)  # facon plus correcte de calculer la std: on veut savoir coombien l'arti varie
+
         mean_ema = np.mean( np.array([ np.mean(x,axis=0) for x in ALL_EMA])  ,axis=0) #apres que chaque phrase soit centrée
 
         std_mfcc = np.mean(np.array([np.std(x, axis=0) for x in ALL_MFCC]), axis=0)
+
         mean_mfcc = np.mean(np.array([np.mean(x, axis=0) for x in ALL_MFCC]), axis=0)
         np.save(os.path.join("norm_values","moving_average_ema_" + speaker), smoothed_moving_average)
         np.save(os.path.join("norm_values","std_ema_"+speaker), std_ema)
@@ -265,7 +274,12 @@ def traitement_general_mocha(N=all):
         for i in range(N):
 
             ema = np.load(os.path.join(root_path, "Donnees_pretraitees","mocha_"+speaker,"ema", EMA_files[i]+".npy"))
-            ema = ((ema - smoothed_moving_average[i,:]))/max(std_ema)
+            ema = ((ema - smoothed_moving_average[i,:])) /max(std_ema)
+
+            ema_filtered = np.load(os.path.join(root_path, "Donnees_pretraitees","mocha_"+speaker,"ema_filtered", EMA_files[i]+".npy"))
+            ema_filtered = ((ema - smoothed_moving_average[i,:])) /max(std_ema)
+            np.save(os.path.join(root_path, "Donnees_pretraitees", "mocha_" + speaker, "ema_filtered", EMA_files[i]),
+                    ema_filtered)
 
             mfcc = np.load(os.path.join(root_path, "Donnees_pretraitees","mocha_"+speaker,"mfcc", EMA_files[i]+".npy"))
             mfcc = (mfcc - mean_mfcc) / std_mfcc
@@ -275,12 +289,6 @@ def traitement_general_mocha(N=all):
 
             #plt.plot(ema[:,0])
 
-            ema_filtered = np.concatenate([np.expand_dims(np.pad(ema[:, k], (xtrm, xtrm), "symmetric"), 1)
-                                             for k in range(ema.shape[1])], axis=1)
-
-            ema_filtered = np.concatenate(  [np.expand_dims(np.convolve(channel, weights, mode='same'), 1)
-                 for channel in ema_filtered.T], axis=1 )
-            ema_filtered = ema_filtered[xtrm:-xtrm, :]
 
             #difference = len(ema_filtered) - len(ema)
             #print("diff :",difference)
@@ -290,10 +298,7 @@ def traitement_general_mocha(N=all):
             #elif difference > 0:
             #    ema_filtered = ema_filtered[halfdif:-(difference - halfdif)]
 
-            if len(ema_filtered) != len(ema):  # sequence filtree plus longue que loriginale
-                print("pbm shape", len(ema_filtered), len(ema))
-            np.save(os.path.join(root_path, "Donnees_pretraitees", "mocha_" + speaker, "ema_filtered", EMA_files[i]), ema_filtered)
 
 N="All"
 
-traitement_general_mocha(N=N)
+traitement_general_mocha(N="All")

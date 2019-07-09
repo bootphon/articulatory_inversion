@@ -69,6 +69,7 @@ def traitement_general_haskins(speaker):
     window = 5
     ALL_EMA = []
     ALL_MFCC = []
+    ALL_EMA_2 = np.zeros((1,12))
     cutoff = 30
 
     def create_directories():
@@ -88,6 +89,8 @@ def traitement_general_haskins(speaker):
             os.makedirs(os.path.join(root_path, "Donnees_brutes","Haskins_IEEE_Rate_Comparison_DB",speaker,"wav"))
 
     create_directories()
+    xtrm = 30
+    weights = low_pass_filter_weight(cut_off=10, sampling_rate=sampling_rate_ema)
 
     for i in range(N) :
         if i%200==0:
@@ -120,18 +123,26 @@ def traitement_general_haskins(speaker):
         full_window = 1 + 2 * window
         mfcc = np.concatenate([frames[i:i + len(mfcc)] for i in range(full_window)], axis=1)
         if np.isnan(ema).sum() != 0:
-            print("nan")
+            print("number of nan :",np.isnan(ema.sum()))
 
         n_frames_wanted = mfcc.shape[0]
         ema = scipy.signal.resample(ema, num=n_frames_wanted)
 
         np.save(os.path.join(path_files_treated, "ema", EMA_files[i]), ema)
         np.save(os.path.join(path_files_treated, "mfcc", EMA_files[i]), mfcc)
+        ema_filtered = np.concatenate([np.expand_dims(np.pad(ema[:, k], (xtrm, xtrm), "symmetric"), 1)
+                                       for k in range(ema.shape[1])], axis=1)
+
+        ema_filtered = np.concatenate([np.expand_dims(np.convolve(channel, weights, mode='same'), 1)
+                                       for channel in ema_filtered.T], axis=1)
+
+        ema_filtered = ema_filtered[xtrm:-xtrm, :]
+
+        np.save(os.path.join(path_files_treated, "ema_filtered", EMA_files[i]), ema_filtered)
 
         ALL_EMA.append(ema)
         ALL_MFCC.append(mfcc)
-
-    weights = low_pass_filter_weight(cut_off=10, sampling_rate=sampling_rate_ema)
+        ALL_EMA_2 = np.concatenate((ALL_EMA_2, ema), axis=0)
 
     n_pad= 30
     all_mean_ema = np.reshape(np.array([np.mean(ALL_EMA[i], axis=0) for i in range(len(ALL_EMA))]),(len(ALL_EMA),12))
@@ -145,32 +156,28 @@ def traitement_general_haskins(speaker):
 
     smoothed_moving_average = smoothed_moving_average[n_pad:-n_pad, :]
 
-    std_ema = np.mean(np.array([np.std(x, axis=0) for x in ALL_EMA]), axis=0)
+   # std_ema = np.mean(np.array([np.std(x, axis=0) for x in ALL_EMA]), axis=0)
     mean_ema = np.mean(np.array([np.mean(x, axis=0) for x in ALL_EMA]), axis=0)
     std_mfcc = np.mean(np.array([np.std(x, axis=0) for x in ALL_MFCC]), axis=0)
     mean_mfcc = np.mean(np.array([np.mean(x, axis=0) for x in ALL_MFCC]), axis=0)
+    ALL_EMA_2 = ALL_EMA_2[1:, :]
+    std_ema = np.std(ALL_EMA_2, axis=0)  # facon plus correcte de calculer la std: on veut savoir coombien l'arti varie
 
     np.save(os.path.join("norm_values", "moving_average_ema_" + speaker), smoothed_moving_average)
     np.save(os.path.join("norm_values", "std_ema_" + speaker), std_ema)
     np.save(os.path.join("norm_values", "mean_ema_" + speaker), mean_ema)
-
+    print("std ema,",std_ema)
     for i in range(N):
         ema = np.load(os.path.join(path_files_treated, "ema", EMA_files[i]+".npy"))
+        ema_filtered = np.load(os.path.join(path_files_treated, "ema_filtered", EMA_files[i]+".npy"))
         mfcc = np.load(os.path.join(path_files_treated, "mfcc", EMA_files[i] + ".npy"))
+        ema_filtered = (ema_filtered - smoothed_moving_average[i, :]) / max(std_ema)
         ema = (ema - smoothed_moving_average[i, :]) / max(std_ema)
+
         mfcc = (mfcc - mean_mfcc) / std_mfcc
-
-        ema_filtered = np.concatenate([np.expand_dims(np.pad(ema[:, k], (xtrm, xtrm), "symmetric"), 1)
-                                       for k in range(ema.shape[1])], axis=1)
-
-        ema_filtered = np.concatenate([np.expand_dims(np.convolve(channel, weights, mode='same'), 1)
-                                       for channel in ema_filtered.T], axis=1)
-
-        ema_filtered = ema_filtered[xtrm:-xtrm, :]
 
 
         np.save(os.path.join(path_files_treated, "ema", EMA_files[i]), ema)
-
         np.save(os.path.join(path_files_treated, "ema_filtered", EMA_files[i]), ema_filtered)
         np.save(os.path.join(path_files_treated, "mfcc", EMA_files[i]), mfcc)
 

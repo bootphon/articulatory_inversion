@@ -153,6 +153,7 @@ def traitement_general_mngu0(N):
 
     ALL_EMA = []
     ALL_MFCC =[]
+    ALL_EMA_2 = np.zeros((1,12))
     cutoff = 25
     weights = low_pass_filter_weight(cut_off=cutoff, sampling_rate=sampling_rate_ema)
     if N == "All":
@@ -170,25 +171,37 @@ def traitement_general_mngu0(N):
             print("probleme de shape")
         np.save(os.path.join(path_files_treated,"ema", EMA_files[i]),ema) #sauvegarde temporaire pour la récup après
         np.save(os.path.join(path_files_treated,"mfcc", EMA_files[i]),mfcc) #sauvegarde temporaire pour la récup après
+
+        ema_filtered = np.concatenate([np.expand_dims(np.convolve(channel, weights, mode='same'), 1)
+                                       for channel in ema.T], axis=1)
+        difference = len(ema_filtered) - len(ema)
+        halfdif = int(difference / 2)
+        if difference < 0:  # sequence filtree moins longue que l'originale
+            ema_filtered = np.pad(ema_filtered, (halfdif, difference - halfdif), "edge")
+        elif difference > 0:
+            ema_filtered = ema_filtered[halfdif:-(difference - halfdif)]
+        if len(ema_filtered) != len(ema):  # sequence filtree plus longue que loriginale
+            print("pbm shape", len(ema_filtered), len(y))
+        np.save(os.path.join(path_files_treated, "ema_filtered", EMA_files[i]), ema_filtered)
+
         ALL_EMA.append(ema)
         ALL_MFCC.append(mfcc)
+        ALL_EMA_2 = np.concatenate((ALL_EMA_2,ema),axis=0)
 
     all_mean_ema = np.array([np.mean(ALL_EMA[i], axis=0) for i in range(len(ALL_EMA))])
-
     xtrm = 30
-
     weights_moving_average = low_pass_filter_weight(cut_off=10, sampling_rate=sampling_rate_ema)
-
     moving_average = np.concatenate([np.expand_dims(np.pad(all_mean_ema[:, k], (xtrm, xtrm), "symmetric"), 1)
                                      for k in range(all_mean_ema.shape[1])], axis=1)
     smoothed_moving_average = np.concatenate(
         [np.expand_dims(np.convolve(channel, weights_moving_average, mode='same'), 1)
          for channel in moving_average.T], axis=1)
     smoothed_moving_average = smoothed_moving_average[xtrm:-xtrm, :]
+    ALL_EMA_2 = ALL_EMA_2[1:, :]
+    std_ema = np.std(ALL_EMA_2, axis=0)  # facon plus correcte de calculer la std: on veut savoir coombien l'arti varie
 
-    std_ema = np.mean(np.array([np.std(x, axis=0) for x in ALL_EMA]), axis=0)
+    #  std_ema = np.mean(np.array([np.std(x, axis=0) for x in ALL_EMA]), axis=0)
     mean_ema = np.mean(np.array([np.mean(x, axis=0) for x in ALL_EMA]), axis=0)  # apres que chaque phrase soit centrée
-
     std_mfcc = np.mean(np.array([np.std(x, axis=0) for x in ALL_MFCC]), axis=0)
     mean_mfcc = np.mean(np.array([np.mean(x, axis=0) for x in ALL_MFCC]), axis=0)
     np.save("norm_values","moving_average_ema_MNGU0", smoothed_moving_average)
@@ -209,21 +222,14 @@ def traitement_general_mngu0(N):
         ema = np.load(os.path.join(path_files_treated,"ema", EMA_files[i]+".npy"))
         ema = ((ema - smoothed_moving_average[i, :])) / max(std_ema)
 
+        ema_filtered = np.load(os.path.join(path_files_treated, "ema_filtered", EMA_files[i])+".npy")
+        ema_filtered = ((ema_filtered- smoothed_moving_average[i, :])) / max(std_ema)
+        np.save(os.path.join(path_files_treated, "ema_filtered", EMA_files[i]), ema_filtered)
+
         mfcc = np.load(os.path.join(path_files_treated,"mfcc", EMA_files[i] + ".npy"))
         mfcc = (mfcc - mean_mfcc) / std_mfcc
         np.save(os.path.join(path_files_treated, "ema",EMA_files[i]), ema)
         np.save(os.path.join(path_files_treated,"mfcc", EMA_files[i]),mfcc)
 
-        ema_filtered = np.concatenate([np.expand_dims(np.convolve(channel, weights, mode='same'), 1)
-                              for channel in ema.T], axis=1)
-        difference = len(ema_filtered) - len(ema)
-        halfdif = int(difference / 2)
-        if difference < 0:  # sequence filtree moins longue que l'originale
-            ema_filtered = np.pad(ema_filtered, (halfdif, difference - halfdif), "edge")
-        elif difference > 0:
-            ema_filtered = ema_filtered[halfdif:-(difference - halfdif)]
-        if len(ema_filtered) != len(ema):  # sequence filtree plus longue que loriginale
-            print("pbm shape", len(ema_filtered), len(y))
-        np.save(os.path.join(path_files_treated,"ema_filtered", EMA_files[i]),ema_filtered)
 
 traitement_general_mngu0(N="All")
