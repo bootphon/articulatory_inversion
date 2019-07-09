@@ -8,10 +8,9 @@ import librosa
 import numpy as np
 import scipy
 import torch
-try :
-    from Apprentissage.velum_modele import learn_velum
-except :
-    from velum_modele import learn_velum
+from Apprentissage.velum_modele import learn_velum
+
+   # from velum_modele import learn_velum
 import matplotlib.pyplot as plt
 articulators = [
         'tt_x', 'tt_y', 'td_x', 'td_y', 'tb_x', 'tb_y', 'li_x', 'li_y',
