@@ -152,17 +152,32 @@ def add_vocal_tract(speaker):
         ema[:, 17:19] = velum_xy
         np.save(os.path.join(root_folder,"Donnees_pretraitees",speaker_2,"ema_VT",EMA_files_names[i]),ema)
 
+
 speakers =  ["F01","F02","F03","F04","M01","M02","M03","M04","F5","F1","M1","M3"
     ,"maps0","faet0",'mjjn0',"ffes0","MNGU0","fsew0","msak0"]
 
+speakers = ["F01","F02","F03","F04"]
 for ind in range(len(speakers)):
     print("speaker : ",speakers[ind])
     add_vocal_tract(speakers[ind])
-#if __name__=='__main__':
- #   import argparse
-  #  parser = argparse.ArgumentParser(description='Train and save a model.')
-   # parser.add_argument('ind', metavar='ind', type=int, help='nombre depochs')
-   # args = parser.parse_args()
-   # ind = int(sys.argv[1])
-   # add_vocal_tract(speakers[ind])
+if __name__=='__main__':
+    import argparse
+    parser = argparse.ArgumentParser(description='Train and save a model.')
+    parser.add_argument('corpus', metavar='corpus', type=str, help='un des corpus : MNGU0, usc, Haskins, mocha')
+    args = parser.parse_args()
+    corpus = str(sys.argv[1])
 
+    if corpus == "MNGU0":
+        speakers = ["MNGU0"]
+    elif corpus == "usc":
+        speakers = ["F1", "F5", "M1","M3"]
+    elif corpus == "Haskins":
+        speakers=  ["F01","F02","F03","F04","M01","M02","M03","M04"]
+
+    elif corpus == "mocha":
+        speakers =["fsew0","msak0","faet0","ffes0",,"maps0","mjjn0"]
+    else :
+        print("vous navez pas choisi un des corpus")
+
+    for sp in speakers :
+        add_vocal_tract(sp)
