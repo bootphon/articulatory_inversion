@@ -43,7 +43,7 @@ def traitement_general_mngu0(N):
     cols_index = None
     n_columns = 87
     window=5
-    path_wav_files = os.path.join(root_path, "Donnees_brutes\MNGU0\wav")
+    path_wav_files = os.path.join(root_path, "Donnees_brutes","MNGU0","wav")
    # wav_files = sorted([name[:-4] for name in os.listdir(path_wav_files) if name.endswith('.wav')])
     sampling_rate_mfcc = 16000
     frame_time = 25
