@@ -97,6 +97,7 @@ def add_vocal_tract(speaker):
 
     EMA_files_names = sorted(
         [name[:-4] for name in os.listdir(files_path) if name.endswith('.npy')])
+
     N = len(EMA_files_names)
     for i in range(N):
 
@@ -115,6 +116,7 @@ def add_vocal_tract(speaker):
 
 
         elif speaker in ["MNGU0","maps0","mjjn0"]: # 12 arti de 0 à 11
+
             wav, sr = librosa.load(os.path.join(wav_path, EMA_files_names[i] + ".wav"), sr=sampling_rate_wav)
             voicing = add_voicing(wav, ema, sampling_rate_wav)
             mfcc = np.load(os.path.join(mfcc_path, EMA_files_names[i] + ".npy"))
@@ -153,11 +155,14 @@ def add_vocal_tract(speaker):
 speakers =  ["F01","F02","F03","F04","M01","M02","M03","M04","F5","F1","M1","M3"
     ,"maps0","faet0",'mjjn0',"ffes0","MNGU0","fsew0","msak0"]
 
-if __name__=='__main__':
-    import argparse
-    parser = argparse.ArgumentParser(description='Train and save a model.')
-    parser.add_argument('ind', metavar='ind', type=int, help='nombre depochs')
-    args = parser.parse_args()
-    ind = int(sys.argv[1])
+for ind in range(len(speakers)):
+    print("speaker : ",speakers[ind])
     add_vocal_tract(speakers[ind])
+#if __name__=='__main__':
+ #   import argparse
+  #  parser = argparse.ArgumentParser(description='Train and save a model.')
+   # parser.add_argument('ind', metavar='ind', type=int, help='nombre depochs')
+   # args = parser.parse_args()
+   # ind = int(sys.argv[1])
+   # add_vocal_tract(speakers[ind])
 
