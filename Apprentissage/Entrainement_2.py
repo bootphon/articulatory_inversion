@@ -140,7 +140,10 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
                 print("{} out of {}".format(ite, n_iteration))
            # print(files_for_train[ite:ite+batch_size])
             x,y = load_data(files_for_train[ite:ite+batch_size],filtered=data_filtered)
-            x, y = model.prepare_batch(x, y)
+            try :
+                x, y = model.prepare_batch(x, y)
+            except :
+                print("pbm de shape avec",files_for_train[ite:ite+batch_size])
 
             y_pred = model(x).double()
           #  print(y_pred)
