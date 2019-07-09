@@ -29,7 +29,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
     data_filtered=True
     modele_filtered=True
     train_on =  ["F01","F02","F03","F04","M01","M02","M03","M04","F5","M1","M3","maps0","faet0",'mjjn0',"ffes0","MNGU0","fsew0","msak0"]
-    
+
     train_on.remove(test_on)
     print("train_on :",train_on)
     print("test on:",test_on)
@@ -179,7 +179,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
             if epoch>0:
                 if loss_vali > model.all_validation_loss[-1]:
                     patience_temp +=1
-                    if patience_temp == 3 :
+                    if patience_temp == 1 :
                         print("decrease learning rate")
                         for param_group in optimizer.param_groups:
                             param_group['lr'] = param_group['lr'] / 2
