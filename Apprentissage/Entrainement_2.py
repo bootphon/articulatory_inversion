@@ -29,7 +29,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
     data_filtered=True
     modele_filtered=True
     train_on =  ["F01","F02","F03","F04","M01","M02","M03","M04","F5","M1","M3","maps0","faet0",'mjjn0',"ffes0","MNGU0","fsew0","msak0"]
-
+    train_on.remove("F01")
     train_on.remove(test_on)
     print("train_on :",train_on)
     print("test on:",test_on)
@@ -141,7 +141,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
            # print(files_for_train[ite:ite+batch_size])
             x,y = load_data(files_for_train[ite:ite+batch_size],filtered=data_filtered)
             x, y = model.prepare_batch(x, y)
-           
+
             y_pred = model(x).double()
           #  print(y_pred)
             torch.cuda.empty_cache()
