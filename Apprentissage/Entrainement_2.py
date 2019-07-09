@@ -166,13 +166,16 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
 
         if epoch%delta_test ==0:  #toutes les delta_test epochs on évalue le modèle sur validation et on sauvegarde le modele si le score est meilleur
             loss_vali = 0
-            random.shuffle(files_for_valid)
+           # random.shuffle(files_for_valid)
 
             for ite_valid in range(n_iteration_validation):
 
                 x,y = load_data(files_for_valid[ite_valid:ite_valid+batch_size],filtered=data_filtered)
             #    y = [y[i][:,:output_dim] for i in range(len(y))]
-                loss_vali+= model.evaluate(x,y,criterion)
+                try :
+                    loss_vali+= model.evaluate(x,y,criterion)
+                except :
+                    print("surmenet pbm de shape pour",files_for_valid[ite_valid:ite_valid+batch_size])
             if epoch>0:
                 if loss_vali > model.all_validation_loss[-1]:
                     patience_temp +=1
