@@ -6,12 +6,16 @@
 """
 import os
 import time
+import os,sys,inspect
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0,parentdir)
 from os.path import dirname
 import numpy as np
 import scipy.signal
 import matplotlib.pyplot as plt
 import scipy.interpolate
-from add_dynamic_features import get_delta_features
+from Traitement.add_dynamic_features import get_delta_features
 import librosa
 from Apprentissage.utils import low_pass_filter_weight
 import scipy.io as sio
