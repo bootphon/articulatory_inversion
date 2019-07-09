@@ -27,7 +27,7 @@ order_arti_MNGU0 = [
 
 def traitement_general_mngu0(N):
     root_path = dirname(dirname(os.path.realpath(__file__)))
-    path_files_annotation = os.path.join(root_path, "Donnees_brutes\MNGU0\phone_labels")
+    path_files_annotation = os.path.join(root_path, "Donnees_brutes","MNGU0","phone_labels")
     sampling_rate_ema = 200
     #articulators in the same order that those of MOCHA
     articulators = [
