@@ -174,8 +174,7 @@ def traitement_general_mngu0(N):
         ALL_MFCC.append(mfcc)
 
     all_mean_ema = np.array([np.mean(ALL_EMA[i], axis=0) for i in range(len(ALL_EMA))])
-    EMA_files_2 =  sorted([name[:-4] for name in os.listdir(os.path.join(path_files_treated,"ema")) if name.endswith('.npy')])
-    N_2 = len(EMA_files_2)
+
     xtrm = 30
 
     weights_moving_average = low_pass_filter_weight(cut_off=10, sampling_rate=sampling_rate_ema)
@@ -205,15 +204,15 @@ def traitement_general_mngu0(N):
    # order = 5
    # filt_b, filt_a = scipy.signal.butter(order, 0.1, btype='lowpass', analog=False) #fs=sampling_rate_ema)
     print(len(smoothed_moving_average))
-    print(N_2)
-    for i in range(N_2):
-        ema = np.load(os.path.join(path_files_treated,"ema", EMA_files_2[i]+".npy"))
+    print()
+    for i in range(N):
+        ema = np.load(os.path.join(path_files_treated,"ema", EMA_files[i]+".npy"))
         ema = ((ema - smoothed_moving_average[i, :])) / max(std_ema)
 
-        mfcc = np.load(os.path.join(path_files_treated,"mfcc", EMA_files_2[i] + ".npy"))
+        mfcc = np.load(os.path.join(path_files_treated,"mfcc", EMA_files[i] + ".npy"))
         mfcc = (mfcc - mean_mfcc) / std_mfcc
-        np.save(os.path.join(path_files_treated, "ema",EMA_files_2[i]), ema)
-        np.save(os.path.join(path_files_treated,"mfcc", EMA_files_2[i]),mfcc)
+        np.save(os.path.join(path_files_treated, "ema",EMA_files[i]), ema)
+        np.save(os.path.join(path_files_treated,"mfcc", EMA_files[i]),mfcc)
 
         ema_filtered = np.concatenate([np.expand_dims(np.convolve(channel, weights, mode='same'), 1)
                               for channel in ema.T], axis=1)
@@ -225,6 +224,6 @@ def traitement_general_mngu0(N):
             ema_filtered = ema_filtered[halfdif:-(difference - halfdif)]
         if len(ema_filtered) != len(ema):  # sequence filtree plus longue que loriginale
             print("pbm shape", len(ema_filtered), len(y))
-        np.save(os.path.join(path_files_treated,"ema_filtered", EMA_files_2[i]),ema_filtered)
+        np.save(os.path.join(path_files_treated,"ema_filtered", EMA_files[i]),ema_filtered)
 
-traitement_general_mngu0(N="All")
+traitement_general_mngu0(N=100)
