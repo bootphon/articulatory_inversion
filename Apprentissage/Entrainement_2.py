@@ -138,10 +138,10 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
         for ite in range(n_iteration):
             if ite % 50 == 0:
                 print("{} out of {}".format(ite, n_iteration))
-            print(files_for_train[ite:ite+batch_size])
+           # print(files_for_train[ite:ite+batch_size])
             x,y = load_data(files_for_train[ite:ite+batch_size],filtered=data_filtered)
             x, y = model.prepare_batch(x, y)
-            print(y.shape,"yshape")
+           
             y_pred = model(x).double()
           #  print(y_pred)
             torch.cuda.empty_cache()
