@@ -226,4 +226,4 @@ def traitement_general_mngu0(N):
             print("pbm shape", len(ema_filtered), len(y))
         np.save(os.path.join(path_files_treated,"ema_filtered", EMA_files[i]),ema_filtered)
 
-traitement_general_mngu0(N=100)
+traitement_general_mngu0(N="All")
