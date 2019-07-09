@@ -1,11 +1,7 @@
 import torch
-try :
-    from Apprentissage.utils import load_filenames, load_data,load_filenames_deter
-    from Apprentissage.pytorchtools import EarlyStopping
 
-except :
-    from utils import load_filenames, load_data,load_filenames_deter
-    from pytorchtools import EarlyStopping
+from Apprentissage.utils import load_filenames, load_data,load_filenames_deter
+from Apprentissage.pytorchtools import EarlyStopping
 
 
 import numpy as np
