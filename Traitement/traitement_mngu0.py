@@ -35,7 +35,7 @@ def traitement_general_mngu0(N):
         'jaw_py','jaw_pz','upperlip_py','upperlip_pz',
         'lowerlip_py','lowerlip_pz']
     n_col_ema = len(articulators)+1 #lip aperture
-    path_ema_files = os.path.join(root_path, "Donnees_brutes\MNGU0\ema")
+    path_ema_files = os.path.join(root_path, "Donnees_brutes","MNGU0","ema")
     EMA_files = sorted([name[:-4] for name in os.listdir(path_ema_files) if name.endswith('.ema')])
     path_files_treated = os.path.join(root_path, "Donnees_pretraitees\MNGU0")
 
