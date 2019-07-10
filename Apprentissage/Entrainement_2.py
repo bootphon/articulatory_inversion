@@ -226,7 +226,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
     if test_on in ["F1", "M1", "F5","M3"]:
         speaker_2 = "usc_timit_" + test_on
 
-    std_speaker=  np.load(os.path.join(root_folder, "Traitement", "norm_values","std_ema_" + speaker_2 + ".npy"))
+    std_speaker=  np.load(os.path.join(root_folder, "Traitement", "norm_values","std_ema_"+speaker+".npy"))
     model.evaluate_on_test(criterion=criterion,verbose=True, X_test=x, Y_test=y,
                            to_plot=to_plot, std_ema=max(std_speaker), suffix=test_on)
 
