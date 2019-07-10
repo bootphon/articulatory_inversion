@@ -13,7 +13,7 @@ speakers.remove("fileset")
 max_length = 500
 speakers = speakers[8:]
 print(speakers)
-
+speakers = ["MNGU0"]
 for sp in speakers :
     print("speaker ",sp)
     file_names = os.listdir(os.path.join(donnees_pretraitees_path,sp,"ema"))
