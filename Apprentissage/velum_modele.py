@@ -1,5 +1,8 @@
 import torch
-
+import os,sys,inspect
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0,parentdir)
 from Apprentissage.utils import load_filenames, load_data,load_filenames_deter
 from Apprentissage.pytorchtools import EarlyStopping
 
