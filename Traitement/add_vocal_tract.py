@@ -156,10 +156,7 @@ def add_vocal_tract(speaker):
 speakers =  ["F01","F02","F03","F04","M01","M02","M03","M04","F5","F1","M1","M3"
     ,"maps0","faet0",'mjjn0',"ffes0","MNGU0","fsew0","msak0"]
 
-speakers = ["F01","F02","F03","F04"]
-for ind in range(len(speakers)):
-    print("speaker : ",speakers[ind])
-    add_vocal_tract(speakers[ind])
+
 if __name__=='__main__':
     import argparse
     parser = argparse.ArgumentParser(description='Train and save a model.')
