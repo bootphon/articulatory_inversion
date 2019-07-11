@@ -170,7 +170,6 @@ def traitement_general_mocha(N=all):
 
     sp_with_velum =["fsew0","msak0","faet0","falh0","ffes0"]
     speakers = ["fsew0","msak0","faet0","falh0","ffes0","mjjn0","maps0"]
-    speakers = ["maps0"]
 
     sampling_rate_mfcc = 16000
     frame_time = 25
@@ -191,7 +190,7 @@ def traitement_general_mocha(N=all):
     xtrm = 30
     for k in range(len(speakers)) :
         speaker = speakers[k]
-        print("SPEAKER : ",speaker)
+        print("MOCHA : SPEAKER : {} , {} out of {}".format(speaker,k+1,len(speakers)))
         if speaker in ["maps0","mjjn0"]:
             articulators = [
                 'tt_x', 'tt_y', 'td_x', 'td_y', 'tb_x', 'tb_y', 'li_x', 'li_y',
@@ -216,8 +215,8 @@ def traitement_general_mocha(N=all):
             ALL_EMA_2 = np.zeros((1,12))
 
         for i in range(N):
-            if i%50 ==0:
-                print(i," out of ",N)
+          #  if i%50 ==0:
+           #     print(i," out of ",N)
 
             ema = first_step_ema_data(i,speaker)   # recup ema de occurence i, conserve colonnes utiles, interpole données manquantes, filtre passe bas pour lisser
             mfcc = first_step_wav_data(i,speaker) #recup MFCC de occurence i,  calcule 13 plus grands mfcc sur chaque trame, calcule les delta et deltadelta
@@ -269,23 +268,24 @@ def traitement_general_mocha(N=all):
         np.save(os.path.join("norm_values","mean_ema_"+speaker), mean_ema)
         np.save(os.path.join("norm_values","std_mfcc_"+speaker), std_mfcc)
         np.save(os.path.join("norm_values","mean_mfcc_"+speaker), mean_mfcc)
-        print(std_ema,"std ema")
+        #print(std_ema,"std ema")
 
         for i in range(N):
 
-            ema = np.load(os.path.join(root_path, "Donnees_pretraitees","mocha_"+speaker,"ema", EMA_files[i]+".npy"))
-            ema = ((ema - smoothed_moving_average[i,:])) /max(std_ema)
-
-            ema_filtered = np.load(os.path.join(root_path, "Donnees_pretraitees","mocha_"+speaker,"ema_filtered", EMA_files[i]+".npy"))
-            ema_filtered = ((ema - smoothed_moving_average[i,:])) /max(std_ema)
-            np.save(os.path.join(root_path, "Donnees_pretraitees", "mocha_" + speaker, "ema_filtered", EMA_files[i]),
-                    ema_filtered)
-
             mfcc = np.load(os.path.join(root_path, "Donnees_pretraitees","mocha_"+speaker,"mfcc", EMA_files[i]+".npy"))
             mfcc = (mfcc - mean_mfcc) / std_mfcc
-
-            np.save(os.path.join(root_path, "Donnees_pretraitees", "mocha_" + speaker, "ema", EMA_files[i]), ema)
             np.save(os.path.join(root_path, "Donnees_pretraitees", "mocha_" + speaker, "mfcc", wav_files[i]), mfcc)
+
+
+           # ema = np.load(os.path.join(root_path, "Donnees_pretraitees","mocha_"+speaker,"ema", EMA_files[i]+".npy"))
+            #ema = ((ema - smoothed_moving_average[i,:])) /max(std_ema)
+
+            #ema_filtered = np.load(os.path.join(root_path, "Donnees_pretraitees","mocha_"+speaker,"ema_filtered", EMA_files[i]+".npy"))
+            #ema_filtered = ((ema_filtered - smoothed_moving_average[i,:])) /max(std_ema)
+            #np.save(os.path.join(root_path, "Donnees_pretraitees", "mocha_" + speaker, "ema_filtered", EMA_files[i]),
+            #        ema_filtered)
+
+            #np.save(os.path.join(root_path, "Donnees_pretraitees", "mocha_" + speaker, "ema", EMA_files[i]), ema)
 
             #plt.plot(ema[:,0])
 
@@ -299,6 +299,6 @@ def traitement_general_mocha(N=all):
             #    ema_filtered = ema_filtered[halfdif:-(difference - halfdif)]
 
 
-N="All"
+#N="All"
 
-traitement_general_mocha(N="All")
+#traitement_general_mocha(N="All")

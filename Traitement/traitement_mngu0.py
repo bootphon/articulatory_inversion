@@ -26,6 +26,8 @@ order_arti_MNGU0 = [
         'll_x','ll_y']
 
 def traitement_general_mngu0(N):
+    print("MNGU0")
+
     root_path = dirname(dirname(os.path.realpath(__file__)))
     path_files_annotation = os.path.join(root_path, "Donnees_brutes","MNGU0","phone_labels")
     sampling_rate_ema = 200
@@ -37,6 +39,7 @@ def traitement_general_mngu0(N):
     n_col_ema = len(articulators)+1 #lip aperture
     path_ema_files = os.path.join(root_path, "Donnees_brutes","MNGU0","ema")
     EMA_files = sorted([name[:-4] for name in os.listdir(path_ema_files) if name.endswith('.ema')])
+    EMA_files = [f for f in EMA_files if "split" not in EMA_files]
     path_files_treated = os.path.join(root_path, "Donnees_pretraitees","MNGU0")
 
 
@@ -45,11 +48,11 @@ def traitement_general_mngu0(N):
     window=5
     path_wav_files = os.path.join(root_path, "Donnees_brutes","MNGU0","wav")
    # wav_files = sorted([name[:-4] for name in os.listdir(path_wav_files) if name.endswith('.wav')])
-    sampling_rate_mfcc = 16000
+    sampling_rate_wav = 16000
     frame_time = 25
     hop_time = 10  # en ms
-    hop_length = int((hop_time * sampling_rate_mfcc) / 1000)
-    frame_length = int((frame_time * sampling_rate_mfcc) / 1000)
+    hop_length = int((hop_time * sampling_rate_wav) / 1000)
+    frame_length = int((frame_time * sampling_rate_wav) / 1000)
     n_coeff = 13
     n_col_mfcc = n_coeff*(2*window+1)*3
     if N == "All":
@@ -101,9 +104,10 @@ def traitement_general_mngu0(N):
            ( Un frame toutes les 10ms, donc K' ~ duree_en_sec/0.01 )
            """
         path_wav = os.path.join(path_wav_files, EMA_files[i] + '.wav')
-        data, sr = librosa.load(path_wav, sr=sampling_rate_mfcc)  # chargement de données
+        data, sr = librosa.load(path_wav, sr=sampling_rate_wav)  # chargement de données
 
-        mfcc = librosa.feature.mfcc(y=data, sr=sampling_rate_mfcc, n_mfcc=n_coeff,
+
+        mfcc = librosa.feature.mfcc(y=data, sr=sampling_rate_wav, n_mfcc=n_coeff,
                                     n_fft=frame_length, hop_length=hop_length
                                     ).T
         dyna_features = get_delta_features(mfcc)
@@ -160,8 +164,8 @@ def traitement_general_mngu0(N):
         N=len(EMA_files)
     #traitement uttérance par uttérance des phrases
     for i in range(N):
-        if i%100 ==0:
-            print(i," out of ",N)
+       # if i%100 ==0:
+        #    print(i," out of ",N)
         ema = first_step_ema_data(i)
         mfcc = first_step_wav_data(i)
         ema, mfcc = second_step_data(i, ema, mfcc)
@@ -209,27 +213,27 @@ def traitement_general_mngu0(N):
     np.save("norm_values","mean_ema_MNGU0", mean_ema)
     np.save("norm_values","std_mfcc_MNGU0", std_mfcc)
     np.save("norm_values","mean_mfcc_MNGU0", mean_mfcc)
-    print(std_ema, "std ema ")
+ #   print(std_ema, "std ema ")
 
     # construction du filtre passe bas que lon va appliquer à chaque frame mfcc et trajectoire d'articulateur
     # la fréquence de coupure réduite de 0.1 a été choisi manuellement pour le moment, et il se trouve qu'on
     # n'a pas besoin d'un filtre différent pour mfcc et ema
    # order = 5
    # filt_b, filt_a = scipy.signal.butter(order, 0.1, btype='lowpass', analog=False) #fs=sampling_rate_ema)
-    print(len(smoothed_moving_average))
-    print()
+
     for i in range(N):
-        ema = np.load(os.path.join(path_files_treated,"ema", EMA_files[i]+".npy"))
-        ema = ((ema - smoothed_moving_average[i, :])) / max(std_ema)
-
-        ema_filtered = np.load(os.path.join(path_files_treated, "ema_filtered", EMA_files[i])+".npy")
-        ema_filtered = ((ema_filtered- smoothed_moving_average[i, :])) / max(std_ema)
-        np.save(os.path.join(path_files_treated, "ema_filtered", EMA_files[i]), ema_filtered)
-
-        mfcc = np.load(os.path.join(path_files_treated,"mfcc", EMA_files[i] + ".npy"))
+        mfcc = np.load(os.path.join(path_files_treated, "mfcc", EMA_files[i] + ".npy"))
         mfcc = (mfcc - mean_mfcc) / std_mfcc
-        np.save(os.path.join(path_files_treated, "ema",EMA_files[i]), ema)
-        np.save(os.path.join(path_files_treated,"mfcc", EMA_files[i]),mfcc)
+        np.save(os.path.join(path_files_treated, "mfcc", EMA_files[i]), mfcc)
+
+     #   ema = np.load(os.path.join(path_files_treated,"ema", EMA_files[i]+".npy"))
+      #  ema = ((ema - smoothed_moving_average[i, :])) / max(std_ema)
+
+       # ema_filtered = np.load(os.path.join(path_files_treated, "ema_filtered", EMA_files[i])+".npy")
+        #ema_filtered = ((ema_filtered- smoothed_moving_average[i, :])) / max(std_ema)
+        #np.save(os.path.join(path_files_treated, "ema_filtered", EMA_files[i]), ema_filtered)
+
+        #np.save(os.path.join(path_files_treated, "ema",EMA_files[i]), ema)
 
 
-traitement_general_mngu0(N="All")
+#traitement_general_mngu0(N="All")
