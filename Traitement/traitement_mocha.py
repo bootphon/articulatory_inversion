@@ -58,9 +58,10 @@ def traitement_general_mocha(N="All"):
         En sortie nparray de dimension (K,13), où K dépend de la longueur de la phrase
          (fréquence d'échantillonnage de 200Hz donc K = 200*durée_en_sec)
         """
-
-        path_ema_file = os.path.join(path_files, EMA_files[i] + ".ema")
-        N= len(wav_files)
+        try :
+            path_ema_file = os.path.join(path_files, EMA_files[i] + ".ema")
+        except :
+            print("pbm useuel avec i {}, file davant {}".format(i,EMA_files[i-1]))
 
         with open(path_ema_file,'rb') as ema_annotation:
             column_names=[0]*n_columns
@@ -162,7 +163,7 @@ def traitement_general_mocha(N="All"):
 
     sp_with_velum =["fsew0","msak0","faet0","falh0","ffes0"]
     speakers = ["fsew0","msak0","faet0","falh0","ffes0","mjjn0","maps0"]
-    speakers = ["maps0"]
+    speakers = ["mjjn0","maps0"]
 
     sampling_rate_mfcc = 16000
     frame_time = 25
@@ -228,6 +229,7 @@ def traitement_general_mocha(N="All"):
             ALL_MFCC.append(mfcc)
             ALL_EMA_2 = np.concatenate((ALL_EMA_2,ema),axis=0)
 
+
         all_mean_ema = np.array([np.mean(ALL_EMA[i], axis=0) for i in range(len(ALL_EMA))])
 
         weights_moving_average = low_pass_filter_weight(cut_off=10, sampling_rate=sampling_rate_ema)
@@ -240,7 +242,7 @@ def traitement_general_mocha(N="All"):
 
         #std_ema =  np.mean( np.array([ np.std(x,axis=0) for x in ALL_EMA]) ,axis=0)
         ALL_EMA_2 = ALL_EMA_2[1:, :]
-
+        np.save(os.path.join("norm_values","all_ema_" + speaker),ALL_EMA_2)
         std_ema = np.std(ALL_EMA_2,   axis=0)  # facon plus correcte de calculer la std: on veut savoir coombien l'arti varie
 
         mean_ema = np.mean( np.array([ np.mean(x,axis=0) for x in ALL_EMA])  ,axis=0) #apres que chaque phrase soit centrée

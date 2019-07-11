@@ -11,12 +11,13 @@ from traitement_mocha import traitement_general_mocha
 from add_vocal_tract import add_vocal_tract_per_corpus
 from split_sentences import split_sentences
 
-def main_traitement(corpus_to_treat = ["mocha","usc","MNGU0","Haskins"],N="All"):
+def main_traitement(corpus_to_treat = ["mocha","usc","MNGU0","Haskins"],N="All",split=False):
     if "mocha" in corpus_to_treat :
         traitement_general_mocha(N=N)
 
     if "MNGU0" in corpus_to_treat:
         traitement_general_mngu0(N=N)
+        split = True
 
     if "usc" in corpus_to_treat  :
         traitement_general_usc_timit(N=N)
@@ -27,10 +28,10 @@ def main_traitement(corpus_to_treat = ["mocha","usc","MNGU0","Haskins"],N="All")
     for corpus in corpus_to_treat :
         add_vocal_tract_per_corpus(corpus,N=N)
 
-    if "MNGU0" in corpus_to_treat :
+    if split :
         split_sentences(corpus=["MNGU0"], max_length=500,N=N)
 
 
-main_traitement(N="All")
+main_traitement(["Haskins"],N="All")
 
 
