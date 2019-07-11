@@ -1,3 +1,9 @@
+import os,sys,inspect
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0,parentdir)
+
+
 from Traitement.traitement_haskins import traitement_general_haskins
 from Traitement.traitement_mngu0 import traitement_general_mngu0
 from Traitement.traitement_usc_timit_2 import traitement_general_usc_timit
