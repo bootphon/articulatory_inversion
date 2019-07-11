@@ -13,14 +13,11 @@ from split_sentences import split_sentences
 from normalization import normalize_data_per_corpus
 
 def main_traitement(corpus_to_treat = ["mocha","usc","MNGU0","Haskins"],max="All",split=False):
-
     if "mocha" in corpus_to_treat :
         traitement_general_mocha(max=max)
-
     if "MNGU0" in corpus_to_treat:
         traitement_general_mngu0(max=max)
         #split = True
-
     if "usc" in corpus_to_treat  :
         traitement_general_usc_timit(max=max)
 

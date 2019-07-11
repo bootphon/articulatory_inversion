@@ -63,4 +63,3 @@ def normalize_data_per_corpus(corpus,max) :
 
         normalize_data(sp,max)
 
-normalize_data_per_corpus("Haskins",max=50)
