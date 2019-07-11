@@ -29,7 +29,7 @@ from Apprentissage.utils import low_pass_filter_weight
 """ after this script the order of the articulators is the following : """
 
 
-def traitement_general_mocha(N=all):
+def traitement_general_mocha(N="All"):
     root_path = dirname(dirname(os.path.realpath(__file__)))
     path_files_treated = os.path.join(root_path, "Donnees_pretraitees")
     order = 5
@@ -58,7 +58,6 @@ def traitement_general_mocha(N=all):
         En sortie nparray de dimension (K,13), où K dépend de la longueur de la phrase
          (fréquence d'échantillonnage de 200Hz donc K = 200*durée_en_sec)
         """
-
 
         path_ema_file = os.path.join(path_files, EMA_files[i] + ".ema")
         N= len(wav_files)
@@ -163,6 +162,7 @@ def traitement_general_mocha(N=all):
 
     sp_with_velum =["fsew0","msak0","faet0","falh0","ffes0"]
     speakers = ["fsew0","msak0","faet0","falh0","ffes0","mjjn0","maps0"]
+    speakers = ["maps0"]
 
     sampling_rate_mfcc = 16000
     frame_time = 25
@@ -188,10 +188,10 @@ def traitement_general_mocha(N=all):
         cols_index = None
         n_columns = 20
         wav_files = sorted([name[:-4] for name in os.listdir(path_files) if name.endswith('.wav')])
-
         create_missing_dir(speaker)
         if N == "All":
             N = len(EMA_files)
+
         ALL_EMA= []
         ALL_MFCC =[]
         if speaker in sp_with_velum:
