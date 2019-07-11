@@ -59,9 +59,6 @@ def traitement_general_mocha(N=all):
          (fréquence d'échantillonnage de 200Hz donc K = 200*durée_en_sec)
         """
 
-        path_files = os.path.join(root_path, "Donnees_brutes\mocha\\" + speaker)
-        EMA_files = sorted([name for name in os.listdir(path_files) if "palate" not in name])
-        EMA_files = sorted([name[:-4] for name in EMA_files if name.endswith('.ema')])
 
         path_ema_file = os.path.join(path_files, EMA_files[i] + ".ema")
         N= len(wav_files)
@@ -105,8 +102,6 @@ def traitement_general_mocha(N=all):
          En sortie nparray de dimension (K',13*3)=(K',39). Ou K' dépend de la longueur de la phrase
          ( Un frame toutes les 10ms, donc K' ~ duree_en_sec/0.01 )
          """
-        path_files = os.path.join(root_path, "Donnees_brutes\mocha\\" + speaker)
-        wav_files = sorted([name[:-4] for name in os.listdir(path_files) if name.endswith('.wav')])
         path_wav = os.path.join(path_files, wav_files[i] + '.wav')
         data, sr = librosa.load(path_wav, sr=sampling_rate_mfcc)  # chargement de données
 
@@ -132,8 +127,6 @@ def traitement_general_mocha(N=all):
               On ajoute le 'contexte' aux données MFCC ie les 5 frames précédent et les 5 frames suivant chaque frame,
               d'où la taille de mfcc 429 = 5*39 + 5*39 + 39
               """
-        path_files = os.path.join(root_path, "Donnees_brutes\mocha\\" + speaker)
-        wav_files = sorted([name[:-4] for name in os.listdir(path_files) if name.endswith('.wav')])
 
         if speaker in ["fsew0","msak0"]:
             path_annotation = os.path.join(path_files, wav_files[i] + '.lab')
@@ -177,14 +170,6 @@ def traitement_general_mocha(N=all):
     hop_length = int((hop_time * sampling_rate_mfcc) / 1000)
     frame_length = int((frame_time * sampling_rate_mfcc) / 1000)
 
-    #nyq = 0.5 * sampling_rate_mfcc #250
-    #fc = cutoff / nyq #20/250=0.08
-    #2*cutoff/sampling_rate_ema = 2*20/500 = 40/500 = 4/50 = 4*2/100 = 0.08
-    #filt_b, filt_a = scipy.signal.butter(order, fc, btype='lowpass', analog=False) #fs=sampling_rate_ema)
-    #nyq = 0.5 * sampling_rate_ema  # 8000
-    #fc = cutoff / nyq  # 20/8000=0.0025
-    #filt_b_ema, filt_a_ema = scipy.signal.butter(order, fc, btype='lowpass', analog=False) #fs=sampling_rate_ema)
-
     cutoff = 30
     weights = low_pass_filter_weight(cut_off=cutoff, sampling_rate=sampling_rate_ema)
     xtrm = 30
@@ -196,7 +181,7 @@ def traitement_general_mocha(N=all):
                 'tt_x', 'tt_y', 'td_x', 'td_y', 'tb_x', 'tb_y', 'li_x', 'li_y',
                 'ul_x', 'ul_y', 'll_x', 'll_y']
 
-        path_files = os.path.join(root_path, "Donnees_brutes","mocha", speaker)
+        path_files = os.path.join(root_path, "Donnees_brutes","mocha\\" + speaker)
         EMA_files = sorted([name for name in os.listdir(path_files) if "palate" not in name])
         EMA_files = sorted([name[:-4] for name in EMA_files if name.endswith('.ema')])
 
