@@ -26,7 +26,7 @@ articulators_after = [
 root_folder = os.path.dirname(os.getcwd())
 
 
-def add_vocal_tract(speaker):
+def add_vocal_tract(speaker,N):
     print("adding vocal tracts for speaker {}".format(speaker))
     def add_lip_aperture(ema):
         ind_1, ind_2 = [articulators.index("ul_y"), articulators.index("ll_y")]
@@ -98,10 +98,12 @@ def add_vocal_tract(speaker):
     EMA_files_names = sorted(
         [name[:-4] for name in os.listdir(files_path) if name.endswith('.npy')])
 
-    N = len(EMA_files_names)
+    EMA_files_names = [f for f in EMA_files_names if "split" not in f ] #juste pour ignorer mgnu0
+    if N == "All":
+        N = len(EMA_files_names)
     for i in range(N):
 
-        if i%100 ==0:
+        if i+1%500 ==0:
             print("{} out of {}".format(i, N))
         ema = np.load(os.path.join(files_path,EMA_files_names[i]+".npy"))
         lip_aperture = add_lip_aperture(ema)
@@ -152,18 +154,11 @@ def add_vocal_tract(speaker):
         ema[:, 17:19] = velum_xy
         np.save(os.path.join(root_folder,"Donnees_pretraitees",speaker_2,"ema_VT",EMA_files_names[i]),ema)
 
+#speakers =  ["F01","F02","F03","F04","M01","M02","M03","M04","F5","F1","M1","M3"
+ #   ,"maps0","faet0",'mjjn0',"ffes0","MNGU0","fsew0","msak0"]
 
-speakers =  ["F01","F02","F03","F04","M01","M02","M03","M04","F5","F1","M1","M3"
-    ,"maps0","faet0",'mjjn0',"ffes0","MNGU0","fsew0","msak0"]
 
-
-if __name__=='__main__':
-    import argparse
-    parser = argparse.ArgumentParser(description='Train and save a model.')
-    parser.add_argument('corpus', metavar='corpus', type=str, help='un des corpus : MNGU0, usc, Haskins, mocha')
-    args = parser.parse_args()
-    corpus = str(sys.argv[1])
-
+def add_vocal_tract_per_corpus(corpus,N="All") :
     if corpus == "MNGU0":
         speakers = ["MNGU0"]
     elif corpus == "usc":
@@ -173,10 +168,9 @@ if __name__=='__main__':
 
     elif corpus == "mocha":
         speakers =["fsew0","msak0","faet0","ffes0","maps0","mjjn0"]
-        speakers =["ffes0"]
 
     else :
         print("vous navez pas choisi un des corpus")
 
     for sp in speakers :
-        add_vocal_tract(sp)
+        add_vocal_tract(sp,N=N)
