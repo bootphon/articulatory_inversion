@@ -25,7 +25,7 @@ order_arti_MNGU0 = [
         'li_x','li_y','ul_x','ul_y',
         'll_x','ll_y']
 
-def traitement_general_mngu0(N):
+def traitement_general_mngu0(max="All"):
     print("MNGU0")
 
     root_path = dirname(dirname(os.path.realpath(__file__)))
@@ -55,8 +55,9 @@ def traitement_general_mngu0(N):
     frame_length = int((frame_time * sampling_rate_wav) / 1000)
     n_coeff = 13
     n_col_mfcc = n_coeff*(2*window+1)*3
-    if N == "All":
-        N = len(EMA_files)
+    N = len(EMA_files)
+    if max != "All":
+        N = max
     def first_step_ema_data(i):
         """
         :param i: index de l'uttérence (ie numero de phrase) dont les données EMA seront extraites
@@ -166,7 +167,7 @@ def traitement_general_mngu0(N):
     for i in range(N):
        # if i%100 ==0:
         #    print(i," out of ",N)
-        ema = first_step_ema_data(i)
+        ema = first_step_ema_data(i) #(K,12)
         mfcc = first_step_wav_data(i)
         ema, mfcc = second_step_data(i, ema, mfcc)
        #  print("second step",ema.shape,mfcc.shape)
@@ -202,7 +203,10 @@ def traitement_general_mngu0(N):
          for channel in moving_average.T], axis=1)
     smoothed_moving_average = smoothed_moving_average[xtrm:-xtrm, :]
     ALL_EMA_2 = ALL_EMA_2[1:, :]
-    std_ema = np.std(ALL_EMA_2, axis=0)  # facon plus correcte de calculer la std: on veut savoir coombien l'arti varie
+    std_ema = np.std(ALL_EMA_2, axis=0) # facon plus correcte de calculer la std: on veut savoir coombien l'arti varie
+    std_ema_2 = np.sqrt(np.mean(  (ALL_EMA_2-smoothed_moving_average)**2 ,axis=0))
+
+
 
     #  std_ema = np.mean(np.array([np.std(x, axis=0) for x in ALL_EMA]), axis=0)
     mean_ema = np.mean(np.array([np.mean(x, axis=0) for x in ALL_EMA]), axis=0)  # apres que chaque phrase soit centrée

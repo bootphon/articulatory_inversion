@@ -27,7 +27,7 @@ order_arti_usctimit = [
         'tt_x', 'tt_y', 'td_x', 'td_y', 'tb_x', 'tb_y', 'li_x', 'li_y',
         'ul_x', 'ul_y', 'll_x', 'll_y']
 
-def traitement_general_usc_timit(N):
+def traitement_general_usc_timit(max="All"):
 
     root_path = dirname(dirname(os.path.realpath(__file__)))
 
@@ -73,9 +73,10 @@ def traitement_general_usc_timit(N):
 
         def cut_all_files(i):
             path_wav = os.path.join(path_files_brutes, "wav", EMA_files[i] + '.wav')
-            # sampling_rate_wav_init = 20000
+           # sampling_rate_wav_init = 20000
             wav, sr = librosa.load(path_wav, sr=sampling_rate_wav)  # chargement de données
-            #    wav = scipy.signal.resample(wav,num=len(wav)*sampling_rate_wav/sampling_rate_wav_init)
+           # wav = scipy.signal.resample(wav,num=int(len(wav)*sampling_rate_wav/sampling_rate_wav_init))
+
             ema = sio.loadmat(os.path.join(path_files_brutes, "mat", EMA_files[i] + ".mat"))
             ema = ema[EMA_files[i]][0]  # dictionnaire où les données sont associées à la clé EMA_files[i]pritn()
             ema = np.concatenate([ema[arti][2][:, [0, 1]] for arti in range(1, 7)], axis=1)
@@ -145,7 +146,7 @@ def traitement_general_usc_timit(N):
             np.save(os.path.join(path_files_treated, "mfcc", EMA_files_2[i]), mfcc)
 
         def for_normalisation(N_2):
-      #      print("calculating norm values - 3 step out of 4 ")
+        #    print("calculating norm values - 3 step out of 4 ")
             ALL_EMA = []
             ALL_MFCC = []
             ALL_EMA_2 = np.zeros((1, 12))
@@ -201,7 +202,7 @@ def traitement_general_usc_timit(N):
             return std_ema, mean_ema, smoothed_moving_average, mean_mfcc, std_mfcc
 
         def normalization(mean_mfcc, std_mfcc,N_2):  # std_ema, mean_ema, smoothed_moving_average,
-          #  print("cutting files between each sentence - 4 step out of 4 ")
+         #   print("cutting files between each sentence - 4 step out of 4 ")
             for i in range(N_2):
                 #   if i % 100 == 0:
                 #      print("{} out of {}".format(i, len(EMA_files_2)))
@@ -222,32 +223,30 @@ def traitement_general_usc_timit(N):
 
         empty_and_create_dirs()
         window=5
-        sampling_rate_wav = 16000
+        sampling_rate_wav = 20000
         frame_time = 25
         hop_time = 10  # en ms
         hop_length = int((hop_time * sampling_rate_wav) / 1000)
         frame_length = int((frame_time * sampling_rate_wav) / 1000)
         n_coeff = 13
         EMA_files = sorted([name[:-4] for name in os.listdir(os.path.join(path_files_brutes, "mat")) if name.endswith(".mat")])
-
-       # print("cut files - 1 step out of 4 ")
-
-        if N == "All":
-            N = len(EMA_files)
+        N = len(EMA_files)
+     #   print("cut files - 1 step out of 4 ")
+        if max != "All":
+            N = max
 
         for i in range(N):
             cut_all_files(i)
         EMA_files_2 = sorted([name[:-4] for name in os.listdir(os.path.join(path_files_brutes, "wav_cut")) if name.endswith(".npy")])
 
-        N_2 = N
-        if N =="All":
-            N_2 = len(EMA_files_2)
-      #  print("treat ema files - 2 step out of 4 ")
+        N_2 = len(EMA_files_2)
+        if max != "All":
+            N_2 = max
 
         for i in range(N_2):
             treat_ema_files(i)
 
-     #   print("treat wav files - 3 step out of 4 ")
+      #  print("treat wav files - 3 step out of 4 ")
         for i in range(N_2) :
          #   if i % 100 == 0 :
           #      print("{} out of {}".format(i,N_2))
@@ -258,7 +257,7 @@ def traitement_general_usc_timit(N):
 
         std_ema, mean_ema, smoothed_moving_average, mean_mfcc,std_mfcc = for_normalisation(N_2)
 
-        normalization( mean_mfcc,std_mfcc,N_2=N_2)
+        #normalization( mean_mfcc,std_mfcc,N_2=N_2)
 
 #N = "All"
 
@@ -275,3 +274,4 @@ def rename(): #the trans folder of usc timit for the speaker m3 have the wrong n
         os.rename(os.path.join(folder,name),os.path.join(folder,name.replace("mri","ema")))
 
 #rename()
+

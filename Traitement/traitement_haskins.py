@@ -99,16 +99,14 @@ def traitement_general_haskins(max="All"):
         xtrm = 30
         weights = low_pass_filter_weight(cut_off=10, sampling_rate=sampling_rate_ema)
        # sampling_rate_wav_init = 44100
-        sampling_rate_wav = 44100
 
         for i in range(N) :
-          #  if i%200==0:
+            #if i%50==0:
              #   print("{} out of {}".format(i,N))
             data = sio.loadmat(os.path.join(path_files_brutes,EMA_files[i]+".mat"))[EMA_files[i]][0]
            # sampling_rate_mfcc = data[0][1][0][0] # 44100 voir si toujours le même
             wav = data[0][2]
-       #     wav = scipy.signal.resample(wav,num=len(wav)*sampling_rate_wav/sampling_rate_wav_init)
-
+          #  wav = scipy.signal.resample(wav,num=int(len(wav)*sampling_rate_wav/sampling_rate_wav_init))
             np.save(os.path.join(root_path, "Donnees_brutes","Haskins_IEEE_Rate_Comparison_DB",speaker,"wav",EMA_files[i]),wav)
 
             ema = np.zeros((len(data[1][2]), len(order_arti_haskins)))
@@ -173,7 +171,6 @@ def traitement_general_haskins(max="All"):
         mean_mfcc = np.mean(np.array([np.mean(x, axis=0) for x in ALL_MFCC]), axis=0)
         ALL_EMA_2 = ALL_EMA_2[1:, :]
         std_ema = np.std(ALL_EMA_2, axis=0)  # facon plus correcte de calculer la std: on veut savoir coombien l'arti varie
-
         np.save(os.path.join("norm_values", "moving_average_ema_" + speaker), smoothed_moving_average)
         np.save(os.path.join("norm_values", "std_ema_" + speaker), std_ema)
         np.save(os.path.join("norm_values", "mean_ema_" + speaker), mean_ema)

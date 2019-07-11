@@ -26,7 +26,7 @@ articulators_after = [
 root_folder = os.path.dirname(os.getcwd())
 
 
-def add_vocal_tract(speaker,N):
+def add_vocal_tract(speaker,max):
     print("adding vocal tracts for speaker {}".format(speaker))
     def add_lip_aperture(ema):
         ind_1, ind_2 = [articulators.index("ul_y"), articulators.index("ll_y")]
@@ -99,8 +99,9 @@ def add_vocal_tract(speaker,N):
         [name[:-4] for name in os.listdir(files_path) if name.endswith('.npy')])
 
     EMA_files_names = [f for f in EMA_files_names if "split" not in f ] #juste pour ignorer mgnu0
-    if N == "All":
-        N = len(EMA_files_names)
+    N = len(EMA_files_names)
+    if max != "All":
+        N = max
     for i in range(N):
 
         if i+1%500 ==0:
@@ -158,7 +159,7 @@ def add_vocal_tract(speaker,N):
  #   ,"maps0","faet0",'mjjn0',"ffes0","MNGU0","fsew0","msak0"]
 
 
-def add_vocal_tract_per_corpus(corpus,N="All") :
+def add_vocal_tract_per_corpus(corpus,max="All") :
     if corpus == "MNGU0":
         speakers = ["MNGU0"]
     elif corpus == "usc":
@@ -173,4 +174,4 @@ def add_vocal_tract_per_corpus(corpus,N="All") :
         print("vous navez pas choisi un des corpus")
 
     for sp in speakers :
-        add_vocal_tract(sp,N=N)
+        add_vocal_tract(sp,max = max)

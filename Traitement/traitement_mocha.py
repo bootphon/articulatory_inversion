@@ -29,7 +29,7 @@ from Apprentissage.utils import low_pass_filter_weight
 """ after this script the order of the articulators is the following : """
 
 
-def traitement_general_mocha(N="All"):
+def traitement_general_mocha(max="All"):
     root_path = dirname(dirname(os.path.realpath(__file__)))
     path_files_treated = os.path.join(root_path, "Donnees_pretraitees")
     order = 5
@@ -47,7 +47,7 @@ def traitement_general_mocha(N="All"):
         if not os.path.exists(os.path.join(root_path, "Donnees_pretraitees", "mocha_" + speaker, "ema_filtered")):
             os.makedirs(os.path.join(root_path, "Donnees_pretraitees", "mocha_" + speaker, "ema_filtered"))
 
-    def first_step_ema_data(i,speaker):
+    def first_step_ema_data(i):
         """
 
         :param i: index de l'uttérence (ie numero de phrase) dont les données EMA seront extraites
@@ -58,10 +58,12 @@ def traitement_general_mocha(N="All"):
         En sortie nparray de dimension (K,13), où K dépend de la longueur de la phrase
          (fréquence d'échantillonnage de 200Hz donc K = 200*durée_en_sec)
         """
+
         try :
             path_ema_file = os.path.join(path_files, EMA_files[i] + ".ema")
         except :
             print("pbm useuel avec i {}, file davant {}".format(i,EMA_files[i-1]))
+            print("normaleent taille de ema files",len(EMA_files))
 
         with open(path_ema_file,'rb') as ema_annotation:
             column_names=[0]*n_columns
@@ -91,7 +93,7 @@ def traitement_general_mocha(N="All"):
 
 
 
-    def first_step_wav_data(i,speaker):
+    def first_step_wav_data(i):
         """
          :param i: index de l'uttérence (ie numero de phrase) dont les données WAV seront extraites
                 speaker : msak0 ou fsew0
@@ -163,7 +165,7 @@ def traitement_general_mocha(N="All"):
 
     sp_with_velum =["fsew0","msak0","faet0","falh0","ffes0"]
     speakers = ["fsew0","msak0","faet0","falh0","ffes0","mjjn0","maps0"]
-    speakers = ["mjjn0","maps0"]
+    speakers = ["msak0","faet0","falh0","ffes0","mjjn0","maps0"]
 
     sampling_rate_mfcc = 16000
     frame_time = 25
@@ -185,14 +187,14 @@ def traitement_general_mocha(N="All"):
         path_files = os.path.join(root_path, "Donnees_brutes","mocha", speaker)
         EMA_files = sorted([name for name in os.listdir(path_files) if "palate" not in name])
         EMA_files = sorted([name[:-4] for name in EMA_files if name.endswith('.ema')])
-
         cols_index = None
         n_columns = 20
         wav_files = sorted([name[:-4] for name in os.listdir(path_files) if name.endswith('.wav')])
         create_missing_dir(speaker)
-        if N == "All":
-            N = len(EMA_files)
 
+        N = len(EMA_files)
+        if max != "All":
+            N = max
         ALL_EMA= []
         ALL_MFCC =[]
         if speaker in sp_with_velum:
@@ -200,12 +202,12 @@ def traitement_general_mocha(N="All"):
         else :
             ALL_EMA_2 = np.zeros((1,12))
 
+
         for i in range(N):
           #  if i%50 ==0:
            #     print(i," out of ",N)
-
-            ema = first_step_ema_data(i,speaker)   # recup ema de occurence i, conserve colonnes utiles, interpole données manquantes, filtre passe bas pour lisser
-            mfcc = first_step_wav_data(i,speaker) #recup MFCC de occurence i,  calcule 13 plus grands mfcc sur chaque trame, calcule les delta et deltadelta
+            ema = first_step_ema_data(i)   # recup ema de occurence i, conserve colonnes utiles, interpole données manquantes, filtre passe bas pour lisser
+            mfcc = first_step_wav_data(i) #recup MFCC de occurence i,  calcule 13 plus grands mfcc sur chaque trame, calcule les delta et deltadelta
             ema, mfcc = second_step_data(i, ema, mfcc,speaker) # enleve les silences en début et fin, ajoute trames alentours pour mfcc, normalise (ema par arti, mfcc en tout)
 
             if ema.shape[0] != mfcc.shape[0]:
@@ -244,11 +246,8 @@ def traitement_general_mocha(N="All"):
         ALL_EMA_2 = ALL_EMA_2[1:, :]
         np.save(os.path.join("norm_values","all_ema_" + speaker),ALL_EMA_2)
         std_ema = np.std(ALL_EMA_2,   axis=0)  # facon plus correcte de calculer la std: on veut savoir coombien l'arti varie
-
         mean_ema = np.mean( np.array([ np.mean(x,axis=0) for x in ALL_EMA])  ,axis=0) #apres que chaque phrase soit centrée
-
         std_mfcc = np.mean(np.array([np.std(x, axis=0) for x in ALL_MFCC]), axis=0)
-
         mean_mfcc = np.mean(np.array([np.mean(x, axis=0) for x in ALL_MFCC]), axis=0)
         np.save(os.path.join("norm_values","moving_average_ema_" + speaker), smoothed_moving_average)
         np.save(os.path.join("norm_values","std_ema_"+speaker), std_ema)
@@ -256,14 +255,10 @@ def traitement_general_mocha(N="All"):
         np.save(os.path.join("norm_values","std_mfcc_"+speaker), std_mfcc)
         np.save(os.path.join("norm_values","mean_mfcc_"+speaker), mean_mfcc)
         #print(std_ema,"std ema")
-
-        for i in range(N):
-
+        for i in range(N) :
             mfcc = np.load(os.path.join(root_path, "Donnees_pretraitees","mocha_"+speaker,"mfcc", EMA_files[i]+".npy"))
             mfcc = (mfcc - mean_mfcc) / std_mfcc
             np.save(os.path.join(root_path, "Donnees_pretraitees", "mocha_" + speaker, "mfcc", wav_files[i]), mfcc)
-
-
            # ema = np.load(os.path.join(root_path, "Donnees_pretraitees","mocha_"+speaker,"ema", EMA_files[i]+".npy"))
             #ema = ((ema - smoothed_moving_average[i,:])) /max(std_ema)
 
@@ -288,4 +283,3 @@ def traitement_general_mocha(N="All"):
 
 #N="All"
 
-#traitement_general_mocha(N="All")
