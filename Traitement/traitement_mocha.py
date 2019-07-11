@@ -181,7 +181,7 @@ def traitement_general_mocha(N=all):
                 'tt_x', 'tt_y', 'td_x', 'td_y', 'tb_x', 'tb_y', 'li_x', 'li_y',
                 'ul_x', 'ul_y', 'll_x', 'll_y']
 
-        path_files = os.path.join(root_path, "Donnees_brutes","mocha\\" + speaker)
+        path_files = os.path.join(root_path, "Donnees_brutes","mocha", speaker)
         EMA_files = sorted([name for name in os.listdir(path_files) if "palate" not in name])
         EMA_files = sorted([name[:-4] for name in EMA_files if name.endswith('.ema')])
 
