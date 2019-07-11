@@ -4,12 +4,12 @@ parentdir = os.path.dirname(currentdir)
 sys.path.insert(0,parentdir)
 
 
-from Traitement.traitement_haskins import traitement_general_haskins
-from Traitement.traitement_mngu0 import traitement_general_mngu0
-from Traitement.traitement_usc_timit_2 import traitement_general_usc_timit
-from Traitement.traitement_mocha import traitement_general_mocha
-from Traitement.add_vocal_tract import add_vocal_tract_per_corpus
-from Traitement.split_sentences import split_sentences
+from traitement_haskins import traitement_general_haskins
+from traitement_mngu0 import traitement_general_mngu0
+from traitement_usc_timit_2 import traitement_general_usc_timit
+from traitement_mocha import traitement_general_mocha
+from add_vocal_tract import add_vocal_tract_per_corpus
+from split_sentences import split_sentences
 
 def main_traitement(corpus_to_treat = ["mocha","usc","MNGU0","Haskins"],N="All"):
     if "mocha" in corpus_to_treat :
