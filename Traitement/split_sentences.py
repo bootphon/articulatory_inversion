@@ -9,7 +9,7 @@ root_folder = os.path.dirname(os.getcwd())
 
 
 # file_names = file_names[0:30]
-def split_sentences(corpus=["MNGU0"] ,max_length = 500,N):
+def split_sentences(corpus=["MNGU0"] ,max_length = 500,N="All"):
     donnees_pretraitees_path = os.path.join(root_folder, "Donnees_pretraitees")
 
     file_names = os.listdir(os.path.join(donnees_pretraitees_path, "MNGU0", "ema"))
