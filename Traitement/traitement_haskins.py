@@ -35,9 +35,9 @@ order_arti_haskins = ['td_x','td_y','tb_x','tb_y','tt_x','tt_y','ul_x','ul_y',"l
 order_arti =    [ 'tt_x', 'tt_y', 'td_x', 'td_y', 'tb_x', 'tb_y', 'li_x', 'li_y',
         'ul_x', 'ul_y', 'll_x', 'll_y']
 
-def traitement_general_haskins(N):
+def traitement_general_haskins(max="All"):
     speakers = ["F01", "F02", "F03", "F04", "M01", "M02", "M03", "M04"]
-    speakers = ["F02", "F03", "F04", "M01", "M02", "M03", "M04"]
+    speakers = [ "M01", "M02", "M03", "M04"]
 
     def detect_silence(data):
         try :#tous les fichiers ne sont pas organisés dans le même ordre dans le dictionnaire, il semble y avoir deux cas
@@ -62,8 +62,10 @@ def traitement_general_haskins(N):
         path_files_annotation = os.path.join(root_path, "Donnees_brutes","Haskins_"+speaker,"trans")
         EMA_files = sorted(  [name[:-4] for name in os.listdir(path_files_brutes) if "palate" not in name])
        # EMA_files = [x for x in EMA_files if x not in files_pbm]
-        if N=="All":
-            N = len(EMA_files)
+
+        N = len(EMA_files)
+        if max != "All":
+            N = max
 
         xtrm = 3
         frame_time = 25
