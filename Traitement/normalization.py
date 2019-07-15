@@ -72,4 +72,4 @@ def normalize_data_per_corpus(corpus,max="All") :
 
 corpus =["Haskins"]
 
-normalize_data("falh0")
+normalize_data_per_corpus("Haskins")
