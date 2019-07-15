@@ -197,7 +197,7 @@ def train_learn_velum(n_epochs=10,patience=5):
 
         return -loss
     criterion = criterion_pearson
-    speakers= ["fsew0","msak0","faet0","ffes0"]
+    speakers= ["fsew0","msak0","faet0","ffes0","falh0"]
 
     early_stopping = EarlyStopping(name_file, patience=patience, verbose=True )
     N= 460 * len(speakers)  # velum for mocha whith 460 sentences
