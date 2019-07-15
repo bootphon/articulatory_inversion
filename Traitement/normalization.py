@@ -50,7 +50,7 @@ def normalize_data(speaker,max="All"):
         np.save(os.path.join(path_speaker, "ema_norma", EMA_files[i]), ema)
         np.save(os.path.join(path_speaker, "ema_filtered_norma", EMA_files[i]), ema_filtered)
 
-def normalize_data_per_corpus(corpus,max) :
+def normalize_data_per_corpus(corpus,max="All") :
     if corpus == "MNGU0":
         speakers = ["MNGU0"]
     elif corpus == "usc":
