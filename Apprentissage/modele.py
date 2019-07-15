@@ -15,7 +15,6 @@ from scipy import signal
 import scipy
 from torch.autograd import Variable
 from Apprentissage import utils
-from Apprentissage.velum_modele import learn_velum
 
 
 class my_ac2art_modele(torch.nn.Module):
@@ -57,16 +56,6 @@ class my_ac2art_modele(torch.nn.Module):
         if self.cuda_avail:
             self.cuda2 = torch.device('cuda:1')
         self.epoch_ref = 0
-        self.model_velum = None
-        self.init_velum()
-
-    def init_velum(self):
-        model_velum = learn_velum(hidden_dim=200, input_dim=429, output_dim=2, name_file="modele_velum").double()
-        model_to_load = os.path.join(root_folder, "Apprentissage", "saved_models", "modeles_valides",
-                                     "modele_velum.txt")
-        loaded_state = torch.load(model_to_load)
-        model_velum.load_state_dict(loaded_state)
-        self.model_velum = model_velum
 
     def prepare_batch(self, x, y):
         max_length = np.max([len(phrase) for phrase in x])
@@ -84,20 +73,15 @@ class my_ac2art_modele(torch.nn.Module):
             x,y = x.to(device=self.cuda2),y.to(device=self.cuda2)
         return x, y
 
-    def forward(self, x, vel=True) :
-        y_pred = torch.zeros((x.shape[0],x.shape[1],self.output_dim))
-        arti_idx_to_consider = torch.arange(self.output_dim)
+    def forward(self, x) :
         dense_out =  torch.nn.functional.relu(self.first_layer(x))
         dense_out_2 = torch.nn.functional.relu(self.second_layer(dense_out))
         lstm_out, hidden_dim = self.lstm_layer(dense_out_2)
         lstm_out = torch.nn.functional.relu(lstm_out)
         lstm_out, hidden_dim = self.lstm_layer_2(lstm_out)
         lstm_out=torch.nn.functional.relu(lstm_out)
-        y_pred[:,:,-2] = self.readout_layer(lstm_out)
-        y_pred[:,:,-2] = self.filter_layer(y_pred_to_cons)
-
-        if vel : #we have velum information
-            y_pred[:,:,-2:] = self.model_velum(x)
+        y_pred = self.readout_layer(lstm_out)
+        y_pred = self.filter_layer(y_pred_to_cons)
         return y_pred
 
     def init_filter_layer(self):
