@@ -62,7 +62,6 @@ def add_vocal_tract(speaker,max):
         model = learn_velum(hidden_dim=200, input_dim=429, output_dim=2, name_file="modele_velum").double()
         model_to_load = os.path.join(root_folder, "Apprentissage", "saved_models", "modeles_valides",
                                      "modele_velum.txt")
-
         loaded_state = torch.load(model_to_load)
         model.load_state_dict(loaded_state)
         mfcc_2 = torch.from_numpy(mfcc).view((1, len(mfcc), len(mfcc[0])))
@@ -103,7 +102,6 @@ def add_vocal_tract(speaker,max):
     if max != "All":
         N = max
     for i in range(N):
-
         if i+1%500 ==0:
             print("{} out of {}".format(i, N))
         ema = np.load(os.path.join(files_path,EMA_files_names[i]+".npy"))
@@ -174,4 +172,5 @@ def add_vocal_tract_per_corpus(corpus,max="All") :
 corpus = ["mocha","usc","MNGU0","Haskins"]
 
 for co in corpus :
+    print("adding vt for corpus ",co)
     add_vocal_tract_per_corpus(co)
