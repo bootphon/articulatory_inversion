@@ -16,7 +16,7 @@ def normalize_data(speaker,max="All"):
     if speaker in ["msak0", "fsew0", "maps0", "faet0", "mjjn0", "ffes0"]:
         speaker_2 = "mocha_" + speaker
 
-    elif speaker == ["MNGU0"]:
+    elif speaker == "MNGU0":
         speaker_2 = speaker
 
     elif speaker in ["F1", "F5", "M1", "M3"]:
@@ -38,7 +38,7 @@ def normalize_data(speaker,max="All"):
     if max != "All":
         N = max
     for i in range(N):
-        if i % 50 == 0:
+        if i % 500 == 0:
             print("{} out of {}".format(i, len(EMA_files)))
         ema = np.load(os.path.join(path_speaker, "ema", EMA_files[i] + ".npy"))
         ema_filtered = np.load(os.path.join(path_speaker, "ema_filtered", EMA_files[i] + ".npy"))
@@ -68,7 +68,7 @@ def normalize_data_per_corpus(corpus,max="All") :
         normalize_data(sp,max)
 
 
-corpus =["mocha","usc","MNGU0","Haskins"]
+corpus =["MNGU0","Haskins"]
 
 for cor in corpus :
     normalize_data_per_corpus(cor)
