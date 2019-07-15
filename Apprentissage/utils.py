@@ -89,7 +89,7 @@ def load_data(files_names,filtered=True, VT=True):
 
         speaker = [s  for s in speakers if s.lower() in file_name.lower()][0] # normalement un seul speaker dans le nom du fichier
         speaker_2=speaker
-        if speaker in ["msak0", "fsew0", "maps0", "faet0", "mjjn0", "ffes0"]:
+        if speaker in ["msak0", "fsew0", "maps0", "faet0", "mjjn0", "ffes0","falh0"]:
             speaker_2 = "mocha_" + speaker
 
         if speaker in ["F1", "M1","F5","M3"]:
