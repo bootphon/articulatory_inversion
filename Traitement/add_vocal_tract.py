@@ -43,13 +43,8 @@ def add_vocal_tract(speaker,max):
         N_frames = int(len(wav) / hop_length)
         window = scipy.signal.get_window("hanning", N_frames)
         ste = scipy.signal.convolve(wav ** 2, window ** 2, mode="same")
-        print("0",len(ste))
         ste = scipy.signal.resample(ste, num=len(ema))
-        print("1",len(ste),ste[2])
-        temp1 = min(ste[2],1)
-        temp2 = np.max(ste[2],0)
-
-        ste = [max(min(x, 1), 0) for x in ste]
+        ste = [np.max(min(x, 1), 0) for x in ste]
         return ste
 
     def add_TTCL(ema): #tongue tip constriction location in degree
