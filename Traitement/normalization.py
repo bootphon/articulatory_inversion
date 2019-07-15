@@ -60,7 +60,8 @@ def normalize_data_per_corpus(corpus,max="All") :
         speakers= ["F03","F04","M01","M02","M03","M04"]
 
     elif corpus == "mocha":
-        speakers =["fsew0","msak0","faet0","ffes0","maps0","mjjn0"]
+        speakers =["fsew0","msak0","faet0","ffes0","maps0","mjjn0","falh0"]
+
 
     else :
         print("vous navez pas choisi un des corpus")
@@ -71,5 +72,4 @@ def normalize_data_per_corpus(corpus,max="All") :
 
 corpus =["Haskins"]
 
-for cor in corpus :
-    normalize_data_per_corpus(cor)
+normalize_data("falh0")
