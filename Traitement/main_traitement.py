@@ -25,14 +25,13 @@ def main_traitement(corpus_to_treat = ["mocha","usc","MNGU0","Haskins"],max="All
         traitement_general_haskins()
 
 
-    for corpus in corpus_to_treat :
+   # for corpus in corpus_to_treat :
         #add_vocal_tract_per_corpus(corpus,max=max)
-        normalize_data_per_corpus(corpus,max=max)
+   #     normalize_data_per_corpus(corpus,max=max)
 
  #   if split :
   #      split_sentences(corpus=["MNGU0"], max_length=500,max=max)
 
-
-main_traitement(["usc","MNGU0","Haskins"],max="All")
+main_traitement(["Haskins"],max="All")
 
 

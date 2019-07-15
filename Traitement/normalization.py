@@ -4,7 +4,6 @@ import random
 import os
 from os.path import dirname
 
-
 def normalize_data(speaker,max="All"):
     print("normalizing for speaker {}".format(speaker))
     if speaker in ["msak0", "fsew0", "maps0", "faet0", "mjjn0", "ffes0"]:
@@ -44,14 +43,13 @@ def normalize_data(speaker,max="All"):
         np.save(os.path.join(path_speaker, "ema_norma", EMA_files[i]), ema)
         np.save(os.path.join(path_speaker, "ema_filtered_norma", EMA_files[i]), ema_filtered)
 
-
 def normalize_data_per_corpus(corpus,max) :
     if corpus == "MNGU0":
         speakers = ["MNGU0"]
     elif corpus == "usc":
         speakers = ["F1", "F5", "M1","M3"]
     elif corpus == "Haskins":
-        speakers=  ["F01","F02","F03","F04","M01","M02","M03","M04"]
+        speakers= ["F01","F02","F03","F04","M01","M02","M03","M04"]
 
     elif corpus == "mocha":
         speakers =["fsew0","msak0","faet0","ffes0","maps0","mjjn0"]
@@ -60,6 +58,5 @@ def normalize_data_per_corpus(corpus,max) :
         print("vous navez pas choisi un des corpus")
 
     for sp in speakers :
-
         normalize_data(sp,max)
 
