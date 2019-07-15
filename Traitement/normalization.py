@@ -71,4 +71,4 @@ def normalize_data_per_corpus(corpus,max="All") :
 corpus =["mocha","usc","MNGU0","Haskins"]
 
 for cor in corpus :
-    normalize_data_per_corpus(corpus)
+    normalize_data_per_corpus(cor)
