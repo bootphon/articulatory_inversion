@@ -90,7 +90,7 @@ def add_vocal_tract(speaker,max):
         sampling_rate_wav= 44100
 
     mfcc_path = os.path.join(root_folder, "Donnees_pretraitees", speaker_2,"mfcc")
-    files_path = os.path.join(root_folder, "Donnees_pretraitees", speaker_2,"ema_filtered")
+    files_path = os.path.join(root_folder, "Donnees_pretraitees", speaker_2,"ema_filtered_norma")
 
     if not os.path.exists(os.path.join(root_folder,"Donnees_pretraitees",speaker_2,"ema_VT")):
         os.makedirs(os.path.join(root_folder,"Donnees_pretraitees",speaker_2,"ema_VT"))
@@ -111,27 +111,23 @@ def add_vocal_tract(speaker,max):
         lip_protrusion = add_lip_protrusion(ema)
         TTCL = add_TTCL(ema)
         TBCL = add_TBCL(ema)
-        if speaker in ["fsew0","msak0","faet0","ffes0"] : # 14 arti de 0 à 13 (2*6 + 2)
+        if speaker in ["fsew0","msak0","faet0","ffes0","falh0"] : # 14 arti de 0 à 13 (2*6 + 2)
             wav,sr = librosa.load(os.path.join(wav_path, EMA_files_names[i] + ".wav"),sr = sampling_rate_wav)
             voicing = add_voicing(wav, ema, sampling_rate_wav)
             velum_xy = ema[:,-2:]
-            ema  = np.concatenate((ema,np.zeros((len(ema),5))),axis=1)
-
+            ema = np.concatenate((ema,np.zeros((len(ema),5))),axis=1)
 
         elif speaker in ["MNGU0","maps0","mjjn0"]: # 12 arti de 0 à 11
-
             wav, sr = librosa.load(os.path.join(wav_path, EMA_files_names[i] + ".wav"), sr=sampling_rate_wav)
             voicing = add_voicing(wav, ema, sampling_rate_wav)
             mfcc = np.load(os.path.join(mfcc_path, EMA_files_names[i] + ".npy"))
-
             velum_xy = add_velum(mfcc)
-            ema  = np.concatenate((ema,np.zeros((len(ema),7))),axis=1)
-
+            ema = np.concatenate((ema,np.zeros((len(ema),7))),axis=1)
 
         elif speaker in ["F1","F5","M1","M3"]:
             wav = np.load(os.path.join(wav_path, EMA_files_names[i] + ".npy"))
             mfcc = np.load(os.path.join(mfcc_path,EMA_files_names[i]+".npy"))
-            ema  = np.concatenate((ema,np.zeros((len(ema),7))),axis=1)
+            ema = np.concatenate((ema,np.zeros((len(ema),7))),axis=1)
 
             if len(ema)!= len(mfcc):
                 print("pbm shape",len(ema),len(mfcc),EMA_files_names[i])
@@ -158,7 +154,6 @@ def add_vocal_tract(speaker,max):
 #speakers =  ["F01","F02","F03","F04","M01","M02","M03","M04","F5","F1","M1","M3"
  #   ,"maps0","faet0",'mjjn0',"ffes0","MNGU0","fsew0","msak0"]
 
-
 def add_vocal_tract_per_corpus(corpus,max="All") :
     if corpus == "MNGU0":
         speakers = ["MNGU0"]
@@ -175,3 +170,8 @@ def add_vocal_tract_per_corpus(corpus,max="All") :
 
     for sp in speakers :
         add_vocal_tract(sp,max = max)
+
+corpus = ["mocha","usc","MNGU0","Haskins"]
+
+for co in corpus :
+    add_vocal_tract_per_corpus(co)
