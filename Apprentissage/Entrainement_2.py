@@ -5,6 +5,7 @@ from modele import my_ac2art_modele
 import sys
 import torch
 import os
+import csv
 import sys
 from sklearn.model_selection import train_test_split
 from utils import load_filenames, load_data, load_filenames_deter
@@ -26,6 +27,8 @@ fileset_path = os.path.join(root_folder, "Donnees_pretraitees", "fileset")
 print(sys.argv)
 
 
+
+
 def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
     data_filtered=True
     modele_filtered=True
@@ -37,7 +40,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
 
     cuda_avail = torch.cuda.is_available()
     print(" cuda ?", cuda_avail)
-    output_dim = 19
+    output_dim = 18
 
     name_file = "test_on_" + test_on
     print("name file : ",name_file)
@@ -51,7 +54,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
 
     early_stopping = EarlyStopping(name_file,patience=patience, verbose=True)
 
-   # model = my_bilstm(hidden_dim=hidden_dim,input_dim=input_dim,name_file =name_file, output_dim=output_dim,
+    # model = my_bilstm(hidden_dim=hidden_dim,input_dim=input_dim,name_file =name_file, output_dim=output_dim,
    #                   batch_size=batch_size,data_filtered=data_filtered,cuda_avail = cuda_avail,modele_filtered=modele_filtered)
     model = my_ac2art_modele(hidden_dim=hidden_dim, input_dim=input_dim, name_file=name_file, output_dim=output_dim,
                       batch_size=batch_size, data_filtered=data_filtered, cuda_avail=cuda_avail,
@@ -88,11 +91,9 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
         model = model.cuda(device=cuda2)
         torch.backends.cuda.cufft_plan_cache.max_size
 
-
     def criterion_pearson(y,y_pred): # (L,K,13)
         y_1 = y - torch.mean(y,dim=1,keepdim=True)  # (L,K,13) - (L,1,13) ==> utile ? normalement proche de 0
         y_pred_1 = y_pred - torch.mean(y_pred,dim=1,keepdim=True)
-
         nume=  torch.sum(y_1* y_pred_1,dim=1,keepdim=True) # y*y_pred multi terme à terme puis on somme pour avoir (L,1,13)
       #pour chaque trajectoire on somme le produit de la vriae et de la predite
         deno =  torch.sqrt(torch.sum(y_1 ** 2,dim=1,keepdim=True)) * torch.sqrt(torch.sum(y_pred_1 ** 2,dim=1,keepdim=True))# use Pearson correlation
@@ -107,6 +108,20 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
         loss = torch.sum(loss)
         return -loss
     criterion = criterion_pearson
+
+    def read_csv_arti_ok_per_speaker():
+        arti_per_speaker = os.path.join(root_folder,"Apprentissage", "articulators_per_speaker.csv")
+        csv.register_dialect('myDialect', delimiter=';')
+        arti_ok_per_speaker = dict()
+        with open(arti_per_speaker, 'r') as csvFile:
+            reader = csv.reader(csvFile, dialect="myDialect")
+            next(reader)
+            for row in reader:
+                arti_ok_per_speaker[row[0]] = row[1:19]
+        return arti_ok_per_speaker
+
+    arti_ok_per_speaker = read_csv_arti_ok_per_speaker() #dictionnaire en clé le speaker en valeurs liste des arti ok
+     # dans le meme ordre que dhabitude
 
     optimizer = torch.optim.Adam(model.parameters(), lr=lr ) #, betas = beta_param)
 
