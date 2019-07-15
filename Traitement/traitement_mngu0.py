@@ -204,7 +204,7 @@ def traitement_general_mngu0(max="All"):
     smoothed_moving_average = smoothed_moving_average[xtrm:-xtrm, :]
     ALL_EMA_2 = ALL_EMA_2[1:, :]
     std_ema = np.std(ALL_EMA_2, axis=0) # facon plus correcte de calculer la std: on veut savoir coombien l'arti varie
-    std_ema_2 = np.sqrt(np.mean(  (ALL_EMA_2-smoothed_moving_average)**2 ,axis=0))
+#    std_ema_2 = np.sqrt(np.mean(  (ALL_EMA_2-smoothed_moving_average)**2 ,axis=0))
 
 
 
