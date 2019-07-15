@@ -155,16 +155,16 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
     test_files_names = []
 
     for epoch in range(n_epochs):
-        random.shuffle(files_for_train)
+        #random.shuffle(files_for_train)
         for ite in range(n_iteration):
             if ite % 50 == 0:
                 print("{} out of {}".format(ite, n_iteration))
            # print(files_for_train[ite:ite+batch_size])
-            try :
-                x, y = load_data(files_for_train[ite:ite + batch_size], filtered=data_filtered)
-                x, y = model.prepare_batch(x, y)
-            except :
-                print("pbm de shape avec",files_for_train[ite:ite+batch_size])
+
+            x, y = load_data(files_for_train[ite:ite + batch_size], filtered=data_filtered)
+            x, y = model.prepare_batch(x, y)
+
+            print(files_for_train[ite:ite+batch_size])
 
             y_pred = model(x).double()
           #  print(y_pred)
