@@ -38,7 +38,7 @@ order_arti =    [ 'tt_x', 'tt_y', 'td_x', 'td_y', 'tb_x', 'tb_y', 'li_x', 'li_y'
 def traitement_general_haskins(max="All"):
     speakers = ["F01", "F02", "F03", "F04", "M01", "M02", "M03", "M04"]
     speakers = [ "M01", "M02", "M03", "M04"]
-
+    speakers = ["F03"]
     def detect_silence(data):
         try :#tous les fichiers ne sont pas organisés dans le même ordre dans le dictionnaire, il semble y avoir deux cas
 
@@ -188,3 +188,4 @@ def traitement_general_haskins(max="All"):
         #    np.save(os.path.join(path_files_treated, "ema", EMA_files[i]), ema)
          #   np.save(os.path.join(path_files_treated, "ema_filtered", EMA_files[i]), ema_filtered)
 
+traitement_general_haskins()
