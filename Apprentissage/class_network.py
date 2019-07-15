@@ -228,7 +228,6 @@ class my_bilstm(torch.nn.Module):
                 if self.cuda_avail:
                     x_torch = x_torch.to(device=self.cuda2)
 
-
                 y_pred_torch = self(x_torch).double() #sortie y_pred (1,L,13)
                 if self.cuda_avail:
                     y_pred_torch = y_pred_torch.cpu()
