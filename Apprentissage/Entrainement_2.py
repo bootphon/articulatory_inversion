@@ -1,6 +1,7 @@
 ### ETUDIER ARTI 6
 
 from class_network import my_bilstm
+from modele import my_ac2art_modele
 import sys
 import torch
 import os
@@ -50,8 +51,12 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
 
     early_stopping = EarlyStopping(name_file,patience=patience, verbose=True)
 
-    model = my_bilstm(hidden_dim=hidden_dim,input_dim=input_dim,name_file =name_file, output_dim=output_dim,
-                      batch_size=batch_size,data_filtered=data_filtered,cuda_avail = cuda_avail,modele_filtered=modele_filtered)
+   # model = my_bilstm(hidden_dim=hidden_dim,input_dim=input_dim,name_file =name_file, output_dim=output_dim,
+   #                   batch_size=batch_size,data_filtered=data_filtered,cuda_avail = cuda_avail,modele_filtered=modele_filtered)
+    model = my_ac2art_modele(hidden_dim=hidden_dim, input_dim=input_dim, name_file=name_file, output_dim=output_dim,
+                      batch_size=batch_size, data_filtered=data_filtered, cuda_avail=cuda_avail,
+                      modele_filtered=modele_filtered)
+
     model = model.double()
 
    # try :
@@ -131,11 +136,8 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
     n_iteration_test = int(N_test/batch_size)
     test_files_names = []
 
-
-
     for epoch in range(n_epochs):
        # random.shuffle(files_for_train)
-
         for ite in range(n_iteration):
             if ite % 50 == 0:
                 print("{} out of {}".format(ite, n_iteration))
@@ -158,7 +160,6 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
 
         #    print("D,E", torch.isnan(model.first_layer.weight.sum()))
             loss = criterion(y,y_pred) #taille ?
-            print("loss",loss)
             loss.backward()
             optimizer.step()
           #  print("ll",x.grad)
