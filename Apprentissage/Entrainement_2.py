@@ -28,7 +28,8 @@ print(sys.argv)
 def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
     data_filtered=True
     modele_filtered=True
-    train_on =  ["F01","F02","F03","F04","M01","M02","M03","M04","F1","F5","M1","M3","maps0","faet0",'mjjn0',"ffes0","MNGU0","fsew0","msak0"]
+    train_on =  ["F01","F02","F03","F04","M01","M02","M03","M04","F1","F5","M1",
+                 "M3","maps0","faet0",'mjjn0',"ffes0","MNGU0","fsew0","msak0"]
     train_on.remove(test_on)
     print("train_on :",train_on)
     print("test on:",test_on)
@@ -126,6 +127,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
 
     n_iteration_validation = int(N_valid/batch_size)
     n_iteration_validation=2
+    n_iteration  =1
     n_iteration_test = int(N_test/batch_size)
     test_files_names = []
 
@@ -155,7 +157,8 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
             optimizer.zero_grad()
 
         #    print("D,E", torch.isnan(model.first_layer.weight.sum()))
-            loss = criterion(y,y_pred)
+            loss = criterion(y,y_pred) #taille ?
+            print("loss shape",loss.shape)
             loss.backward()
             optimizer.step()
           #  print("ll",x.grad)
@@ -229,7 +232,6 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
     std_speaker=  np.load(os.path.join(root_folder, "Traitement", "norm_values","std_ema_"+speaker+".npy"))
     model.evaluate_on_test(criterion=criterion,verbose=True, X_test=x, Y_test=y,
                            to_plot=to_plot, std_ema=max(std_speaker), suffix=test_on)
-
 
 if __name__=='__main__':
     import argparse
