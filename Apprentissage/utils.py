@@ -81,7 +81,7 @@ def load_data(files_names,filtered=True, VT=True):
         , "maps0", "faet0", 'mjjn0', "ffes0", "MNGU0", "fsew0", "msak0"]
     suff = ""
     if filtered :
-        suff = "_filtered"
+        suff = "_filtered_norma"
     if VT :
         suff = "_VT"
 

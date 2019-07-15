@@ -38,7 +38,7 @@ def normalize_data(speaker,max="All"):
     if max != "All":
         N = max
     for i in range(N):
-        if i % 50 == 0:
+        if i % 500 == 0:
             print("{} out of {}".format(i, len(EMA_files)))
         ema = np.load(os.path.join(path_speaker, "ema", EMA_files[i] + ".npy"))
         ema_filtered = np.load(os.path.join(path_speaker, "ema_filtered", EMA_files[i] + ".npy"))
