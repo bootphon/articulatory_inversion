@@ -57,6 +57,7 @@ def normalize_data_per_corpus(corpus,max="All") :
         speakers = ["F1", "F5", "M1","M3"]
     elif corpus == "Haskins":
         speakers= ["F01","F02","F03","F04","M01","M02","M03","M04"]
+        speakers= ["F03","F04","M01","M02","M03","M04"]
 
     elif corpus == "mocha":
         speakers =["fsew0","msak0","faet0","ffes0","maps0","mjjn0"]
@@ -68,7 +69,7 @@ def normalize_data_per_corpus(corpus,max="All") :
         normalize_data(sp,max)
 
 
-corpus =["MNGU0","Haskins"]
+corpus =["Haskins"]
 
 for cor in corpus :
     normalize_data_per_corpus(cor)
