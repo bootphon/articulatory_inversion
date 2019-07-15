@@ -169,7 +169,7 @@ def add_vocal_tract_per_corpus(corpus,max="All") :
     for sp in speakers :
         add_vocal_tract(sp,max = max)
 
-corpus = ["mocha","usc","MNGU0","Haskins"]
+corpus = ["usc","MNGU0","Haskins"]
 
 for co in corpus :
     print("adding vt for corpus ",co)
