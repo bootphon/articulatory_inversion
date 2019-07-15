@@ -13,7 +13,7 @@ def normalize_data(speaker,max="All"):
 
     """
     print("normalizing for speaker {}".format(speaker))
-    if speaker in ["msak0", "fsew0", "maps0", "faet0", "mjjn0", "ffes0"]:
+    if speaker in ["msak0", "fsew0", "maps0", "faet0", "mjjn0", "ffes0","falh0"]:
         speaker_2 = "mocha_" + speaker
 
     elif speaker == "MNGU0":
