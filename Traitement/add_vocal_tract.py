@@ -47,7 +47,7 @@ def add_vocal_tract(speaker,max):
         ste = scipy.signal.resample(ste, num=len(ema))
         print("1",len(ste),ste[2])
         temp1 = min(ste[2],1)
-        temp2 = max(ste[2],0)
+        temp2 = np.max(ste[2],0)
 
         ste = [max(min(x, 1), 0) for x in ste]
         return ste
