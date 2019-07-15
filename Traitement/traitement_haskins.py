@@ -4,19 +4,19 @@ Il y a un fichier .mat par phrase. Et les données doivent être au préalable t
 Les données articulatoires sont consitituées des 12 basiques + de 4 supplémentaires que nous ignorons ici, car c'est le
 seul corpus qui fournit ces données articulatoires.
 """
-import os
+
+import os,sys,inspect
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0,parentdir)
+
 import time
 from os.path import dirname
 import numpy as np
 import scipy.signal
 import matplotlib.pyplot as plt
 import scipy.interpolate
-try :
-    from Traitement.add_dynamic_features import get_delta_features
-
-except :
-    from add_dynamic_features import get_delta_features
-
+from Traitement.add_dynamic_features import get_delta_features
 from Apprentissage.utils import low_pass_filter_weight
 
 import librosa
