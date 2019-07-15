@@ -33,6 +33,6 @@ def main_traitement(corpus_to_treat = ["mocha","usc","MNGU0","Haskins"],max="All
   #      split_sentences(corpus=["MNGU0"], max_length=500,max=max)
 
 
-main_traitement(max="All")
+main_traitement(["usc","MNGU0","Haskins"],max="All")
 
 
