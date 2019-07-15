@@ -240,4 +240,4 @@ def traitement_general_mngu0(max="All"):
         #np.save(os.path.join(path_files_treated, "ema",EMA_files[i]), ema)
 
 
-traitement_general_mngu0(N="All")
+traitement_general_mngu0()
