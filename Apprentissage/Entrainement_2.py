@@ -158,7 +158,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
 
         #    print("D,E", torch.isnan(model.first_layer.weight.sum()))
             loss = criterion(y,y_pred) #taille ?
-            print("loss shape",loss.shape)
+            print("loss",loss)
             loss.backward()
             optimizer.step()
           #  print("ll",x.grad)
