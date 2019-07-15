@@ -5,6 +5,13 @@ import os
 from os.path import dirname
 
 def normalize_data(speaker,max="All"):
+    """
+    calcule puis sauvegarde les données EMA normalisées.
+    Norma utilisée : standardisation (standard score) par speaker et par articulateur
+    sur l'ensemble des phrases prononcées.
+
+
+    """
     print("normalizing for speaker {}".format(speaker))
     if speaker in ["msak0", "fsew0", "maps0", "faet0", "mjjn0", "ffes0"]:
         speaker_2 = "mocha_" + speaker
@@ -60,3 +67,8 @@ def normalize_data_per_corpus(corpus,max) :
     for sp in speakers :
         normalize_data(sp,max)
 
+
+corpus =["mocha","usc","MNGU0","Haskins"]
+
+for cor in corpus :
+    normalize_data_per_corpus(corpus)
