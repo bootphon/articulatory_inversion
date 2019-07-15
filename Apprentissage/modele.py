@@ -1,6 +1,8 @@
 import torch
-import os
-import sys
+import os,sys,inspect
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0,parentdir)
 from sklearn.model_selection import train_test_split
 from scipy.signal import butter, lfilter, freqz
 import time
@@ -12,10 +14,8 @@ import numpy as np
 from scipy import signal
 import scipy
 from torch.autograd import Variable
-
-try :
-    from Apprentissage import utils
-except :  import utils
+from Apprentissage import utils
+from Apprentissage.velum_modele import learn_velum
 
 
 class my_ac2art_modele(torch.nn.Module):
@@ -57,6 +57,16 @@ class my_ac2art_modele(torch.nn.Module):
         if self.cuda_avail:
             self.cuda2 = torch.device('cuda:1')
         self.epoch_ref = 0
+        self.model_velum = None
+        self.init_velum()
+
+    def init_velum(self):
+        model_velum = learn_velum(hidden_dim=200, input_dim=429, output_dim=2, name_file="modele_velum").double()
+        model_to_load = os.path.join(root_folder, "Apprentissage", "saved_models", "modeles_valides",
+                                     "modele_velum.txt")
+        loaded_state = torch.load(model_to_load)
+        model_velum.load_state_dict(loaded_state)
+        self.model_velum = model_velum
 
     def prepare_batch(self, x, y):
         max_length = np.max([len(phrase) for phrase in x])
@@ -74,7 +84,7 @@ class my_ac2art_modele(torch.nn.Module):
             x,y = x.to(device=self.cuda2),y.to(device=self.cuda2)
         return x, y
 
-    def forward(self, x) :
+    def forward(self, x, vel=True) :
         y_pred = torch.zeros((x.shape[0],x.shape[1],self.output_dim))
         arti_idx_to_consider = torch.arange(self.output_dim)
         dense_out =  torch.nn.functional.relu(self.first_layer(x))
@@ -83,10 +93,11 @@ class my_ac2art_modele(torch.nn.Module):
         lstm_out = torch.nn.functional.relu(lstm_out)
         lstm_out, hidden_dim = self.lstm_layer_2(lstm_out)
         lstm_out=torch.nn.functional.relu(lstm_out)
-        y_pred_to_cons = self.readout_layer(lstm_out)
-      #  if self.modele_filtered :
-        y_pred_to_cons = self.filter_layer(y_pred_to_cons)
-        y_pred[:,:,arti_idx_to_consider] = y_pred_to_cons
+        y_pred[:,:,-2] = self.readout_layer(lstm_out)
+        y_pred[:,:,-2] = self.filter_layer(y_pred_to_cons)
+
+        if vel : #we have velum information
+            y_pred[:,:,-2:] = self.model_velum(x)
         return y_pred
 
     def init_filter_layer(self):
@@ -273,3 +284,156 @@ class my_ac2art_modele(torch.nn.Module):
             print("pearson mean per arti : \n", pearson_per_arti_mean)
          #   print("pearson std per arti : \n", pearson_per_arti_std)
         return loss_test
+
+
+
+class ac2art_basic_arti(torch.nn.Module):
+    def __init__(self, hidden_dim, input_dim, output_dim, batch_size,name_file, sampling_rate=200,
+                 window=5, cutoff=30,data_filtered=False,cuda_avail =False,modele_filtered=False):
+        root_folder = os.path.dirname(os.getcwd())
+        super(my_ac2art_modele, self).__init__()
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+        self.hidden_dim = hidden_dim
+        self.first_layer = torch.nn.Linear(input_dim, hidden_dim)
+        self.second_layer = torch.nn.Linear(hidden_dim, hidden_dim)
+        self.last_layer = torch.nn.Linear(output_dim,output_dim)
+        self.lstm_layer = torch.nn.LSTM(input_size=hidden_dim,
+                                        hidden_size=hidden_dim, num_layers=1,
+                                        bidirectional=True)
+        self.lstm_layer_2= torch.nn.LSTM(input_size=hidden_dim*2,
+                                       hidden_size=hidden_dim, num_layers=1,
+                                      bidirectional=True)
+        self.readout_layer = torch.nn.Linear(hidden_dim *2 , output_dim)
+        self.batch_size = batch_size
+        self.sigmoid = torch.nn.Sigmoid()
+        self.data_filtered=data_filtered
+        self.modele_filtered=modele_filtered
+        self.softmax = torch.nn.Softmax(dim=output_dim)
+        self.tanh = torch.nn.Tanh()
+        self.sampling_rate = sampling_rate
+        self.window = window
+        self.cutoff = cutoff
+        self.min_valid_error = 100000
+        self.all_training_loss = []
+        self.all_validation_loss = []
+        self.all_test_loss = []
+        #self.std = np.load(os.path.join(root_folder,"Traitement","std_ema_"+speaker+".npy"))
+        self.name_file = name_file
+        self.lowpass = None
+        self.init_filter_layer()
+        self.cuda_avail = cuda_avail
+        if self.cuda_avail:
+            self.cuda2 = torch.device('cuda:1')
+        self.epoch_ref = 0
+        self.model_velum = None
+        self.init_velum()
+
+
+    def forward(self, x) : #prédit tous les arti sauf le velum
+        dense_out =  torch.nn.functional.relu(self.first_layer(x))
+        dense_out_2 = torch.nn.functional.relu(self.second_layer(dense_out))
+        lstm_out, hidden_dim = self.lstm_layer(dense_out_2)
+        lstm_out = torch.nn.functional.relu(lstm_out)
+        lstm_out, hidden_dim = self.lstm_layer_2(lstm_out)
+        lstm_out=torch.nn.functional.relu(lstm_out)
+        y_pred = self.readout_layer(lstm_out)
+        y_pred = self.filter_layer(y_pred)
+        return y_pred
+
+    def init_filter_layer(self):
+        def get_filter_weights():
+            cutoff = torch.tensor(self.cutoff, dtype=torch.float64).view(1, 1)
+            fc = torch.div(cutoff,
+                  self.sampling_rate)  # Cutoff frequency as a fraction of the sampling rate (in (0, 0.5)).
+            if fc > 0.5:
+                raise Exception("La frequence de coupure doit etre au moins deux fois la frequence dechantillonnage")
+            b = 0.08  # Transition band, as a fraction of the sampling rate (in (0, 0.5)).
+            N = int(np.ceil((4 / b)))  # le window
+            if not N % 2:
+                N += 1  # Make sure that N is odd.
+            n = torch.arange(N).double()
+            alpha = torch.mul(fc, 2 * (n - (N - 1) / 2)).double()
+            minim = torch.tensor(0.01, dtype=torch.float64)
+            alpha = torch.max(alpha,minim)
+            h = torch.div(torch.sin(alpha), alpha)
+            #        h = np.sinc(2 * fc * (n - (N - 1) / 2))  # Compute sinc filter.
+            beta = n * 2 * math.pi * (N - 1)
+
+            """ n = torch.from_numpy(np.arange(N) ) # int of [0,N]
+        h = np.sinc(2 * fc * (n - (N - 1) / 2))  # Compute sinc filter.
+        h = torch.from_numpy(h)
+        w = 0.5 * (1 - np.cos(2 * np.pi * n / (N - 1)))  # Compute hanning window.
+        h = h * w  # Multiply sinc filter with window.
+       """
+           # print("2.5",beta)
+            w = 0.5 * (1 - torch.cos(beta))  # Compute hanning window.
+            #print("3",w)
+            h = torch.mul(h, w)  # Multiply sinc filter with window.
+            h = torch.div(h, torch.sum(h))
+            #print("4",h)
+           # h.require_grads = True
+          #  self.cutoff = Variable(cutoff, requires_grad=True)
+         #   self.cutoff.require_grads = True
+         #   self.cutoff.retain_grad()
+            #  h = torch.cat([h]*self.output_dim,0)
+            return h
+
+        def get_filter_weights_en_dur():
+            fc = self.cutoff/self.sampling_rate
+            if fc > 0.5:
+                raise Exception("La frequence de coupure doit etre au moins deux fois la frequence dechantillonnage")
+
+            b = 0.08  # Transition band, as a fraction of the sampling rate (in (0, 0.5)).
+            N = int(np.ceil((4 / b)))  # le window
+            if not N % 2:
+                N += 1  # Make sure that N is odd.
+            n = np.arange(N)
+            h = np.sinc(fc*2*(n - (N - 1) / 2))
+            w = 0.5 * (1 - np.cos( n * 2 * math.pi / (N - 1)))  # Compute hanning window.
+            h = h*w
+            h = h/np.sum(h)
+            return torch.tensor(h)
+
+        # print("1",self.cutoff)
+        # self.cutoff = torch.nn.parameter.Parameter(torch.Tensor(self.cutoff))
+        # self.cutoff.requires_grad = True
+        window_size = 5
+        C_in = 1
+        stride=1
+        padding = int(0.5*((C_in-1)*stride-C_in+window_size))+23
+        lowpass = torch.nn.Conv1d(C_in, self.output_dim, window_size, stride=1, padding=padding, bias=False)
+    #    weight_init = get_filter_weights_en_dur()
+        weight_init = get_filter_weights()
+
+        weight_init = weight_init.view((1, 1, -1))
+        lowpass.weight = torch.nn.Parameter(weight_init)
+        lowpass = lowpass.double()
+        self.lowpass = lowpass
+        #print("lowpasse ",self.lowpass.weight)
+
+        #self.lowpass.require_grads=True
+    def filter_layer(self, y):
+        B = len(y) # batch size
+        L = len(y[0])
+        #     y= y.view(self.batch_size,self.output_dim,L)
+        y = y.double()
+        y_smoothed = torch.zeros(B, L, self.output_dim)
+        for i in range(self.output_dim):
+            traj_arti = y[:, :, i].view(B, 1, L)
+          #  print("traj arti shape",traj_arti.shape)
+            traj_arti_smoothed = self.lowpass(traj_arti)  # prend que une seule dimension
+            difference = int((L-traj_arti_smoothed.shape[2])/ 2)
+            if difference != 0:
+                print("PAS MEME SHAPE AVANT ET APRES FILTRAGE !")
+                print("init L",L)
+                print("after smoothed ",traj_arti_smoothed.shape[2])
+            if difference>0: #si la traj smoothed est plus petite que L on rajoute le meme dernier élément
+                traj_arti_smoothed = torch.nn.ReplicationPad1d(difference)(traj_arti_smoothed)
+            elif difference < 0:  # si la traj smoothed est plus petite que L on rajoute le meme dernier élément
+                traj_arti_smoothed = traj_arti_smoothed[:,:,0:L]
+
+            traj_arti_smoothed = traj_arti_smoothed.view(B, L)
+            y_smoothed[:, :, i] = traj_arti_smoothed
+        return y_smoothed
+
