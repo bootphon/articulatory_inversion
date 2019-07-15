@@ -17,11 +17,10 @@ articulators = [
         'ul_x', 'ul_y', 'll_x', 'll_y']
 
 
-
-
 articulators_after = [
         'tt_x', 'tt_y', 'td_x', 'td_y', 'tb_x', 'tb_y', 'li_x', 'li_y',
-        'ul_x', 'ul_y', 'll_x', 'll_y','la','pro','ttcl','tbcl','lar','v_x','v_y'] #détailler
+        'ul_x', 'ul_y', 'll_x', 'll_y','la','pro','ttcl','tbcl','v_x','v_y'] #détailler
+
 
 root_folder = os.path.dirname(os.getcwd())
 
