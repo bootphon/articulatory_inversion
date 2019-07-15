@@ -45,8 +45,8 @@ def add_vocal_tract(speaker,max):
         ste = scipy.signal.convolve(wav ** 2, window ** 2, mode="same")
         print("0",len(ste))
         ste = scipy.signal.resample(ste, num=len(ema))
-        print("1",len(ste))
-        temp1 = min(ste[0],1)
+        print("1",len(ste),ste[2])
+        temp1 = min(ste[2],1)
         temp2 = max(ste[2],0)
 
         ste = [max(min(x, 1), 0) for x in ste]
