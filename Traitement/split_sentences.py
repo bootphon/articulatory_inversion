@@ -64,4 +64,4 @@ def split_sentences(corpus=["MNGU0"] ,max_length = 500,N="All"):
         print("number cut for ",sp," : ",Number_cut)
 
 
-split_sentences()
+#split_sentences()
