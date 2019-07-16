@@ -34,7 +34,7 @@ def main_traitement(corpus_to_treat = ["mocha","usc","MNGU0","Haskins"],max="All
 
     for corpus in corpus_to_treat :
         normalize_data_per_corpus(corpus)
-        #add_vocal_tract_per_corpus(corpus,max=max)
+        add_vocal_tract_per_corpus(corpus)
 
 
  #   if split :
