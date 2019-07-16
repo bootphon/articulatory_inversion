@@ -231,9 +231,11 @@ def traitement_general_usc_timit(max="All"):
         n_coeff = 13
         EMA_files = sorted([name[:-4] for name in os.listdir(os.path.join(path_files_brutes, "mat")) if name.endswith(".mat")])
         N = len(EMA_files)
+
      #   print("cut files - 1 step out of 4 ")
         if max != "All":
             N = max
+        EMA_files = EMA_files[:N]
 
         for i in range(N):
             cut_all_files(i)
