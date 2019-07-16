@@ -13,6 +13,10 @@ bas que pour filtrer les trajectoires, mais cette fois ci avec une fréquence de
 On normalise ensuite en divisant par l'écart type max (sur lensemble des articulateurs).
 
 """
+import os,sys,inspect
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0,parentdir)
 
 import os
 import time
@@ -172,7 +176,6 @@ def traitement_general_mocha(max="All"):
 
     sp_with_velum =["fsew0","msak0","faet0","falh0","ffes0"]
     speakers = ["fsew0","msak0","faet0","falh0","ffes0","mjjn0","maps0"]
-    speakers= ["falh0"]
     sampling_rate_mfcc = 16000
     frame_time = 25
     hop_time = 10  # en ms
