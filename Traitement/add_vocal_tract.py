@@ -185,6 +185,6 @@ def add_vocal_tract_per_corpus(corpus,max="All") :
  #   print("adding vt for corpus ",co)
   #  add_vocal_tract_per_corpus(co)
 
-add_vocal_tract("falh0",max="All")
-add_vocal_tract("F01",max="All")
-add_vocal_tract("F02",max="All")
+#add_vocal_tract("falh0",max="All")
+#add_vocal_tract("F01",max="All")
+#add_vocal_tract("F02",max="All")
