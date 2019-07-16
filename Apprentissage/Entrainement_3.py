@@ -86,7 +86,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
         torch.backends.cuda.cufft_plan_cache.max_size
 
     def criterion_pearson(y,y_pred): # (L,K,13)
-        y_1 = y - torch.mean(y,dim=1,keepdim=True)  # (L,K,13) - (L,1,13) ==> utile ? normalement proche de 0
+        y_1 = y - torch.mean(y,dim=1,keepdim=True)
         y_pred_1 = y_pred - torch.mean(y_pred,dim=1,keepdim=True)
         nume=  torch.sum(y_1* y_pred_1,dim=1,keepdim=True) # y*y_pred multi terme à terme puis on somme pour avoir (L,1,13)
       #pour chaque trajectoire on somme le produit de la vriae et de la predite
@@ -99,7 +99,8 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
             nume = nume.to(device=cuda2)
         deno = torch.max(deno,minim)
         loss = nume/deno
-        loss = torch.sum(loss)
+        loss = torch.sum(loss) #pearson doit etre le plus grand possible
+        loss = torch.div(loss, torch.tensor(y.shape[2]),dtype=torch.float64)
         return -loss
     criterion = criterion_pearson
 
@@ -159,28 +160,39 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
     #  n_iteration  =1
     n_iteration_test = int(N_test/batch_size)
     test_files_names = []
-    files_for_train_per_categ = dict()
+
+    files_per_categ = dict()
     for categ in categ_of_speakers.keys():
         print("categ",categ)
+        files_per_categ[categ] = dict()
+
         sp_in_categ = categ_of_speakers[categ]["sp"]
         sp_in_categ = [sp for sp in sp_in_categ if sp in train_on]
         # fichiers qui appartiennent à la categorie car le nom du speaker apparait touojurs dans le nom du fichier
-        files_this_categ = [[f for f in files_for_train if sp.lower() in f ]for sp in sp_in_categ]
-        files_this_categ = [item for sublist in files_this_categ for item in sublist] # flatten la liste de liste
 
-        N_iter_categ = int(len(files_this_categ)/batch_size)+1         # on veut qu'il y a en ait un multiple du batch size , on en double certains
-        n_a_ajouter = batch_size*N_iter_categ - len(files_this_categ) #si 14 element N_iter_categ vaut 2 et n_a_ajouter vaut 6
-        files_this_categ = files_this_categ + random.sample(files_this_categ,n_a_ajouter) #nbr de fichier par categorie multiple du batch size
-        random.shuffle(files_this_categ)
-        files_for_train_per_categ[categ] = files_this_categ
+        files_train_this_categ = [[f for f in files_for_train if sp.lower() in f ]for sp in sp_in_categ]
+        files_train_this_categ = [item for sublist in files_train_this_categ for item in sublist] # flatten la liste de liste
+        N_iter_categ = int(len(files_train_this_categ)/batch_size)+1         # on veut qu'il y a en ait un multiple du batch size , on en double certains
+        n_a_ajouter = batch_size*N_iter_categ - len(files_train_this_categ) #si 14 element N_iter_categ vaut 2 et n_a_ajouter vaut 6
+        files_train_this_categ = files_train_this_categ + files_train_this_categ[:n_a_ajouter] #nbr de fichier par categorie multiple du batch size
+        random.shuffle(files_train_this_categ)
+        files_per_categ[categ]["train"] = files_train_this_categ
+
+        files_valid_this_categ = [[f for f in files_for_valid if sp.lower() in f] for sp in sp_in_categ]
+        files_valid_this_categ = [item for sublist in files_valid_this_categ for item in sublist]  # flatten la liste de liste
+        N_iter_categ = int(len(  files_valid_this_categ) / batch_size) + 1  # on veut qu'il y a en ait un multiple du batch size , on en double certains
+        n_a_ajouter = batch_size * N_iter_categ - len(
+            files_valid_this_categ)  # si 14 element N_iter_categ vaut 2 et n_a_ajouter vaut 6
+        files_valid_this_categ = files_valid_this_categ + files_valid_this_categ[:n_a_ajouter] # nbr de fichier par categorie multiple du batch size
+        random.shuffle(files_valid_this_categ)
+        files_per_categ[categ]["valid"] = files_valid_this_categ
 
     for epoch in range(n_epochs):
-        files_for_train_courant = files_for_train
         #random.shuffle(files_for_train)
 
-        for categ in files_for_train_per_categ.keys():  # de A à F pour le moment
+        for categ in files_per_categ.keys():  # de A à F pour le moment
             print("categ ",categ)
-            files_this_categ_courant = files_for_train_per_categ[categ]  #on na pas encore apprit dessus au cours de cette epoch
+            files_this_categ_courant = files_per_categ[categ]["train"] #on na pas encore apprit dessus au cours de cette epoch
             temp = 0
             arti_to_consider = categ_of_speakers[categ]["arti"] #liste de 18 0/1 qui indique les arti à considérer
             idx_to_consider = [i for i,n in enumerate(arti_to_consider) if n=="1"]
@@ -210,14 +222,32 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
 
         if epoch%delta_test ==0:  #toutes les delta_test epochs on évalue le modèle sur validation et on sauvegarde le modele si le score est meilleur
             loss_vali = 0
-           # random.shuffle(files_for_valid)
-            for ite_valid in range(n_iteration_validation):
-                x,y = load_data(files_for_valid[ite_valid:ite_valid+batch_size],filtered=data_filtered)
-            #    y = [y[i][:,:output_dim] for i in range(len(y))]
-                try :
-                    loss_vali+= model.evaluate(x,y,criterion)
-                except :
-                    print("surmenet pbm de shape pour",files_for_valid[ite_valid:ite_valid+batch_size])
+            for categ in files_per_categ.keys():  # de A à F pour le moment
+                print("categ ", categ)
+                files_this_categ_courant = files_per_categ[categ]["valid"]  # on na pas encore apprit dessus au cours de cette epoch
+                temp = 0
+                arti_to_consider = categ_of_speakers[categ]["arti"]  # liste de 18 0/1 qui indique les arti à considérer
+                idx_to_consider = [i for i, n in enumerate(arti_to_consider) if n == "1"]
+                while files_this_categ_courant != []:
+                    files_batch = files_this_categ_courant[:batch_size]
+                    temp = temp + batch_size
+                    files_this_categ_courant = [f for f in files_this_categ_courant if
+                                                f not in files_batch]  # we a re going to train on this 10 files
+                    x, y = load_data(files_batch, filtered=data_filtered)
+                    x, y = model.prepare_batch(x, y)
+                    y_pred = model(x).double()
+                    torch.cuda.empty_cache()
+                    if cuda_avail:
+                        y_pred = y_pred.to(device=cuda2)
+                    y = y.double()  # (Batchsize, maxL, 18)
+                    y = y[:, :, idx_to_consider]
+                    y_pred = y_pred[:, :, idx_to_consider]
+                    loss_courant = criterion(y, y_pred)
+                    loss_vali += loss_courant.item()
+
+            model.all_validation_loss.append(loss_vali)
+            model.all_training_loss.append(loss)
+
             if epoch>0:
                 if loss_vali > model.all_validation_loss[-1]:
                     for param_group in optimizer.param_groups:
@@ -225,15 +255,6 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
                         print(param_group["lr"])
                         patience_temp=0
 
-            loss_vali = loss_vali / n_iteration_validation
-            model.all_validation_loss.append(loss_vali)
-            model.all_training_loss.append(loss)
-            #model.all_validation_loss += [model.all_validation_loss[-1]] * (epoch+previous_epoch - len(model.all_validation_loss))
-            loss_test=0
-           # if test_on != [""]:
-            #    loss_test = model.evaluate_on_test(criterion,X_test = X_test,Y_test = Y_test,to_plot=False,cuda_avail=cuda_avail)
-            model.all_test_loss.append(loss_test)
-            model.all_training_loss.append(loss)
             #model.all_test_loss += [model.all_test_loss[-1]] * (epoch+previous_epoch - len(model.all_test_loss))
             print("\n ---------- epoch" + str(epoch) + " ---------")
             #early_stopping.epoch = previous_epoch+epoch
