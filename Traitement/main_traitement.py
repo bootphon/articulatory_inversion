@@ -4,13 +4,14 @@ parentdir = os.path.dirname(currentdir)
 sys.path.insert(0,parentdir)
 from os.path import dirname
 
-from traitement_haskins import traitement_general_haskins
-from traitement_mngu0 import traitement_general_mngu0
-from traitement_usc_timit_2 import traitement_general_usc_timit
-from traitement_mocha import traitement_general_mocha
-from add_vocal_tract import add_vocal_tract_per_corpus
-from split_sentences import split_sentences
-from normalization import normalize_data_per_corpus
+from Traitement.traitement_haskins import traitement_general_haskins
+from Traitement.traitement_mngu0 import traitement_general_mngu0
+from Traitement.traitement_usc_timit_2 import traitement_general_usc_timit
+from Traitement.traitement_mocha import traitement_general_mocha
+from Traitement.add_vocal_tract import add_vocal_tract_per_corpus
+from Traitement.split_sentences import split_sentences
+from Traitement.normalization import normalize_data_per_corpus
+from Traitement.create_filesets import get_fileset_names_per_corpus
 
 def main_traitement(corpus_to_treat = ["mocha","usc","MNGU0","Haskins"],max="All",split=False):
     root_path = dirname(dirname(os.path.realpath(__file__)))
@@ -32,11 +33,18 @@ def main_traitement(corpus_to_treat = ["mocha","usc","MNGU0","Haskins"],max="All
         traitement_general_haskins(max=max)
 
     for corpus in corpus_to_treat :
+        print("norma,addVT for corpus {}".format(corpus))
         normalize_data_per_corpus(corpus)
         add_vocal_tract_per_corpus(corpus)
+        get_fileset_names_per_corpus(corpus)
+
+  #  if split :
+   #     split_sentences()
+
+
 
 
  #   if split :
   #      split_sentences(corpus=["MNGU0"], max_length=500,max=max)
 
-main_traitement(max="All")
+main_traitement(["MNGU0"],max="All")
