@@ -68,7 +68,7 @@ def normalize_data_per_corpus(corpus) :
         print("vous navez pas choisi un des corpus")
     for sp in speakers :
         normalize_data(sp)
-normalize_data("mocha")
+normalize_data("falh0")
 
 #orpus =["Haskins"]
 
