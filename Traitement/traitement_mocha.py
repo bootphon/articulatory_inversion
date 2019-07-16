@@ -170,7 +170,6 @@ def traitement_general_mocha(max="All"):
 
     sp_with_velum =["fsew0","msak0","faet0","falh0","ffes0"]
     speakers = ["fsew0","msak0","faet0","falh0","ffes0","mjjn0","maps0"]
-    speakers = ["faet0"]
 
     sampling_rate_mfcc = 16000
     frame_time = 25
