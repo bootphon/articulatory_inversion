@@ -26,7 +26,7 @@ root_folder = os.path.dirname(os.getcwd())
 
 
 def add_vocal_tract(speaker,max):
-    print("adding vocal tracts for speaker {}".format(speaker))
+ #   print("adding vocal tracts for speaker {}".format(speaker))
     def add_lip_aperture(ema):
         ind_1, ind_2 = [articulators.index("ul_y"), articulators.index("ll_y")]
         lip_aperture = ema[:, ind_1] - ema[:, ind_2]  # upperlip_y - lowerlip_y
@@ -69,7 +69,7 @@ def add_vocal_tract(speaker,max):
         velum_xy = velum_xy.detach().numpy().reshape((len(mfcc), 2))
         return velum_xy
 
-    if speaker in ["msak0", "fsew0","maps0","faet0","mjjn0","ffes0"]:
+    if speaker in ["msak0", "fsew0","maps0","faet0","mjjn0","ffes0","falh0"]:
         speaker_2 = "mocha_" + speaker
         wav_path = os.path.join(root_folder, "Donnees_brutes","mocha", speaker)
         sampling_rate_wav = 16000
@@ -170,7 +170,7 @@ def add_vocal_tract_per_corpus(corpus,max="All") :
         speakers=  ["F01","F02","F03","F04","M01","M02","M03","M04"]
 
     elif corpus == "mocha":
-        speakers =["fsew0","msak0","faet0","ffes0","maps0","mjjn0"]
+        speakers =["fsew0","msak0","faet0","ffes0","maps0","mjjn0","falh0"]
 
     else :
         print("vous navez pas choisi un des corpus")
@@ -178,9 +178,13 @@ def add_vocal_tract_per_corpus(corpus,max="All") :
     for sp in speakers :
         add_vocal_tract(sp,max = max)
 
+
 #corpus = ["mocha","usc","MNGU0","Haskins"]
 #add_vocal_tract("F1",max=30)
 #for co in corpus :
  #   print("adding vt for corpus ",co)
   #  add_vocal_tract_per_corpus(co)
 
+add_vocal_tract("falh0",max="All")
+add_vocal_tract("F01",max="All")
+add_vocal_tract("F02",max="All")
