@@ -5,29 +5,26 @@ Les données articulatoires sont consitituées des 12 basiques + de 4 supplémen
 seul corpus qui fournit ces données articulatoires.
 """
 
-import os,sys,inspect
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(currentdir)
-sys.path.insert(0,parentdir)
-
-import time
+import os
 from os.path import dirname
+import sys
+import inspect
 import numpy as np
+import time
 import scipy.signal
 import matplotlib.pyplot as plt
 import scipy.interpolate
-from Traitement.add_dynamic_features import get_delta_features
-from Apprentissage.utils import low_pass_filter_weight
-
 import librosa
 import scipy.io as sio
 import shutil
 import glob
 import scipy.io as sio
 
-
-
-""" after this script the order of the articulators is the following : """
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0, parentdir)
+from Traitement.add_dynamic_features import get_delta_features
+from Apprentissage.utils import low_pass_filter_weight
 
 order_arti_haskins = ['td_x','td_y','tb_x','tb_y','tt_x','tt_y','ul_x','ul_y',"ll_x","ll_y",
                       "ml_x","ml_y","li_x","li_y","jl_x","jl_y"]
@@ -35,38 +32,33 @@ order_arti_haskins = ['td_x','td_y','tb_x','tb_y','tt_x','tt_y','ul_x','ul_y',"l
 order_arti =    [ 'tt_x', 'tt_y', 'td_x', 'td_y', 'tb_x', 'tb_y', 'li_x', 'li_y',
         'ul_x', 'ul_y', 'll_x', 'll_y']
 
-def traitement_general_haskins(max="All"):
+
+def traitement_general_haskins(max_N="All"):
     speakers = ["F01", "F02", "F03", "F04", "M01", "M02", "M03", "M04"]
 
-    def detect_silence(data):
-        try :#tous les fichiers ne sont pas organisés dans le même ordre dans le dictionnaire, il semble y avoir deux cas
-
-            debut = data[0][5][0][0][1][0][1]
-            fin = data[0][5][0][-1][1][0][0]
+    def detect_silence(ma_data):
+        try : #tous les fichiers ne sont pas organisés dans le même ordre dans le dictionnaire, il semble y avoir deux cas
+            mon_debut = ma_data[0][5][0][0][1][0][1]
+            ma_fin = ma_data[0][5][0][-1][1][0][0]
         except :
-            debut = data[0][6][0][0][1][0][1]
-            fin   =  data[0][6][0][-1][1][0][0]
-        return [debut,fin]
-    count=1
-    for speaker in speakers :
-        print("HASKINS : SPEAKER : {} , {} out of {}".format(speaker,count,len(speakers)))
-        count+=1
-
+            mon_debut = ma_data[0][6][0][0][1][0][1]
+            ma_fin = ma_data[0][6][0][-1][1][0][0]
+        return [mon_debut, ma_fin]
+    count = 1
+    for speaker in speakers:
+        print("HASKINS : SPEAKER : {} , {} out of {}".format(speaker, count, len(speakers)))
+        count += 1
         root_path = dirname(dirname(os.path.realpath(__file__)))
-
-        sampling_rate_ema = 100 # voir si toujours le même, récupérable dans le fichier .mat
-        sampling_rate_wav = 44100
-        path_files_brutes = os.path.join(root_path, "Donnees_brutes","Haskins_IEEE_Rate_Comparison_DB",speaker,"data")
-        path_files_treated = os.path.join(root_path, "Donnees_pretraitees","Haskins_"+speaker)
-        path_files_annotation = os.path.join(root_path, "Donnees_brutes","Haskins_"+speaker,"trans")
+        sampling_rate_ema = 100  # toujours le même, mais lisible directement dans le fichier
+        sampling_rate_wav = 44100  # toujours le même, mais lisible directement dans le fichier
+        path_files_brutes = os.path.join(root_path, "Donnees_brutes", "Haskins_IEEE_Rate_Comparison_DB", speaker, "data")
+        path_files_treated = os.path.join(root_path, "Donnees_pretraitees", "Haskins_"+speaker)
         EMA_files = sorted(  [name[:-4] for name in os.listdir(path_files_brutes) if "palate" not in name])
-       # EMA_files = [x for x in EMA_files if x not in files_pbm]
 
         N = len(EMA_files)
-        if max != "All":
-            N = max
+        if max_N != "All":
+            N = max_N
 
-        xtrm = 30
         frame_time = 25
         hop_time = 10  # en ms
         hop_length = int((hop_time * sampling_rate_wav) / 1000)
@@ -76,7 +68,6 @@ def traitement_general_haskins(max="All"):
         ALL_EMA = []
         ALL_MFCC = []
         ALL_EMA_2 = np.zeros((1,12))
-        cutoff = 30
 
         def create_and_empty_directories():
 
@@ -101,13 +92,9 @@ def traitement_general_haskins(max="All"):
         create_and_empty_directories()
         xtrm = 30
         weights = low_pass_filter_weight(cut_off=10, sampling_rate=sampling_rate_ema)
-       # sampling_rate_wav_init = 44100
 
         for i in range(N) :
-            #if i%50==0:
-             #   print("{} out of {}".format(i,N))
-            data = sio.loadmat(os.path.join(path_files_brutes,EMA_files[i]+".mat"))[EMA_files[i]][0]
-           # sampling_rate_mfcc = data[0][1][0][0] # 44100 voir si toujours le même
+            data = sio.loadmat(os.path.join(path_files_brutes , EMA_files[i]+".mat"))[EMA_files[i]][0]
             wav = data[0][2]
           #  wav = scipy.signal.resample(wav,num=int(len(wav)*sampling_rate_wav/sampling_rate_wav_init))
             np.save(os.path.join(root_path, "Donnees_brutes","Haskins_IEEE_Rate_Comparison_DB",speaker,"wav",EMA_files[i]),wav)
@@ -183,12 +170,5 @@ def traitement_general_haskins(max="All"):
             mfcc = (mfcc - mean_mfcc) / std_mfcc
             np.save(os.path.join(path_files_treated, "mfcc", EMA_files[i]), mfcc)
 
-    #    ema = np.load(os.path.join(path_files_treated, "ema", EMA_files[i]+".npy"))
-         #   ema_filtered = np.load(os.path.join(path_files_treated, "ema_filtered", EMA_files[i]+".npy"))
-           # ema_filtered = (ema_filtered - smoothed_moving_average[i, :]) / max(std_ema)
-           # ema = (ema - smoothed_moving_average[i, :]) / max(std_ema)
-
-        #    np.save(os.path.join(path_files_treated, "ema", EMA_files[i]), ema)
-         #   np.save(os.path.join(path_files_treated, "ema_filtered", EMA_files[i]), ema_filtered)
 
 #traitement_general_haskins()
