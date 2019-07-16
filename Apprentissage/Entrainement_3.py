@@ -26,9 +26,6 @@ fileset_path = os.path.join(root_folder, "Donnees_pretraitees", "fileset")
 
 print(sys.argv)
 
-
-
-
 def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
     data_filtered=True
     modele_filtered=True
@@ -114,16 +111,26 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
     def read_csv_arti_ok_per_speaker():
         arti_per_speaker = os.path.join(root_folder,"Apprentissage", "articulators_per_speaker.csv")
         csv.register_dialect('myDialect', delimiter=';')
-        arti_ok_per_speaker = dict()
+        categ_of_speakers = dict()
         with open(arti_per_speaker, 'r') as csvFile:
             reader = csv.reader(csvFile, dialect="myDialect")
             next(reader)
-            for row in reader:
-                arti_ok_per_speaker[row[0]] = row[1:19]
-        return arti_ok_per_speaker
+            for categ in ["A", "B", "C", "D", "E", "F"]:
+                categ_of_speakers[categ] = dict()
+                categ_of_speakers[categ]["sp"] = []
+                categ_of_speakers[categ]["arti"] = None
 
-    arti_ok_per_speaker = read_csv_arti_ok_per_speaker() #dictionnaire en clé le speaker en valeurs liste des arti ok
-     # dans le meme ordre que dhabitude
+            for row in reader:
+                categ_of_speakers[row[19]]["sp"].append(row[0])
+                if categ_of_speakers[row[19]]["arti"] != None:
+                    if categ_of_speakers[row[19]]["arti"] != row[1:19]:
+                        print("check arti and category for categ {}".format(row[19]))
+                else:
+                    categ_of_speakers[row[19]]["arti"] = row[1:19]
+        return categ_of_speakers
+
+    categ_of_speakers = read_csv_arti_ok_per_speaker() #dictionnaire en clé la categorie en valeur un dictionnaire
+#avec les speakers dans la catégorie et les arti concernées par cette categorie
 
     optimizer = torch.optim.Adam(model.parameters(), lr=lr ) #, betas = beta_param)
 
@@ -146,51 +153,51 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
     N_test = len(files_for_test)
     print('N_train',N_train)
     n_iteration = int(N_train / batch_size)
-
     n_iteration_validation = int(N_valid/batch_size)
    # n_iteration_validation=2
     n_iteration = 100
     #  n_iteration  =1
     n_iteration_test = int(N_test/batch_size)
     test_files_names = []
+    files_for_train_per_categ = dict()
+    for categ in categ_of_speakers.keys():
+        sp_in_categ = categ_of_speakers[categ]["sp"]
+        # fichiers qui appartiennent à la categorie car le nom du speaker apparait touojurs dans le nom du fichier
+        files_this_categ = [[f for f in files_for_train if sp in f] for sp in sp_in_categ]
+        N_iter_categ = int(len(files_this_categ)/batch_size)+1         # on veut qu'il y a en ait un multiple du batch size , on en double certains
+        n_a_ajouter = batch_size*N_iter_categ - len(files_this_categ) #si 14 element N_iter_categ vaut 2 et n_a_ajouter vaut 6
+        files_this_categ = files_this_categ + random.sample(files_this_categ,n_a_ajouter) #nbr de fichier par categorie multiple du batch size
+        random.shuffle(files_this_categ)
+        files_for_train_per_categ[categ] = files_this_categ
 
     for epoch in range(n_epochs):
+        files_for_train_courant = files_for_train
         #random.shuffle(files_for_train)
-        for ite in range(n_iteration):
-            if ite % 50 == 0:
-                print("{} out of {}".format(ite, n_iteration))
-           # print(files_for_train[ite:ite+batch_size])
-            print(files_for_train[ite:ite+batch_size])
-            x, y = load_data(files_for_train[ite:ite + batch_size], filtered=data_filtered)
-            x, y = model.prepare_batch(x, y)
-            y_pred = model(x).double()
-          #  print(y_pred)
-            torch.cuda.empty_cache()
+        while files_for_train_courant != []:
+            for categ in files_for_train_per_categ.keys():  #de A à F pour le moment
+                files_this_categ_courant = [f for f in files_for_train_per_categ[categ] if f in files_for_train_courant] #on na pas encore apprit dessus au cours de cette epoch
+                files_batch = random.sample(files_this_categ_courant,batch_size) #au hasard 10 fichiers
+                files_for_train_courant = [f for f in files_for_train_courant if f not in files_batch] #we a re going to train on this 10 files
 
-            if cuda_avail:
-                #y_pred = y_pred.cuda()
-                y_pred = y_pred.to(device=cuda2)
-            y = y.double()
-            optimizer.zero_grad()
+                x, y = load_data(files_batch, filtered=data_filtered)
+                x, y = model.prepare_batch(x, y)
+                y_pred = model(x).double()
 
-        #    print("D,E", torch.isnan(model.first_layer.weight.sum()))
-            loss = criterion(y,y_pred)
-            loss.backward()
-            optimizer.step()
-          #  print("ll",x.grad)
-           # print("G", torch.isnan(model.first_layer.weight.sum()))
-        #  model.all_training_loss.append(loss.item())
-            torch.cuda.empty_cache()
-       # change_lr_frq = 3
-       # if epoch%change_lr_frq== 0 :
-        #    print("change learning rate",)
+                torch.cuda.empty_cache()
+
+                if cuda_avail:
+                    y_pred = y_pred.to(device=cuda2)
+                y = y.double()
+                optimizer.zero_grad()
+                loss = criterion(y,y_pred)
+                loss.backward()
+                optimizer.step()
+                torch.cuda.empty_cache()
 
         if epoch%delta_test ==0:  #toutes les delta_test epochs on évalue le modèle sur validation et on sauvegarde le modele si le score est meilleur
             loss_vali = 0
            # random.shuffle(files_for_valid)
-
             for ite_valid in range(n_iteration_validation):
-
                 x,y = load_data(files_for_valid[ite_valid:ite_valid+batch_size],filtered=data_filtered)
             #    y = [y[i][:,:output_dim] for i in range(len(y))]
                 try :
