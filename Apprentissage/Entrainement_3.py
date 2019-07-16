@@ -30,9 +30,8 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
     data_filtered=True
     modele_filtered=True
     train_on =  ["F01","F02","F03","F04","M01","M02","M03","M04","F1","F5","M1",
-                 "M3","maps0","faet0",'mjjn0',"ffes0","MNGU0","fsew0","msak0"]
-    train_on = [ "F1", "F5", "M1",
-                "M3", "maps0", "faet0", 'mjjn0', "ffes0", "MNGU0", "fsew0", "msak0"]
+                 "M3","maps0","faet0",'mjjn0',"falh0","ffes0","MNGU0","fsew0","msak0"]
+
     train_on.remove(test_on)
     print("train_on :",train_on)
     print("test on:",test_on)
@@ -140,11 +139,10 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
     N_train,N_valid,N_test=0,0,0
     path_files = os.path.join(os.path.dirname(os.getcwd()),"Donnees_pretraitees","fileset")
 
+
     for speaker in train_on:
-        print(speaker)
         N_train = N_train + len(open(os.path.join(path_files,speaker+"_train.txt"), "r").read().split())
         N_valid = N_valid + len(open(os.path.join(path_files,speaker+"_valid.txt"), "r").read().split())
-        print(N_train)
 
     files_for_train = load_filenames_deter(train_on, part=["train", "test"])
     files_for_valid = load_filenames_deter(train_on, part=["valid"])
@@ -161,10 +159,14 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
     test_files_names = []
     files_for_train_per_categ = dict()
     for categ in categ_of_speakers.keys():
-
+        print("categ",categ)
         sp_in_categ = categ_of_speakers[categ]["sp"]
+        sp_in_categ = [sp for sp in sp_in_categ if sp in train_on]
         # fichiers qui appartiennent à la categorie car le nom du speaker apparait touojurs dans le nom du fichier
-        files_this_categ = [[f for f in files_for_train if sp in f] for sp in sp_in_categ]
+        print("sp in categ",sp_in_categ)
+        files_this_categ = [[f for f in files_for_train if sp.lower() in f ]for sp in sp_in_categ]
+        files_this_categ = [item for sublist in files_this_categ for item in sublist] # flatten la liste de liste
+
         N_iter_categ = int(len(files_this_categ)/batch_size)+1         # on veut qu'il y a en ait un multiple du batch size , on en double certains
         n_a_ajouter = batch_size*N_iter_categ - len(files_this_categ) #si 14 element N_iter_categ vaut 2 et n_a_ajouter vaut 6
         files_this_categ = files_this_categ + random.sample(files_this_categ,n_a_ajouter) #nbr de fichier par categorie multiple du batch size
@@ -174,18 +176,19 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
     for epoch in range(n_epochs):
         files_for_train_courant = files_for_train
         #random.shuffle(files_for_train)
-        while files_for_train_courant != []:
-            for categ in files_for_train_per_categ.keys():  #de A à F pour le moment
-                files_this_categ_courant = [f for f in files_for_train_per_categ[categ] if f in files_for_train_courant] #on na pas encore apprit dessus au cours de cette epoch
-                files_batch = random.sample(files_this_categ_courant,batch_size) #au hasard 10 fichiers
-                files_for_train_courant = [f for f in files_for_train_courant if f not in files_batch] #we a re going to train on this 10 files
 
+        for categ in files_for_train_per_categ.keys():  # de A à F pour le moment
+            files_this_categ_courant = files_for_train_per_categ[categ]  #on na pas encore apprit dessus au cours de cette epoch
+            temp = 0
+            while files_this_categ_courant != []:
+                files_batch = files_this_categ_courant[:batch_size]
+                temp = temp+batch_size
+                files_this_categ_courant = [f for f in files_this_categ_courant if f not in files_batch] #we a re going to train on this 10 files
                 x, y = load_data(files_batch, filtered=data_filtered)
+
                 x, y = model.prepare_batch(x, y)
                 y_pred = model(x).double()
-
                 torch.cuda.empty_cache()
-
                 if cuda_avail:
                     y_pred = y_pred.to(device=cuda2)
                 y = y.double()
@@ -207,13 +210,10 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
                     print("surmenet pbm de shape pour",files_for_valid[ite_valid:ite_valid+batch_size])
             if epoch>0:
                 if loss_vali > model.all_validation_loss[-1]:
-                    patience_temp +=1
-                    if patience_temp == 1 :
-                        print("decrease learning rate")
-                        for param_group in optimizer.param_groups:
-                            param_group['lr'] = param_group['lr'] / 2
-                            print(param_group["lr"])
-                            patience_temp=0
+                    for param_group in optimizer.param_groups:
+                        param_group['lr'] = param_group['lr'] / 2
+                        print(param_group["lr"])
+                        patience_temp=0
 
             loss_vali = loss_vali / n_iteration_validation
             model.all_validation_loss.append(loss_vali)
