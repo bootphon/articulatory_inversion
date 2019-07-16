@@ -172,7 +172,7 @@ def traitement_general_mocha(max="All"):
 
     sp_with_velum =["fsew0","msak0","faet0","falh0","ffes0"]
     speakers = ["fsew0","msak0","faet0","falh0","ffes0","mjjn0","maps0"]
-
+    speakers= ["falh0"]
     sampling_rate_mfcc = 16000
     frame_time = 25
     hop_time = 10  # en ms
@@ -313,3 +313,4 @@ def add_tb_y_faet0():
 #add_tb_y_faet0()
 
 
+traitement_general_mocha()
