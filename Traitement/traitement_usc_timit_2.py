@@ -67,7 +67,6 @@ def traitement_general_usc_timit(max="All"):
             files += glob.glob(os.path.join(path_files_brutes,"mat_cut","*"))
             files += glob.glob(os.path.join(path_files_treated, "ema_filtered", "*"))
             files += glob.glob(os.path.join(path_files_treated, "mfcc", "*"))
-
             for f in files:
                 os.remove(f)
 
@@ -241,7 +240,7 @@ def traitement_general_usc_timit(max="All"):
 
         N_2 = len(EMA_files_2)
         if max != "All":
-            N_2 = max
+            N_2 = int(max/3)
 
         for i in range(N_2):
             treat_ema_files(i)

@@ -86,7 +86,7 @@ def get_fileset_names(speaker):
     On a donc une liste X et une liste Y, qu'on va diviser en train et test.
     """
 
-    if speaker in ["msak0","fsew0","maps0","faet0","mjjn0","ffes0"]:
+    if speaker in ["msak0","fsew0","maps0","faet0","mjjn0","ffes0","falh0"]:
         speaker_2 = "mocha_"+speaker
 
     elif speaker == "MNGU0":
@@ -123,7 +123,7 @@ def get_fileset_names(speaker):
     outF.close()
 
 speakers =  ["F01","F02","F03","F04","M01","M02","M03","M04","F1","F5","M1","M3"
-    ,"maps0","faet0",'mjjn0',"ffes0","MNGU0"]
+    ,"maps0","faet0",'mjjn0',"ffes0","falh0","MNGU0"]
 for sp in speakers :
     print("speaker :",sp)
     get_fileset_names(sp)

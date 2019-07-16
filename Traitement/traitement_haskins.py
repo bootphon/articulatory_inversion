@@ -78,11 +78,10 @@ def traitement_general_haskins(max="All"):
         ALL_EMA_2 = np.zeros((1,12))
         cutoff = 30
 
-        def create_directories():
+        def create_and_empty_directories():
 
             if not os.path.exists(os.path.join(path_files_treated, "ema")):
                 os.makedirs(os.path.join(path_files_treated, "ema"))
-
 
             if not os.path.exists(os.path.join(path_files_treated, "ema_filtered")):
                 os.makedirs(os.path.join(path_files_treated, "ema_filtered"))
@@ -90,11 +89,14 @@ def traitement_general_haskins(max="All"):
             if not os.path.exists(os.path.join(path_files_treated, "mfcc")):
                 os.makedirs(os.path.join(path_files_treated, "mfcc"))
 
-
             if not os.path.exists(os.path.join(root_path, "Donnees_brutes","Haskins_IEEE_Rate_Comparison_DB",speaker,"wav")):
                 os.makedirs(os.path.join(root_path, "Donnees_brutes","Haskins_IEEE_Rate_Comparison_DB",speaker,"wav"))
 
-        create_directories()
+            shutil.rmtree(os.path.join(path_files_treated, "ema"))
+            shutil.rmtree(os.path.join(path_files_treated, "ema_filtered"))
+            shutil.rmtree(os.path.join(path_files_treated, "mfcc"))
+
+    create_and_empty_directories()
         xtrm = 30
         weights = low_pass_filter_weight(cut_off=10, sampling_rate=sampling_rate_ema)
        # sampling_rate_wav_init = 44100
@@ -187,4 +189,4 @@ def traitement_general_haskins(max="All"):
         #    np.save(os.path.join(path_files_treated, "ema", EMA_files[i]), ema)
          #   np.save(os.path.join(path_files_treated, "ema_filtered", EMA_files[i]), ema_filtered)
 
-traitement_general_haskins()
+#traitement_general_haskins()

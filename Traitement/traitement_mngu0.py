@@ -17,6 +17,7 @@ import matplotlib.pyplot as plt
 import scipy.interpolate
 from Traitement.add_dynamic_features import get_delta_features
 import librosa
+import shutil
 from Apprentissage.utils import low_pass_filter_weight
 
 """ after this script the order of the articulators is the following : """
@@ -42,7 +43,6 @@ def traitement_general_mngu0(max="All"):
     EMA_files = [f for f in EMA_files if "split" not in EMA_files]
     path_files_treated = os.path.join(root_path, "Donnees_pretraitees","MNGU0")
 
-
     cols_index = None
     n_columns = 87
     window=5
@@ -56,8 +56,20 @@ def traitement_general_mngu0(max="All"):
     n_coeff = 13
     n_col_mfcc = n_coeff*(2*window+1)*3
     N = len(EMA_files)
-    if max != "All":
-        N = max
+
+    def create_missing_dir():
+        if not os.path.exists(os.path.join(os.path.join(path_files_treated, "ema"):
+            os.makedirs(os.path.join(path_files_treated, "ema")
+        if not os.path.exists(os.path.join(os.path.join(path_files_treated, "ema_filtered"):
+            os.makedirs(os.path.join(path_files_treated, "ema_filtered")
+        if not os.path.exists(os.path.join(os.path.join(path_files_treated, "mfcc"):
+            os.makedirs(os.path.join(path_files_treated, "mfcc")
+        shutil.rmtree(os.path.join(path_files_treated,  "ema"))
+        shutil.rmtree(os.path.join(path_files_treated,"ema_filtered"))
+        shutil.rmtree(os.path.join(path_files_treated, "mfcc"))
+
+    create_missing_dir()
+
     def first_step_ema_data(i):
         """
         :param i: index de l'uttérence (ie numero de phrase) dont les données EMA seront extraites
@@ -161,8 +173,9 @@ def traitement_general_mngu0(max="All"):
     ALL_EMA_2 = np.zeros((1,12))
     cutoff = 25
     weights = low_pass_filter_weight(cut_off=cutoff, sampling_rate=sampling_rate_ema)
-    if N == "All":
-        N=len(EMA_files)
+    N = len(EMA_files)
+    if max != "All":
+        N = max
     #traitement uttérance par uttérance des phrases
     for i in range(N):
        # if i%100 ==0:
@@ -240,4 +253,4 @@ def traitement_general_mngu0(max="All"):
         #np.save(os.path.join(path_files_treated, "ema",EMA_files[i]), ema)
 
 
-traitement_general_mngu0()
+#traitement_general_mngu0()

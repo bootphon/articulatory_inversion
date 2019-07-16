@@ -25,6 +25,7 @@ import scipy.interpolate
 from Traitement.add_dynamic_features import get_delta_features
 import librosa
 from Apprentissage.utils import low_pass_filter_weight
+import shutil
 
 """ after this script the order of the articulators is the following : """
 
@@ -46,6 +47,10 @@ def traitement_general_mocha(max="All"):
             os.makedirs(os.path.join(root_path, "Donnees_pretraitees", "mocha_" + speaker, "mfcc"))
         if not os.path.exists(os.path.join(root_path, "Donnees_pretraitees", "mocha_" + speaker, "ema_filtered")):
             os.makedirs(os.path.join(root_path, "Donnees_pretraitees", "mocha_" + speaker, "ema_filtered"))
+
+        shutil.rmtree(os.path.join(root_path, "Donnees_pretraitees", "mocha_" + speaker, "ema"))
+        shutil.rmtree(os.path.join(root_path, "Donnees_pretraitees", "mocha_" + speaker, "ema_filtered"))
+        shutil.rmtree(os.path.join(root_path, "Donnees_pretraitees", "mocha_" + speaker, "mfcc"))
 
     def first_step_ema_data(i):
         """
@@ -165,7 +170,7 @@ def traitement_general_mocha(max="All"):
 
     sp_with_velum =["fsew0","msak0","faet0","falh0","ffes0"]
     speakers = ["fsew0","msak0","faet0","falh0","ffes0","mjjn0","maps0"]
-    speakers = ["msak0","faet0","falh0","ffes0","mjjn0","maps0"]
+    speakers = ["faet0"]
 
     sampling_rate_mfcc = 16000
     frame_time = 25
@@ -187,6 +192,8 @@ def traitement_general_mocha(max="All"):
         path_files = os.path.join(root_path, "Donnees_brutes","mocha", speaker)
         EMA_files = sorted([name for name in os.listdir(path_files) if "palate" not in name])
         EMA_files = sorted([name[:-4] for name in EMA_files if name.endswith('.ema')])
+        pbm_files = ["faet0_011"]
+       # EMA_files = [f for f in EMA_files if f not in pbm_files]
         cols_index = None
         n_columns = 20
         wav_files = sorted([name[:-4] for name in os.listdir(path_files) if name.endswith('.wav')])
@@ -250,6 +257,8 @@ def traitement_general_mocha(max="All"):
         std_mfcc = np.mean(np.array([np.std(x, axis=0) for x in ALL_MFCC]), axis=0)
         mean_mfcc = np.mean(np.array([np.mean(x, axis=0) for x in ALL_MFCC]), axis=0)
         np.save(os.path.join("norm_values","moving_average_ema_" + speaker), smoothed_moving_average)
+        np.save(os.path.join("norm_values","moving_average_ema_brute" + speaker), moving_average)
+
         np.save(os.path.join("norm_values","std_ema_"+speaker), std_ema)
         np.save(os.path.join("norm_values","mean_ema_"+speaker), mean_ema)
         np.save(os.path.join("norm_values","std_mfcc_"+speaker), std_mfcc)
@@ -282,4 +291,24 @@ def traitement_general_mocha(max="All"):
 
 
 #N="All"
+
+#traitement_general_mocha()
+
+def add_tb_y_faet0():
+    root_path = dirname(dirname(os.path.realpath(__file__)))
+    path_files_treated = os.path.join(root_path, "Donnees_pretraitees","mocha_faet0","ema_filtered_norma")
+    EMA_files = sorted([name[:-4] for name in os.listdir(path_files) if "palate" not in name])
+    for i in range(len(EMA_files)):
+        if i%50==0:
+            print("{} out of {}".format(i,len(EMA_files)))
+        arti_faet0  = np.load(os.path.join(path_files_treated,EMA_files[i]+".npy"))
+        arti_fsew0 = np.load(os.path.join(root_path, "Donnees_pretraitees","mocha_fsew0","ema_filtered_norma" ,"fsew0_"+EMA_files[i][5:]+".npy"))
+        L = len(arti_faet0)
+        arti_fsew0_resample = scipy.signal.resample(arti_fsew0,num=L)
+        arti_faet0[:,5] = arti_fsew0_resample
+        np.save(os.path.join(path_files_treated,EMA_files[i]+".npy"),arti_faet0)
+
+
+#add_tb_y_faet0()
+
 
