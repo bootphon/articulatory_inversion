@@ -192,6 +192,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
                 try :
                     x, y = model.prepare_batch(x, y)
                 except:
+                    x, y = model.prepare_batch(x, y)
                     print("pbm avec {}".format(files_batch))
                 y_pred = model(x).double()
                 torch.cuda.empty_cache()
