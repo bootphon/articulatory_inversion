@@ -100,7 +100,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
         deno = torch.max(deno,minim)
         loss = nume/deno
         loss = torch.sum(loss) #pearson doit etre le plus grand possible
-        loss = torch.div(loss, torch.tensor(y.shape[2]),dtype=torch.float64)
+        loss = torch.div(loss, torch.tensor(y.shape[2],dtype=torch.float64))
         return -loss
     criterion = criterion_pearson
 
