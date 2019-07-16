@@ -72,10 +72,6 @@ def traitement_general_mngu0(max="All"):
         for f in files:
             os.remove(f)
 
-        shutil.rmtree(os.path.join(path_files_treated,  "ema"))
-
-        shutil.rmtree(os.path.join(path_files_treated,"ema_filtered"))
-        shutil.rmtree(os.path.join(path_files_treated, "mfcc"))
 
     create_missing_dir()
 
