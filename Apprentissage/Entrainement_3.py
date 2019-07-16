@@ -32,8 +32,6 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
     train_on =  ["F01","F02","F03","F04","M01","M02","M03","M04","F1","F5","M1",
                  "M3","maps0","faet0",'mjjn0',"falh0","ffes0","fsew0","msak0","MNGU0"]
 
-    train_on = ["F1", "F5", "maps0", "faet0", 'mjjn0', "falh0", "ffes0", "MNGU0", "fsew0", "msak0"]
-
     train_on.remove(test_on)
     print("train_on :",train_on)
     print("test on:",test_on)
@@ -49,7 +47,6 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
     hidden_dim = 300
     input_dim = 429
     batch_size = 3
-
     print("batch size",batch_size)
 
     early_stopping = EarlyStopping(name_file,patience=patience, verbose=True)
@@ -168,7 +165,6 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
         sp_in_categ = categ_of_speakers[categ]["sp"]
         sp_in_categ = [sp for sp in sp_in_categ if sp in train_on]
         # fichiers qui appartiennent à la categorie car le nom du speaker apparait touojurs dans le nom du fichier
-        print("sp in categ",sp_in_categ)
         files_this_categ = [[f for f in files_for_train if sp.lower() in f ]for sp in sp_in_categ]
         files_this_categ = [item for sublist in files_this_categ for item in sublist] # flatten la liste de liste
 
@@ -263,9 +259,6 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
     x, y = load_data(files_for_test)
 
     print("evaluation on speaker {}".format(test_on))
-    speaker_2 = test_on
-    if test_on in ["F1", "M1", "F5","M3"]:
-        speaker_2 = "usc_timit_" + test_on
 
     std_speaker=  np.load(os.path.join(root_folder, "Traitement", "norm_values","std_ema_"+speaker+".npy"))
     model.evaluate_on_test(criterion=criterion,verbose=True, X_test=x, Y_test=y,
