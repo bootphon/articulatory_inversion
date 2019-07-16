@@ -58,13 +58,14 @@ def traitement_general_mngu0(max="All"):
     N = len(EMA_files)
 
     def create_missing_dir():
-        if not os.path.exists(os.path.join(os.path.join(path_files_treated, "ema"):
-            os.makedirs(os.path.join(path_files_treated, "ema")
-        if not os.path.exists(os.path.join(os.path.join(path_files_treated, "ema_filtered"):
-            os.makedirs(os.path.join(path_files_treated, "ema_filtered")
-        if not os.path.exists(os.path.join(os.path.join(path_files_treated, "mfcc"):
-            os.makedirs(os.path.join(path_files_treated, "mfcc")
+        if not os.path.exists(os.path.join(os.path.join(path_files_treated, "ema"))):
+            os.makedirs(os.path.join(path_files_treated, "ema"))
+        if not os.path.exists(os.path.join(os.path.join(path_files_treated, "ema_filtered"))):
+            os.makedirs(os.path.join(path_files_treated, "ema_filtered"))
+        if not os.path.exists(os.path.join(os.path.join(path_files_treated, "mfcc"))):
+            os.makedirs(os.path.join(path_files_treated, "mfcc"))
         shutil.rmtree(os.path.join(path_files_treated,  "ema"))
+
         shutil.rmtree(os.path.join(path_files_treated,"ema_filtered"))
         shutil.rmtree(os.path.join(path_files_treated, "mfcc"))
 
