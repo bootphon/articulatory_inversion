@@ -19,6 +19,7 @@ from Traitement.add_dynamic_features import get_delta_features
 import librosa
 import shutil
 from Apprentissage.utils import low_pass_filter_weight
+import glob
 
 """ after this script the order of the articulators is the following : """
 order_arti_MNGU0 = [
@@ -64,6 +65,13 @@ def traitement_general_mngu0(max="All"):
             os.makedirs(os.path.join(path_files_treated, "ema_filtered"))
         if not os.path.exists(os.path.join(os.path.join(path_files_treated, "mfcc"))):
             os.makedirs(os.path.join(path_files_treated, "mfcc"))
+
+        files = glob.glob(os.path.join(path_files_treated, "ema", "*"))
+        files += glob.glob(os.path.join(path_files_treated, "ema_filtered", "*"))
+        files += glob.glob(os.path.join(path_files_treated, "mfcc", "*"))
+        for f in files:
+            os.remove(f)
+
         shutil.rmtree(os.path.join(path_files_treated,  "ema"))
 
         shutil.rmtree(os.path.join(path_files_treated,"ema_filtered"))

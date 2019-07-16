@@ -26,7 +26,7 @@ from Traitement.add_dynamic_features import get_delta_features
 import librosa
 from Apprentissage.utils import low_pass_filter_weight
 import shutil
-
+import glob
 """ after this script the order of the articulators is the following : """
 
 
@@ -48,9 +48,11 @@ def traitement_general_mocha(max="All"):
         if not os.path.exists(os.path.join(root_path, "Donnees_pretraitees", "mocha_" + speaker, "ema_filtered")):
             os.makedirs(os.path.join(root_path, "Donnees_pretraitees", "mocha_" + speaker, "ema_filtered"))
 
-        shutil.rmtree(os.path.join(root_path, "Donnees_pretraitees", "mocha_" + speaker, "ema"))
-        shutil.rmtree(os.path.join(root_path, "Donnees_pretraitees", "mocha_" + speaker, "ema_filtered"))
-        shutil.rmtree(os.path.join(root_path, "Donnees_pretraitees", "mocha_" + speaker, "mfcc"))
+        files = glob.glob(os.path.join(root_path, "Donnees_pretraitees", "mocha_" + speaker, "ema","*"))
+        files += glob.glob(os.path.join(root_path, "Donnees_pretraitees", "mocha_" + speaker, "mfcc","*"))
+        files += glob.glob(os.path.join(root_path, "Donnees_pretraitees", "mocha_" + speaker, "ema_filtered","*"))
+        for f in files:
+            os.remove(f)
 
     def first_step_ema_data(i):
         """

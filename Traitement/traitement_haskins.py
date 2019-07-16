@@ -92,9 +92,11 @@ def traitement_general_haskins(max="All"):
             if not os.path.exists(os.path.join(root_path, "Donnees_brutes","Haskins_IEEE_Rate_Comparison_DB",speaker,"wav")):
                 os.makedirs(os.path.join(root_path, "Donnees_brutes","Haskins_IEEE_Rate_Comparison_DB",speaker,"wav"))
 
-            shutil.rmtree(os.path.join(path_files_treated, "ema"))
-            shutil.rmtree(os.path.join(path_files_treated, "ema_filtered"))
-            shutil.rmtree(os.path.join(path_files_treated, "mfcc"))
+            files = glob.glob(os.path.join(path_files_treated, "ema", "*"))
+            files += glob.glob(os.path.join(path_files_treated, "ema_filtered", "*"))
+            files += glob.glob(os.path.join(path_files_treated, "mfcc", "*"))
+            for f in files:
+                os.remove(f)
 
         create_and_empty_directories()
         xtrm = 30
