@@ -81,7 +81,7 @@ class my_ac2art_modele(torch.nn.Module):
         lstm_out, hidden_dim = self.lstm_layer_2(lstm_out)
         lstm_out=torch.nn.functional.relu(lstm_out)
         y_pred = self.readout_layer(lstm_out)
-        y_pred = self.filter_layer(y_pred_to_cons)
+        y_pred = self.filter_layer(y_pred)
         return y_pred
 
     def init_filter_layer(self):
