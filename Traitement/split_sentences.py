@@ -12,7 +12,7 @@ root_folder = os.path.dirname(os.getcwd())
 def split_sentences(corpus=["MNGU0"] ,max_length = 500,N="All"):
     donnees_pretraitees_path = os.path.join(root_folder, "Donnees_pretraitees")
 
-    file_names = os.listdir(os.path.join(donnees_pretraitees_path, "MNGU0", "ema"))
+    file_names = os.listdir(os.path.join(donnees_pretraitees_path, "MNGU0", "ema_VT"))
     file_names = [f for f in file_names if 'split' not in f]
     if N == "All":
         N = len(file_names)
@@ -66,4 +66,4 @@ def split_sentences(corpus=["MNGU0"] ,max_length = 500,N="All"):
 
 
 
-
+split_sentences()
