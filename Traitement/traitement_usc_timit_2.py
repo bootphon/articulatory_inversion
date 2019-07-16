@@ -65,6 +65,7 @@ def traitement_general_usc_timit(max="All"):
 
             files = glob.glob(os.path.join(path_files_brutes,"wav_cut","*"))
             files += glob.glob(os.path.join(path_files_brutes,"mat_cut","*"))
+            files += glob.glob(os.path.join(path_files_treated, "ema", "*"))
             files += glob.glob(os.path.join(path_files_treated, "ema_filtered", "*"))
             files += glob.glob(os.path.join(path_files_treated, "mfcc", "*"))
             for f in files:

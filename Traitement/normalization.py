@@ -4,7 +4,7 @@ import random
 import os
 from os.path import dirname
 
-def normalize_data(speaker,max="All"):
+def normalize_data(speaker):
     """
     calcule puis sauvegarde les données EMA normalisées.
     Norma utilisée : standardisation (standard score) par speaker et par articulateur
@@ -35,10 +35,9 @@ def normalize_data(speaker,max="All"):
     if not(os.path.exists(os.path.join(path_speaker, "ema_norma"))):
         os.mkdir(os.path.join(path_speaker, "ema_norma"))
     N = len(EMA_files)
-    if max != "All":
-        N = max
+
     for i in range(N):
-        if i % 500 == 0:
+        if i % 1 == 0:
             print("{} out of {}".format(i, len(EMA_files)))
         ema = np.load(os.path.join(path_speaker, "ema", EMA_files[i] + ".npy"))
         ema_filtered = np.load(os.path.join(path_speaker, "ema_filtered", EMA_files[i] + ".npy"))
@@ -50,7 +49,7 @@ def normalize_data(speaker,max="All"):
         np.save(os.path.join(path_speaker, "ema_norma", EMA_files[i]), ema)
         np.save(os.path.join(path_speaker, "ema_filtered_norma", EMA_files[i]), ema_filtered)
 
-def normalize_data_per_corpus(corpus,max="All") :
+def normalize_data_per_corpus(corpus) :
     if corpus == "MNGU0":
         speakers = ["MNGU0"]
     elif corpus == "usc":
@@ -61,13 +60,10 @@ def normalize_data_per_corpus(corpus,max="All") :
 
     elif corpus == "mocha":
         speakers =["fsew0","msak0","faet0","ffes0","maps0","mjjn0","falh0"]
-
-
     else :
         print("vous navez pas choisi un des corpus")
-
     for sp in speakers :
-        normalize_data(sp,max)
+        normalize_data(sp)
 
 
 #orpus =["Haskins"]

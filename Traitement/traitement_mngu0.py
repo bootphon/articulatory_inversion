@@ -66,6 +66,7 @@ def traitement_general_mngu0(max="All"):
         if not os.path.exists(os.path.join(os.path.join(path_files_treated, "mfcc"))):
             os.makedirs(os.path.join(path_files_treated, "mfcc"))
 
+
         files = glob.glob(os.path.join(path_files_treated, "ema", "*"))
         files += glob.glob(os.path.join(path_files_treated, "ema_filtered", "*"))
         files += glob.glob(os.path.join(path_files_treated, "mfcc", "*"))
@@ -230,11 +231,11 @@ def traitement_general_mngu0(max="All"):
     mean_ema = np.mean(np.array([np.mean(x, axis=0) for x in ALL_EMA]), axis=0)  # apres que chaque phrase soit centrée
     std_mfcc = np.mean(np.array([np.std(x, axis=0) for x in ALL_MFCC]), axis=0)
     mean_mfcc = np.mean(np.array([np.mean(x, axis=0) for x in ALL_MFCC]), axis=0)
-    np.save("norm_values","moving_average_ema_MNGU0", smoothed_moving_average)
-    np.save("norm_values","std_ema_MNGU0", std_ema)
-    np.save("norm_values","mean_ema_MNGU0", mean_ema)
-    np.save("norm_values","std_mfcc_MNGU0", std_mfcc)
-    np.save("norm_values","mean_mfcc_MNGU0", mean_mfcc)
+    np.save(os.path.join("norm_values","moving_average_ema_MNGU0"), smoothed_moving_average)
+    np.save(os.path.join("norm_values","std_ema_MNGU0"), std_ema)
+    np.save(os.path.join("norm_values","mean_ema_MNGU0"), mean_ema)
+    np.save(os.path.join("norm_values","std_mfcc_MNGU0"), std_mfcc)
+    np.save(os.path.join("norm_values","mean_mfcc_MNGU0"), mean_mfcc)
  #   print(std_ema, "std ema ")
 
     # construction du filtre passe bas que lon va appliquer à chaque frame mfcc et trajectoire d'articulateur
