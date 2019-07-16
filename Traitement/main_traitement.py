@@ -25,7 +25,7 @@ def main_traitement(corpus_to_treat = ["mocha","usc","MNGU0","Haskins"],max="All
         traitement_general_usc_timit(max=max)
 
     if "Haskins" in corpus_to_treat :
-        traitement_general_haskins()
+        traitement_general_haskins(max=max)
 
     for corpus in corpus_to_treat :
         add_vocal_tract_per_corpus(corpus,max=max)
