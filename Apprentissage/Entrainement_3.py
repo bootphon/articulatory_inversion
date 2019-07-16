@@ -47,7 +47,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
 
     hidden_dim = 300
     input_dim = 429
-    batch_size = 10
+    batch_size = 3
 
     print("batch size",batch_size)
 
@@ -161,6 +161,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
     test_files_names = []
     files_for_train_per_categ = dict()
     for categ in categ_of_speakers.keys():
+
         sp_in_categ = categ_of_speakers[categ]["sp"]
         # fichiers qui appartiennent à la categorie car le nom du speaker apparait touojurs dans le nom du fichier
         files_this_categ = [[f for f in files_for_train if sp in f] for sp in sp_in_categ]
