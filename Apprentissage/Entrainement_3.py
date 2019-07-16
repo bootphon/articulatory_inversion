@@ -32,6 +32,8 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
     train_on =  ["F01","F02","F03","F04","M01","M02","M03","M04","F1","F5","M1",
                  "M3","maps0","faet0",'mjjn0',"falh0","ffes0","MNGU0","fsew0","msak0"]
 
+    train_on = ["F1", "F5", "maps0", "faet0", 'mjjn0', "falh0", "ffes0", "MNGU0", "fsew0", "msak0"]
+
     train_on.remove(test_on)
     print("train_on :",train_on)
     print("test on:",test_on)
@@ -46,7 +48,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
 
     hidden_dim = 300
     input_dim = 429
-    batch_size = 3
+    batch_size = 10
 
     print("batch size",batch_size)
 
@@ -178,21 +180,27 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
         #random.shuffle(files_for_train)
 
         for categ in files_for_train_per_categ.keys():  # de A à F pour le moment
+            print("categ ",categ)
             files_this_categ_courant = files_for_train_per_categ[categ]  #on na pas encore apprit dessus au cours de cette epoch
             temp = 0
+            arti_to_consider = categ_of_speakers[categ]["arti"] #liste de 18 0/1 qui indique les arti à considérer
+            idx_to_consider = [i for i,n in enumerate(arti_to_consider) if n=="1"]
+            print("idx to consider ",idx_to_consider)
             while files_this_categ_courant != []:
                 files_batch = files_this_categ_courant[:batch_size]
                 temp = temp+batch_size
                 files_this_categ_courant = [f for f in files_this_categ_courant if f not in files_batch] #we a re going to train on this 10 files
                 x, y = load_data(files_batch, filtered=data_filtered)
-
                 x, y = model.prepare_batch(x, y)
                 y_pred = model(x).double()
                 torch.cuda.empty_cache()
                 if cuda_avail:
                     y_pred = y_pred.to(device=cuda2)
-                y = y.double()
+                y = y.double() #(Batchsize, maxL, 18)
+                y = y[:,:,idx_to_consider]
+                y_pred = y_pred[:,:,idx_to_consider]
                 optimizer.zero_grad()
+
                 loss = criterion(y,y_pred)
                 loss.backward()
                 optimizer.step()
