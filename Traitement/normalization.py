@@ -70,6 +70,6 @@ def normalize_data_per_corpus(corpus,max="All") :
         normalize_data(sp,max)
 
 
-corpus =["Haskins"]
+#orpus =["Haskins"]
 
-normalize_data_per_corpus("Haskins")
+#normalize_data_per_corpus("Haskins")
