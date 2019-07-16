@@ -66,7 +66,7 @@ def traitement_general_haskins(max="All"):
         if max != "All":
             N = max
 
-        xtrm = 3
+        xtrm = 30
         frame_time = 25
         hop_time = 10  # en ms
         hop_length = int((hop_time * sampling_rate_wav) / 1000)
@@ -96,7 +96,7 @@ def traitement_general_haskins(max="All"):
             shutil.rmtree(os.path.join(path_files_treated, "ema_filtered"))
             shutil.rmtree(os.path.join(path_files_treated, "mfcc"))
 
-    create_and_empty_directories()
+        create_and_empty_directories()
         xtrm = 30
         weights = low_pass_filter_weight(cut_off=10, sampling_rate=sampling_rate_ema)
        # sampling_rate_wav_init = 44100
