@@ -3,7 +3,7 @@ import numpy as np
 import random
 import os
 from os.path import dirname
-
+import glob
 def normalize_data(speaker):
     """
     calcule puis sauvegarde les données EMA normalisées.
@@ -34,7 +34,14 @@ def normalize_data(speaker):
 
     if not(os.path.exists(os.path.join(path_speaker, "ema_norma"))):
         os.mkdir(os.path.join(path_speaker, "ema_norma"))
+
+    files = glob.glob(os.path.join(path_speaker, "ema_norma", "*"))
+    files += glob.glob(os.path.join(path_speaker, "ema_filtered_norma", "*"))
+    for f in files:
+        os.remove(f)
+
     N = len(EMA_files)
+
 
     for i in range(N):
         if i % 500 == 0:

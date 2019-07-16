@@ -9,7 +9,7 @@ import numpy as np
 import scipy
 import torch
 from Apprentissage.velum_modele import learn_velum
-
+import glob
    # from velum_modele import learn_velum
 import matplotlib.pyplot as plt
 articulators = [
@@ -57,6 +57,7 @@ def add_vocal_tract(speaker,max):
         return TBCL
 
 
+
     def add_velum(mfcc):
         model = learn_velum(hidden_dim=200, input_dim=429, output_dim=2, name_file="modele_velum").double()
         model_to_load = os.path.join(root_folder, "Apprentissage", "saved_models", "modeles_valides",
@@ -92,6 +93,10 @@ def add_vocal_tract(speaker,max):
 
     if not os.path.exists(os.path.join(root_folder,"Donnees_pretraitees",speaker_2,"ema_VT")):
         os.makedirs(os.path.join(root_folder,"Donnees_pretraitees",speaker_2,"ema_VT"))
+
+    files = glob.glob(os.path.join(root_folder,"Donnees_pretraitees",speaker_2,"ema_VT","*"))
+    for f in files:
+        os.remove(f)
 
     EMA_files_names = sorted(
         [name[:-4] for name in os.listdir(files_path) if name.endswith('.npy')])

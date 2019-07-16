@@ -12,7 +12,6 @@ from add_vocal_tract import add_vocal_tract_per_corpus
 from split_sentences import split_sentences
 from normalization import normalize_data_per_corpus
 
-
 def main_traitement(corpus_to_treat = ["mocha","usc","MNGU0","Haskins"],max="All",split=False):
     root_path = dirname(dirname(os.path.realpath(__file__)))
 
