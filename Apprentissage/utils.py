@@ -58,7 +58,6 @@ def load_filenames(train_on,batch_size,part=["train"]):
 
 def load_filenames_deter(train_on,part=["train"]):
     path_files = os.path.join(os.path.dirname(os.getcwd()),"Donnees_pretraitees","fileset")
-
     filenames = []
     for speaker in train_on:
         for p in part:
