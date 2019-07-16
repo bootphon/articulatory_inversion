@@ -30,7 +30,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
     data_filtered=True
     modele_filtered=True
     train_on =  ["F01","F02","F03","F04","M01","M02","M03","M04","F1","F5","M1",
-                 "M3","maps0","faet0",'mjjn0',"falh0","ffes0","MNGU0","fsew0","msak0"]
+                 "M3","maps0","faet0",'mjjn0',"falh0","ffes0","fsew0","msak0","MNGU0"]
 
     train_on = ["F1", "F5", "maps0", "faet0", 'mjjn0', "falh0", "ffes0", "MNGU0", "fsew0", "msak0"]
 
@@ -84,9 +84,6 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
     model_dict.update(loaded_state)
     model.load_state_dict(model_dict)
 
-  #  previous_epoch = 0
-
-  #  print("previous epoch  :", previous_epoch)
     if cuda_avail:
         model = model.cuda(device=cuda2)
         torch.backends.cuda.cufft_plan_cache.max_size
@@ -110,6 +107,14 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
     criterion = criterion_pearson
 
     def read_csv_arti_ok_per_speaker():
+        """
+        :return:
+        dictionnaire avec en clé les différentes categories de speaker (categ de A à F pour le moment). Au sein
+        d'une catégorie les speakers ont les mêmes arti valides. Ces catégories sont tirées du fichier CSV qui est lu
+        et peut être modifié par l'utilisateur.
+        La valeur associée à une categorie est un autre dictionnaire donnant les speakers concernés par cette catégorie
+        et les articulateurs concernés, sous forme d'une liste de 18 0 et 1, avec un 1 pour les arti valides.
+        """
         arti_per_speaker = os.path.join(root_folder,"Apprentissage", "articulators_per_speaker.csv")
         csv.register_dialect('myDialect', delimiter=';')
         categ_of_speakers = dict()
@@ -120,7 +125,6 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
                 categ_of_speakers[categ] = dict()
                 categ_of_speakers[categ]["sp"] = []
                 categ_of_speakers[categ]["arti"] = None
-
             for row in reader:
                 categ_of_speakers[row[19]]["sp"].append(row[0])
                 if categ_of_speakers[row[19]]["arti"] != None:
@@ -129,7 +133,6 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
                 else:
                     categ_of_speakers[row[19]]["arti"] = row[1:19]
         return categ_of_speakers
-
     categ_of_speakers = read_csv_arti_ok_per_speaker() #dictionnaire en clé la categorie en valeur un dictionnaire
 #avec les speakers dans la catégorie et les arti concernées par cette categorie
 
@@ -191,7 +194,10 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
                 temp = temp+batch_size
                 files_this_categ_courant = [f for f in files_this_categ_courant if f not in files_batch] #we a re going to train on this 10 files
                 x, y = load_data(files_batch, filtered=data_filtered)
-                x, y = model.prepare_batch(x, y)
+                try :
+                    x, y = model.prepare_batch(x, y)
+                except:
+                    print("pbm avec {}".format(files_batch))
                 y_pred = model(x).double()
                 torch.cuda.empty_cache()
                 if cuda_avail:
