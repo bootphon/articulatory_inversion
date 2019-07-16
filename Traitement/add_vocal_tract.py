@@ -112,19 +112,21 @@ def add_vocal_tract(speaker,max):
             wav,sr = librosa.load(os.path.join(wav_path, EMA_files_names[i] + ".wav"),sr = sampling_rate_wav)
           #  voicing = add_voicing(wav, ema, sampling_rate_wav)
           #  velum_xy = ema[:,-2:]
-            ema = np.concatenate((ema,np.zeros((len(ema),5))),axis=1)
+            ema = np.concatenate((ema,np.zeros((len(ema),4))),axis=1)
+            ema[:,15:18] = ema[:,12:15] # met les velum dans les 2 dernieres arti
+            ema[:,12:16] = 0 #les 4 autres colonnes vont etre remplies avec les VT par la suite
 
         elif speaker in ["MNGU0","maps0","mjjn0"]: # 12 arti de 0 à 11
             wav, sr = librosa.load(os.path.join(wav_path, EMA_files_names[i] + ".wav"), sr=sampling_rate_wav)
            # voicing = add_voicing(wav, ema, sampling_rate_wav)
             mfcc = np.load(os.path.join(mfcc_path, EMA_files_names[i] + ".npy"))
           #  velum_xy = add_velum(mfcc)
-            ema = np.concatenate((ema,np.zeros((len(ema),7))),axis=1)
+            ema = np.concatenate((ema,np.zeros((len(ema),6))),axis=1)
 
         elif speaker in ["F1","F5","M1","M3"]:
             wav = np.load(os.path.join(wav_path, EMA_files_names[i] + ".npy"))
             mfcc = np.load(os.path.join(mfcc_path,EMA_files_names[i]+".npy"))
-            ema = np.concatenate((ema,np.zeros((len(ema),7))),axis=1)
+            ema = np.concatenate((ema,np.zeros((len(ema),6))),axis=1)
 
             if len(ema)!= len(mfcc):
                 print("pbm shape",len(ema),len(mfcc),EMA_files_names[i])
@@ -134,7 +136,7 @@ def add_vocal_tract(speaker,max):
         elif speaker in  ["F01","F02","F03","F04","M01","M02","M03","M04"] : #haskins
             wav = np.reshape(np.load(os.path.join(wav_path, EMA_files_names[i] + ".npy")),-1)
             mfcc = np.load(os.path.join(mfcc_path, EMA_files_names[i] + ".npy"))
-            ema = np.concatenate((ema, np.zeros((len(ema), 7))), axis=1)
+            ema = np.concatenate((ema, np.zeros((len(ema), 6))), axis=1)
             if len(ema) != len(mfcc):
                 print("pbm shape", len(ema), len(mfcc), EMA_files_names[i])
            # voicing = add_voicing(wav, ema, sampling_rate_wav)
@@ -144,6 +146,9 @@ def add_vocal_tract(speaker,max):
         ema[:, 13] = lip_protrusion
         ema[:, 14] = TTCL
         ema[:, 15] = TBCL
+
+        if ema.shape[1] != 18 :
+            print("pbm ema shape",speaker_2,EMA_files_names[i])
 
    #     ema[:, 16:18] = velum_xy
         np.save(os.path.join(root_folder,"Donnees_pretraitees",speaker_2,"ema_VT",EMA_files_names[i]),ema)
@@ -169,7 +174,7 @@ def add_vocal_tract_per_corpus(corpus,max="All") :
         add_vocal_tract(sp,max = max)
 
 #corpus = ["mocha","usc","MNGU0","Haskins"]
-
+#add_vocal_tract("F1",max=30)
 #for co in corpus :
  #   print("adding vt for corpus ",co)
   #  add_vocal_tract_per_corpus(co)
