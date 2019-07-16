@@ -122,11 +122,40 @@ def get_fileset_names(speaker):
     outF.write('\n'.join(valid_files) + '\n')
     outF.close()
 
+
+def get_fileset_names_per_corpus(corpus):
+    """
+    :param speaker: pour le moment fsew0,msak0 ou MNGU0
+    :return: rien
+    lit tous les numpy mfcc et ema correspondant au speaker et les concatène pour avoir une liste de toutes les données.
+    On normalise les mfcc et les ema (soustrait moyenne et divise par écart type)
+    On divise en deux les phrases plus longues que 800 frames mfcc.
+
+    On a donc une liste X et une liste Y, qu'on va diviser en train et test.
+    """
+
+    if corpus == "MNGU0":
+        speakers = ["MNGU0"]
+    elif corpus == "usc":
+        speakers = ["F1", "F5", "M1", "M3"]
+    elif corpus == "Haskins":
+        speakers = ["F01", "F02", "F03", "F04", "M01", "M02", "M03", "M04"]
+
+    elif corpus == "mocha":
+        speakers = ["fsew0", "msak0", "faet0", "ffes0", "maps0", "mjjn0", "falh0"]
+    else:
+        print("vous navez pas choisi un des corpus")
+
+    for sp in speakers:
+        get_fileset_names(sp)
+
+
 speakers =  ["F01","F02","F03","F04","M01","M02","M03","M04","F1","F5","M1","M3"
-    ,"maps0","faet0",'mjjn0',"ffes0","falh0","MNGU0"]
+    ,"maps0","faet0",'mjjn0',"ffes0","msak0","falh0","MNGU0"]
 for sp in speakers :
-    print("speaker :",sp)
     get_fileset_names(sp)
+
+ #   print("speaker :",sp)
 
 #create_fileset("fsew0")
 #create_fileset("msak0")
