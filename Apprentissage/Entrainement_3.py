@@ -56,7 +56,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
 
     hidden_dim = 300
     input_dim = 429
-    batch_size = 3
+    batch_size = 10
     print("batch size",batch_size)
 
     early_stopping = EarlyStopping(name_file,patience=patience, verbose=True)
