@@ -50,7 +50,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
     print(" cuda ?", cuda_avail)
     output_dim = 18
 
-    name_file = "test_on_" + test_on
+    name_file = "test_on_" + test_on+"_idx_"+select_arti+"_onlycorpus_"+only_on_corpus
     print("name file : ",name_file)
 #   logger = Logger('./log_' + name_file)
 
