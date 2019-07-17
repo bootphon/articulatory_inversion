@@ -19,6 +19,7 @@ import matplotlib.pyplot as plt
 import scipy
 from os import listdir
 #from logger import Logger
+import json
 
 
 root_folder = os.path.dirname(os.getcwd())
@@ -114,35 +115,9 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
         return -loss
     criterion = criterion_pearson
 
-    def read_csv_arti_ok_per_speaker():
-        """
-        :return:
-        dictionnaire avec en clé les différentes categories de speaker (categ de A à F pour le moment). Au sein
-        d'une catégorie les speakers ont les mêmes arti valides. Ces catégories sont tirées du fichier CSV qui est lu
-        et peut être modifié par l'utilisateur.
-        La valeur associée à une categorie est un autre dictionnaire donnant les speakers concernés par cette catégorie
-        et les articulateurs concernés, sous forme d'une liste de 18 0 et 1, avec un 1 pour les arti valides.
-        """
-        arti_per_speaker = os.path.join(root_folder,"Apprentissage", "articulators_per_speaker.csv")
-        csv.register_dialect('myDialect', delimiter=';')
-        categ_of_speakers = dict()
-        with open(arti_per_speaker, 'r') as csvFile:
-            reader = csv.reader(csvFile, dialect="myDialect")
-            next(reader)
-            for categ in ["A", "B", "C", "D", "E", "F"]:
-                categ_of_speakers[categ] = dict()
-                categ_of_speakers[categ]["sp"] = []
-                categ_of_speakers[categ]["arti"] = None
-            for row in reader:
-                categ_of_speakers[row[19]]["sp"].append(row[0])
-                if categ_of_speakers[row[19]]["arti"] != None:
-                    if categ_of_speakers[row[19]]["arti"] != row[1:19]:
-                        print("check arti and category for categ {}".format(row[19]))
-                else:
-                    categ_of_speakers[row[19]]["arti"] = row[1:19]
-        return categ_of_speakers
-    categ_of_speakers = read_csv_arti_ok_per_speaker() #dictionnaire en clé la categorie en valeur un dictionnaire
-#avec les speakers dans la catégorie et les arti concernées par cette categorie
+    with open('categ_of_speakers.json', 'r') as fp:
+        categ_of_speakers = json.load(fp) #dictionnaire en clé la categorie en valeur un dictionnaire
+                                            # #avec les speakers dans la catégorie et les arti concernées par cette categorie
 
     optimizer = torch.optim.Adam(model.parameters(), lr=lr ) #, betas = beta_param)
 
@@ -152,19 +127,23 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
     N_train,N_valid,N_test=0,0,0
     path_files = os.path.join(os.path.dirname(os.getcwd()),"Donnees_pretraitees","fileset")
 
-
     for speaker in train_on:
         N_train = N_train + len(open(os.path.join(path_files,speaker+"_train.txt"), "r").read().split())
         N_valid = N_valid + len(open(os.path.join(path_files,speaker+"_valid.txt"), "r").read().split())
 
     files_for_train = load_filenames_deter(train_on, part=["train", "test"])
+    print("len files for train",len(files_for_train))
     files_for_valid = load_filenames_deter(train_on, part=["valid"])
+    print("lenfiles for valid",len(files_for_valid))
+
     files_for_test = load_filenames_deter([test_on], part=["train", "valid", "test"])
+    print("len files for test",len(files_for_test))
 
     print('N_train',N_train)
 
     files_per_categ = dict()
     for categ in categ_of_speakers.keys():
+
         files_per_categ[categ] = dict()
         sp_in_categ = categ_of_speakers[categ]["sp"]
         sp_in_categ = [sp for sp in sp_in_categ if sp in train_on]
@@ -172,7 +151,6 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
 
         files_train_this_categ = [[f for f in files_for_train if sp.lower() in f ]for sp in sp_in_categ]
         files_train_this_categ = [item for sublist in files_train_this_categ for item in sublist] # flatten la liste de liste
-
 
         files_valid_this_categ = [[f for f in files_for_valid if sp.lower() in f] for sp in sp_in_categ]
         files_valid_this_categ = [item for sublist in files_valid_this_categ for item in sublist]  # flatten la liste de liste
