@@ -222,26 +222,20 @@ class my_ac2art_modele(torch.nn.Module):
                 y_torch = torch.from_numpy(y).double().reshape(1,L,self.output_dim) #y (1,L,13)
                 if self.cuda_avail:
                     x_torch = x_torch.to(device=self.cuda2)
-
-
                 y_pred_torch = self(x_torch).double() #sortie y_pred (1,L,13)
                 if self.cuda_avail:
                     y_pred_torch = y_pred_torch.cpu()
                 y_pred = y_pred_torch.detach().numpy().reshape((L, self.output_dim))  # y_pred (L,13)
                 the_loss = criterion(y_torch, y_pred_torch)  #loss entre données de taillees  (1,L,13)
                 loss_test += the_loss.item()
-                if i in indices_to_plot:
+                if k in indices_to_plot:
                     self.plot_results(y, y_pred, suffix=suffix + str(i))
 
-                rmse = np.sqrt(np.mean(np.square(y - y_pred), axis=0))  # calcule du rmse à la main
-                rmse = np.reshape(rmse, (1,self.output_dim)) #dénormalisation et taille (1,13)
-                all_diff = np.concatenate((all_diff, rmse))
-
                 pearson = [0]*self.output_dim
-                for i in range(self.output_dim):
-                    pearson[i]= np.corrcoef(y[:,i].T,y_pred[:,i].T)[0,1]
+                for k in range(self.output_dim):
+                    pearson[k]= np.corrcoef(y[:,k].T,y_pred[:,k].T)[0,1]
                 pearson = np.array(pearson).reshape((1,self.output_dim))
-                pearson[np.isnan(pearson)] = 1
+                pearson[np.isnan(pearson)] = 0
             # print(pearson)
              #   y_1 = (y_torch - torch.mean(y_torch,dim=[0,1]))*torch.from_numpy(std_ema) #(L,13)
               #  y_pred_1 = (y_pred_torch - torch.mean(y_pred_torch,dim=[0,1]))*torch.from_numpy(std_ema )# (L,13)
