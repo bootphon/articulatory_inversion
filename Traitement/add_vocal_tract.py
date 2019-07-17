@@ -26,7 +26,7 @@ articulators_after = [
 root_folder = os.path.dirname(os.getcwd())
 
 
-def add_vocal_tract(speaker,max):
+def add_vocal_tract(speaker,max="All"):
  #   print("adding vocal tracts for speaker {}".format(speaker))
     def add_lip_aperture(ema):
         ind_1, ind_2 = [articulators.index("ul_y"), articulators.index("ll_y")]
