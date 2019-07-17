@@ -26,11 +26,21 @@ fileset_path = os.path.join(root_folder, "Donnees_pretraitees", "fileset")
 
 print(sys.argv)
 
-def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,select_arti=False):
+def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,select_arti=False,only_on_corpus=True):
     data_filtered=True
     modele_filtered=True
     train_on =  ["F01","F02","F03","F04","M01","M02","M03","M04","F1","F5","M1",
                  "M3","maps0","faet0",'mjjn0',"falh0","ffes0","fsew0","msak0","MNGU0"]
+
+    if only_on_corpus :
+        if test_on in ["F01","F02","F03","F04","M01","M02","M03","M04"]:
+            train_on = ["F01","F02","F03","F04","M01","M02","M03","M04"]
+
+        elif test_on in ["F1","F5","M1","M3"]:
+            train_on = ["F1","F5","M1","M3"]
+
+        elif test_on in ["maps0","faet0",'mjjn0',"falh0","ffes0","fsew0","msak0"]:
+            train_on = ["maps0","faet0",'mjjn0',"falh0","ffes0","fsew0","msak0"]
 
     train_on.remove(test_on)
     print("train_on :",train_on)
@@ -308,14 +318,18 @@ if __name__=='__main__':
     parser.add_argument('select_arti', metavar='select_arti', type=bool,
                         help='ssi dans la retropro on ne considere que les arti bons')
 
+    parser.add_argument('only_on_corpus', metavar='only_on_corpus', type=bool,
+                        help='ssi dans la retropro on ne considere que les arti bons')
+
     args = parser.parse_args()
     test_on =  sys.argv[1]
-    n_epochs = int( sys.argv[2] )
+    n_epochs = int(sys.argv[2])
     delta_test = int(sys.argv[3])
     patience = int(sys.argv[4])
     lr = float(sys.argv[5])
     to_plot = sys.argv[6].lower()=="true"
     select_arti = sys.argv[7].lower()=="true"
+    only_on_corpus = sys.argv[8].lower()=="true"
 
     train_model(test_on = test_on,n_epochs=n_epochs,delta_test=delta_test,patience=patience,
-                lr = lr,to_plot=to_plot,select_arti=select_arti)
+                lr = lr,to_plot=to_plot,select_arti=select_arti,only_on_corpus = only_on_corpus)
