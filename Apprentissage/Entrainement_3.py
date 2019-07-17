@@ -314,7 +314,7 @@ if __name__=='__main__':
     patience = int(sys.argv[4])
     lr = float(sys.argv[5])
     to_plot = sys.argv[6].lower()=="true"
-    select_arti = sys.arg[7].lower()=="true"
+    select_arti = sys.argv[7].lower()=="true"
 
     train_model(test_on = test_on,n_epochs=n_epochs,delta_test=delta_test,patience=patience,
                 lr = lr,to_plot=to_plot,select_arti=select_arti)
