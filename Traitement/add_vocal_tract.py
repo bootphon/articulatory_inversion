@@ -119,7 +119,7 @@ def add_vocal_tract(speaker,max="All"):
           #  voicing = add_voicing(wav, ema, sampling_rate_wav)
           #  velum_xy = ema[:,-2:]
             ema = np.concatenate((ema,np.zeros((len(ema),4))),axis=1)
-            ema[:,15:18] = ema[:,12:15] # met les velum dans les 2 dernieres arti
+            ema[:,16:18] = ema[:,12:14] # met les velum dans les 2 dernieres arti
             ema[:,12:16] = 0 #les 4 autres colonnes vont etre remplies avec les VT par la suite
 
         elif speaker in ["MNGU0","maps0","mjjn0"]: # 12 arti de 0 à 11
