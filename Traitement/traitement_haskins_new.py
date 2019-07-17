@@ -190,7 +190,6 @@ def traitement_general_haskins(N_max):
         for i in range(N):
             if i %100==0:
                 print("{} out of {}".format(i,N))
-                print(EMA_files[i])
 
             ema,mfcc = read_ema_and_wav(i)
             np.save(os.path.join(path_files_treated, "ema", EMA_files[i]), ema)
@@ -216,10 +215,10 @@ def traitement_general_haskins(N_max):
     n_coeff = 13
     cutoff = 10
     speakers = ["F01", "F02", "F03", "F04", "M01", "M02", "M03", "M04"]
+    speakers = ["M01", "M02", "M03", "M04"]
 
     for sp in speakers :
         print("speaker ",sp)
         traitement_haskins(sp,N_max = N_max)
 
 traitement_general_haskins(N_max = "All")
-
