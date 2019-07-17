@@ -9,6 +9,7 @@ import numpy as np
 import scipy
 import torch
 from Apprentissage.velum_modele import learn_velum
+from Traitement.fonctions_utiles import get_speakers_per_corpus
 import glob
    # from velum_modele import learn_velum
 import matplotlib.pyplot as plt
@@ -161,30 +162,9 @@ def add_vocal_tract(speaker,max):
 #speakers =  ["F01","F02","F03","F04","M01","M02","M03","M04","F5","F1","M1","M3"
  #   ,"maps0","faet0",'mjjn0',"ffes0","MNGU0","fsew0","msak0"]
 
-def add_vocal_tract_per_corpus(corpus,max="All") :
-    if corpus == "MNGU0":
-        speakers = ["MNGU0"]
-    elif corpus == "usc":
-        speakers = ["F1", "F5", "M1","M3"]
-    elif corpus == "Haskins":
-        speakers=  ["F01","F02","F03","F04","M01","M02","M03","M04"]
-
-    elif corpus == "mocha":
-        speakers =["fsew0","msak0","faet0","ffes0","maps0","mjjn0","falh0"]
-
-    else :
-        print("vous navez pas choisi un des corpus")
-
+def add_vocal_tract_per_corpus(corpus, max="All") :
+    speakers = get_speakers_per_corpus(corpus)
     for sp in speakers :
         add_vocal_tract(sp,max = max)
 
-
-#corpus = ["mocha","usc","MNGU0","Haskins"]
-#add_vocal_tract("F1",max=30)
-#for co in corpus :
- #   print("adding vt for corpus ",co)
-  #  add_vocal_tract_per_corpus(co)
-
-add_vocal_tract("falh0",max="All")
-#add_vocal_tract("F01",max="All")
-#add_vocal_tract("F02",max="All")
+add_vocal_tract("F01")
