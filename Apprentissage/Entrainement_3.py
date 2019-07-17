@@ -110,7 +110,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
         deno = torch.max(deno,minim)
         loss = nume/deno
         loss = torch.sum(loss) #pearson doit etre le plus grand possible
-        loss = torch.div(loss, torch.tensor(y.shape[2],dtype=torch.float64)) # correlation moyenne par arti
+        #loss = torch.div(loss, torch.tensor(y.shape[2],dtype=torch.float64)) # correlation moyenne par arti
         return -loss
     criterion = criterion_pearson
 
@@ -163,13 +163,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
 
     N_test = len(files_for_test)
     print('N_train',N_train)
-    n_iteration = int(N_train / batch_size)
-    n_iteration_validation = int(N_valid/batch_size)
-   # n_iteration_validation=2
-    n_iteration = 100
-    #  n_iteration  =1
-    n_iteration_test = int(N_test/batch_size)
-    test_files_names = []
+
 
     files_per_categ = dict()
     for categ in categ_of_speakers.keys():
@@ -211,7 +205,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
                 x, y = load_data(files_batch, filtered=data_filtered)
                 try :
                     x, y = model.prepare_batch(x, y)
-                except:
+                except :
                     x, y = model.prepare_batch(x, y)
                     print("pbm avec {}".format(files_batch))
                 y_pred = model(x).double()
