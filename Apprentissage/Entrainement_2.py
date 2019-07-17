@@ -111,19 +111,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
         return -loss
     criterion = criterion_pearson
 
-    def read_csv_arti_ok_per_speaker():
-        arti_per_speaker = os.path.join(root_folder,"Apprentissage", "articulators_per_speaker.csv")
-        csv.register_dialect('myDialect', delimiter=';')
-        arti_ok_per_speaker = dict()
-        with open(arti_per_speaker, 'r') as csvFile:
-            reader = csv.reader(csvFile, dialect="myDialect")
-            next(reader)
-            for row in reader:
-                arti_ok_per_speaker[row[0]] = row[1:19]
-        return arti_ok_per_speaker
 
-    arti_ok_per_speaker = read_csv_arti_ok_per_speaker() #dictionnaire en clé le speaker en valeurs liste des arti ok
-     # dans le meme ordre que dhabitude
 
     optimizer = torch.optim.Adam(model.parameters(), lr=lr ) #, betas = beta_param)
 
@@ -133,15 +121,12 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
     N_train,N_valid,N_test=0,0,0
     path_files = os.path.join(os.path.dirname(os.getcwd()),"Donnees_pretraitees","fileset")
 
-    for speaker in train_on:
-        N_train = N_train + len(open(os.path.join(path_files,speaker+"_train.txt"), "r").read().split())
-        N_valid = N_valid + len(open(os.path.join(path_files,speaker+"_valid.txt"), "r").read().split())
 
     files_for_train = load_filenames_deter(train_on, part=["train", "test"])
     files_for_valid = load_filenames_deter(train_on, part=["valid"])
     files_for_test = load_filenames_deter([test_on], part=["train", "valid", "test"])
-    print("len files for train",len(files_for_train))
-
+    N_train = len(files_for_train)
+    N_valid = len(files_for_valid)
     N_test = len(files_for_test)
     print('N_train',N_train)
     n_iteration = int(N_train / batch_size)
