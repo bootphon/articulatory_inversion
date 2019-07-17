@@ -37,7 +37,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
             train_on = ["F01","F02","F03","F04","M01","M02","M03","M04"]
 
         elif test_on in ["F1","F5","M1","M3"]:
-            train_on = ["F1","F5","M1","M3"]
+            train_on = ["F1","M1","M3"]
 
         elif test_on in ["maps0","faet0",'mjjn0',"falh0","ffes0","fsew0","msak0"]:
             train_on = ["maps0","faet0",'mjjn0',"falh0","ffes0","fsew0","msak0"]
@@ -173,7 +173,6 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
 
     files_per_categ = dict()
     for categ in categ_of_speakers.keys():
-        print("categ",categ)
         files_per_categ[categ] = dict()
 
         sp_in_categ = categ_of_speakers[categ]["sp"]
@@ -201,7 +200,6 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
         #random.shuffle(files_for_train)
 
         for categ in files_per_categ.keys():  # de A à F pour le moment
-            print("categ ",categ)
             files_this_categ_courant = files_per_categ[categ]["train"] #on na pas encore apprit dessus au cours de cette epoch
             temp = 0
             arti_to_consider = categ_of_speakers[categ]["arti"] #liste de 18 0/1 qui indique les arti à considérer
@@ -235,7 +233,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
         if epoch%delta_test ==0:  #toutes les delta_test epochs on évalue le modèle sur validation et on sauvegarde le modele si le score est meilleur
             loss_vali = 0
             for categ in files_per_categ.keys():  # de A à F pour le moment
-                print("categ ", categ)
+
                 files_this_categ_courant = files_per_categ[categ]["valid"]  # on na pas encore apprit dessus au cours de cette epoch
                 temp = 0
                 arti_to_consider = categ_of_speakers[categ]["arti"]  # liste de 18 0/1 qui indique les arti à considérer
