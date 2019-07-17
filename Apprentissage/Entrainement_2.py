@@ -132,10 +132,8 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
     path_files = os.path.join(os.path.dirname(os.getcwd()),"Donnees_pretraitees","fileset")
 
     for speaker in train_on:
-        print(speaker)
         N_train = N_train + len(open(os.path.join(path_files,speaker+"_train.txt"), "r").read().split())
         N_valid = N_valid + len(open(os.path.join(path_files,speaker+"_valid.txt"), "r").read().split())
-        print(N_train)
 
     files_for_train = load_filenames_deter(train_on, part=["train", "test"])
     files_for_valid = load_filenames_deter(train_on, part=["valid"])
@@ -157,8 +155,6 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
         for ite in range(n_iteration):
             if ite % 50 == 0:
                 print("{} out of {}".format(ite, n_iteration))
-           # print(files_for_train[ite:ite+batch_size])
-            print(files_for_train[ite:ite+batch_size])
             x, y = load_data(files_for_train[ite:ite + batch_size], filtered=data_filtered)
             x, y = model.prepare_batch(x, y)
             y_pred = model(x).double()
