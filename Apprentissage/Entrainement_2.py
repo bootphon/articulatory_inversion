@@ -126,6 +126,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
     files_for_valid = load_filenames_deter(train_on, part=["valid"])
     files_for_test = load_filenames_deter([test_on], part=["train", "valid", "test"])
     print("len files for train",len(files_for_train))
+    print("len files for test",len(files_for_test))
     N_train = len(files_for_train)
     N_valid = len(files_for_valid)
     N_test = len(files_for_test)
@@ -220,9 +221,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
 
     random.shuffle(files_for_test)
     x, y = load_data(files_for_test)
-
     print("evaluation on speaker {}".format(test_on))
-
     std_speaker=  np.load(os.path.join(root_folder, "Traitement", "norm_values","std_ema_"+test_on+".npy"))
     model.evaluate_on_test(criterion=criterion,verbose=True, X_test=x, Y_test=y,
                            to_plot=to_plot, std_ema=max(std_speaker), suffix=test_on)
