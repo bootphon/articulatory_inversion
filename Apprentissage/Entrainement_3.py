@@ -169,23 +169,28 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
         sp_in_categ = categ_of_speakers[categ]["sp"]
         sp_in_categ = [sp for sp in sp_in_categ if sp in train_on]
         # fichiers qui appartiennent à la categorie car le nom du speaker apparait touojurs dans le nom du fichier
+
         files_train_this_categ = [[f for f in files_for_train if sp.lower() in f ]for sp in sp_in_categ]
         files_train_this_categ = [item for sublist in files_train_this_categ for item in sublist] # flatten la liste de liste
-        N_iter_categ = int(len(files_train_this_categ)/batch_size)+1         # on veut qu'il y a en ait un multiple du batch size , on en double certains
-        n_a_ajouter = batch_size*N_iter_categ - len(files_train_this_categ) #si 14 element N_iter_categ vaut 2 et n_a_ajouter vaut 6
-        print("n a ajouter",n_a_ajouter)
-        files_train_this_categ = files_train_this_categ + files_train_this_categ[:n_a_ajouter] #nbr de fichier par categorie multiple du batch size
-        random.shuffle(files_train_this_categ)
-        files_per_categ[categ]["train"] = files_train_this_categ
+
 
         files_valid_this_categ = [[f for f in files_for_valid if sp.lower() in f] for sp in sp_in_categ]
         files_valid_this_categ = [item for sublist in files_valid_this_categ for item in sublist]  # flatten la liste de liste
-        N_iter_categ = int(len(  files_valid_this_categ) / batch_size) + 1  # on veut qu'il y a en ait un multiple du batch size , on en double certains
-        n_a_ajouter = batch_size * N_iter_categ - len(
-            files_valid_this_categ)  # si 14 element N_iter_categ vaut 2 et n_a_ajouter vaut 6
-        files_valid_this_categ = files_valid_this_categ + files_valid_this_categ[:n_a_ajouter] # nbr de fichier par categorie multiple du batch size
-        random.shuffle(files_valid_this_categ)
-        files_per_categ[categ]["valid"] = files_valid_this_categ
+
+        if files_train_this_categ != [] : #meaning we have at least one file in this categ
+            N_iter_categ = int(len(files_train_this_categ)/batch_size)+1         # on veut qu'il y a en ait un multiple du batch size , on en double certains
+            n_a_ajouter = batch_size*N_iter_categ - len(files_train_this_categ) #si 14 element N_iter_categ vaut 2 et n_a_ajouter vaut 6
+            print("n a ajouter",n_a_ajouter)
+            files_train_this_categ = files_train_this_categ + files_train_this_categ[:n_a_ajouter] #nbr de fichier par categorie multiple du batch size
+            random.shuffle(files_train_this_categ)
+            files_per_categ[categ]["train"] = files_train_this_categ
+
+            N_iter_categ = int(len(  files_valid_this_categ) / batch_size) + 1  # on veut qu'il y a en ait un multiple du batch size , on en double certains
+            n_a_ajouter = batch_size * N_iter_categ - len(
+                files_valid_this_categ)  # si 14 element N_iter_categ vaut 2 et n_a_ajouter vaut 6
+            files_valid_this_categ = files_valid_this_categ + files_valid_this_categ[:n_a_ajouter] # nbr de fichier par categorie multiple du batch size
+            random.shuffle(files_valid_this_categ)
+            files_per_categ[categ]["valid"] = files_valid_this_categ
 
     for epoch in range(n_epochs):
         #random.shuffle(files_for_train)
