@@ -155,7 +155,7 @@ def get_fileset_names_per_corpus(corpus):
         get_fileset_names(sp)
 
 
-speakers =  ["F01","F02","F03","F04","M01","M02","M03","M04","F1","F5","M1","M3"
+speakers =  ["F01","F02","F03","F04","M01","M02","M03","M04","F1","F5","M1","M3","fsew0"
     ,"maps0","faet0",'mjjn0',"ffes0","msak0","falh0","MNGU0"]
 for sp in speakers :
     get_fileset_names(sp)
