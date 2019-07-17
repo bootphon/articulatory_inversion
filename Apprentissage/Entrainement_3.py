@@ -26,7 +26,7 @@ fileset_path = os.path.join(root_folder, "Donnees_pretraitees", "fileset")
 
 print(sys.argv)
 
-def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
+def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,select_arti=False):
     data_filtered=True
     modele_filtered=True
     train_on =  ["F01","F02","F03","F04","M01","M02","M03","M04","F1","F5","M1",
@@ -100,7 +100,8 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
         deno = torch.max(deno,minim)
         loss = nume/deno
         loss = torch.sum(loss) #pearson doit etre le plus grand possible
-        loss = torch.div(loss, torch.tensor(y.shape[2],dtype=torch.float64))
+        print("loss shape",loss.shape)
+        loss = torch.div(loss, torch.tensor(y.shape[2],dtype=torch.float64)) # correlation moyenne par arti
         return -loss
     criterion = criterion_pearson
 
@@ -211,8 +212,10 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
                 if cuda_avail:
                     y_pred = y_pred.to(device=cuda2)
                 y = y.double() #(Batchsize, maxL, 18)
-                y = y[:,:,idx_to_consider]
-                y_pred = y_pred[:,:,idx_to_consider]
+                if select_arti :
+                    y = y[:,:,idx_to_consider]
+                    y_pred = y_pred[:,:,idx_to_consider]
+
                 optimizer.zero_grad()
 
                 loss = criterion(y,y_pred)
@@ -240,8 +243,9 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
                     if cuda_avail:
                         y_pred = y_pred.to(device=cuda2)
                     y = y.double()  # (Batchsize, maxL, 18)
-                    y = y[:, :, idx_to_consider]
-                    y_pred = y_pred[:, :, idx_to_consider]
+                    if select_arti:
+                        y = y[:, :, idx_to_consider]
+                        y_pred = y_pred[:, :, idx_to_consider]
                     loss_courant = criterion(y, y_pred)
                     loss_vali += loss_courant.item()
 
@@ -300,6 +304,8 @@ if __name__=='__main__':
     parser.add_argument('lr', metavar='lr', type=str,
                         help='learning rate of Adam optimizer ')
     parser.add_argument('to_plot', metavar='to_plot', type=bool,         help='si true plot les resultats sur le test')
+    parser.add_argument('select_arti', metavar='select_arti', type=bool,         help='ssi dans la retropro on '
+                                                                                      'ne considere que les arti "bons"')
 
     args = parser.parse_args()
     test_on =  sys.argv[1]
@@ -308,6 +314,7 @@ if __name__=='__main__':
     patience = int(sys.argv[4])
     lr = float(sys.argv[5])
     to_plot = sys.argv[6].lower()=="true"
+    select_arti = sys.arg[7].lower()=="true"
 
     train_model(test_on = test_on,n_epochs=n_epochs,delta_test=delta_test,patience=patience,
-                lr = lr,to_plot=to_plot)
+                lr = lr,to_plot=to_plot,select_arti=select_arti)
