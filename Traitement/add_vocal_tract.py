@@ -89,13 +89,13 @@ def add_vocal_tract(speaker,max="All"):
         wav_path = os.path.join(root_folder, "Donnees_brutes", "Haskins_IEEE_Rate_Comparison_DB",speaker,"wav")
         sampling_rate_wav= 44100
 
-    mfcc_path = os.path.join(root_folder, "Donnees_pretraitees", speaker_2,"mfcc")
-    files_path = os.path.join(root_folder, "Donnees_pretraitees", speaker_2,"ema_filtered_norma")
+    mfcc_path = os.path.join(root_folder, "Donnees_pretraitees", speaker,"mfcc")
+    files_path = os.path.join(root_folder, "Donnees_pretraitees", speaker,"ema_filtered_norma")
 
-    if not os.path.exists(os.path.join(root_folder,"Donnees_pretraitees",speaker_2,"ema_VT")):
-        os.makedirs(os.path.join(root_folder,"Donnees_pretraitees",speaker_2,"ema_VT"))
+    if not os.path.exists(os.path.join(root_folder,"Donnees_pretraitees",speaker,"ema_VT")):
+        os.makedirs(os.path.join(root_folder,"Donnees_pretraitees",speaker,"ema_VT"))
 
-    files = glob.glob(os.path.join(root_folder,"Donnees_pretraitees",speaker_2,"ema_VT","*"))
+    files = glob.glob(os.path.join(root_folder,"Donnees_pretraitees",speaker,"ema_VT","*"))
     for f in files:
         os.remove(f)
 
@@ -157,7 +157,7 @@ def add_vocal_tract(speaker,max="All"):
             print("pbm ema shape",speaker_2,EMA_files_names[i])
 
    #     ema[:, 16:18] = velum_xy
-        np.save(os.path.join(root_folder,"Donnees_pretraitees",speaker_2,"ema_VT",EMA_files_names[i]),ema)
+        np.save(os.path.join(root_folder,"Donnees_pretraitees",speaker,"ema_VT",EMA_files_names[i]),ema)
 
 #speakers =  ["F01","F02","F03","F04","M01","M02","M03","M04","F5","F1","M1","M3"
  #   ,"maps0","faet0",'mjjn0',"ffes0","MNGU0","fsew0","msak0"]
@@ -167,4 +167,4 @@ def add_vocal_tract_per_corpus(corpus, max="All") :
     for sp in speakers :
         add_vocal_tract(sp,max = max)
 
-add_vocal_tract("F01")
+#add_vocal_tract("F01")
