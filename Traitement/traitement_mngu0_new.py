@@ -212,6 +212,8 @@ def traitement_general_mngu0(max="All"):
         N = max
 
     for i in range(N):
+        if i%50==0:
+            print("{} out of {}".format(i,N))
         ema = read_ema_file(i)
         mfcc = from_wav_to_mfcc(i)
         ema, mfcc = synchro_ema_mfcc(i, ema, mfcc)
@@ -221,9 +223,14 @@ def traitement_general_mngu0(max="All"):
         np.save(os.path.join(root_path, "Donnees_pretraitees",speaker, "ema_filtered", EMA_files[i]), ema_filtered)
         list_EMA_traj.append(ema_filtered)
         list_MFCC_frames.append(mfcc)
-
+    print("STEP 1/4 DONE")
     calculate_norm_values(list_EMA_traj, list_MFCC_frames)
+    print("STEP 2/4 DONE")
+
     normalize_data(speaker)
+    print("STEP 3/4 DONE")
     add_vocal_tract(speaker)
+    print("STEP 4/4 DONE")
+
 
 traitement_general_mngu0(max="All")
