@@ -100,7 +100,6 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
         deno = torch.max(deno,minim)
         loss = nume/deno
         loss = torch.sum(loss) #pearson doit etre le plus grand possible
-        print("loss shape",loss.shape)
         loss = torch.div(loss, torch.tensor(y.shape[2],dtype=torch.float64)) # correlation moyenne par arti
         return -loss
     criterion = criterion_pearson
