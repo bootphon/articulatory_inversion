@@ -148,7 +148,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
 
     plt.ioff()
     print("number of epochs : ", n_epochs)
-    valid_files_names = []
+
     N_train,N_valid,N_test=0,0,0
     path_files = os.path.join(os.path.dirname(os.getcwd()),"Donnees_pretraitees","fileset")
 
@@ -161,18 +161,14 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
     files_for_valid = load_filenames_deter(train_on, part=["valid"])
     files_for_test = load_filenames_deter([test_on], part=["train", "valid", "test"])
 
-    N_test = len(files_for_test)
     print('N_train',N_train)
-
 
     files_per_categ = dict()
     for categ in categ_of_speakers.keys():
         files_per_categ[categ] = dict()
-
         sp_in_categ = categ_of_speakers[categ]["sp"]
         sp_in_categ = [sp for sp in sp_in_categ if sp in train_on]
         # fichiers qui appartiennent à la categorie car le nom du speaker apparait touojurs dans le nom du fichier
-
         files_train_this_categ = [[f for f in files_for_train if sp.lower() in f ]for sp in sp_in_categ]
         files_train_this_categ = [item for sublist in files_train_this_categ for item in sublist] # flatten la liste de liste
         N_iter_categ = int(len(files_train_this_categ)/batch_size)+1         # on veut qu'il y a en ait un multiple du batch size , on en double certains
@@ -194,20 +190,18 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
         #random.shuffle(files_for_train)
 
         for categ in files_per_categ.keys():  # de A à F pour le moment
+            print("categ ", categ)
             files_this_categ_courant = files_per_categ[categ]["train"] #on na pas encore apprit dessus au cours de cette epoch
             temp = 0
             arti_to_consider = categ_of_speakers[categ]["arti"] #liste de 18 0/1 qui indique les arti à considérer
             idx_to_consider = [i for i,n in enumerate(arti_to_consider) if n=="1"]
+            print("n train dans categ",len(files_this_categ_courant))
             while files_this_categ_courant != []:
                 files_batch = files_this_categ_courant[:batch_size]
-                temp = temp+batch_size
-                files_this_categ_courant = [f for f in files_this_categ_courant if f not in files_batch] #we a re going to train on this 10 files
+                files_this_categ_courant = files_this_categ_courant[batch_size:] #we a re going to train on this 10 files
                 x, y = load_data(files_batch, filtered=data_filtered)
-                try :
-                    x, y = model.prepare_batch(x, y)
-                except :
-                    x, y = model.prepare_batch(x, y)
-                    print("pbm avec {}".format(files_batch))
+                x, y = model.prepare_batch(x, y)
+
                 y_pred = model(x).double()
                 torch.cuda.empty_cache()
                 if cuda_avail:
