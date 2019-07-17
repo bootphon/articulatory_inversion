@@ -193,6 +193,8 @@ def traitement_general_mocha(N_max):
         list_MFCC_frames = []
 
         for i in range(N):
+            if i%50 == 0:
+                print("{} out of {}".format(i,N))
             ema = read_ema_file(i)
             mfcc = from_wav_to_mfcc(i)
             ema,mfcc = synchro_ema_mfcc(i,ema,mfcc)
@@ -225,5 +227,5 @@ def traitement_general_mocha(N_max):
         traitement_mocha(sp,N_max = N_max)
 
 
-traitement_general_mocha(N_max = 30)
+traitement_general_mocha(N_max = "All")
 

@@ -232,8 +232,9 @@ def traitement_general_usc(N_max):
         if N_max != "All":
             N_2 = min(N_max,N_2)
         for i in range(N_2):
+            if i%100==0:
+                print("{} out of {}".format(i,N_2))
             ema = read_ema_file(i)
-
             mfcc = from_wav_to_mfcc(i)
             ema,mfcc = synchro_ema_mfcc(i,ema,mfcc)
             np.save(os.path.join(root_path, "Donnees_pretraitees",  speaker, "ema", EMA_files_2[i]), ema)

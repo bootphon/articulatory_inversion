@@ -212,7 +212,7 @@ def traitement_general_mngu0(max="All"):
         N = max
 
     for i in range(N):
-        if i%50==0:
+        if i%200==0:
             print("{} out of {}".format(i,N))
         ema = read_ema_file(i)
         mfcc = from_wav_to_mfcc(i)
