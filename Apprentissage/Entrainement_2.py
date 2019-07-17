@@ -140,6 +140,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
     files_for_train = load_filenames_deter(train_on, part=["train", "test"])
     files_for_valid = load_filenames_deter(train_on, part=["valid"])
     files_for_test = load_filenames_deter([test_on], part=["train", "valid", "test"])
+    print("len files for train",len(files_for_train))
 
     N_test = len(files_for_test)
     print('N_train',N_train)
