@@ -228,7 +228,7 @@ class my_ac2art_modele(torch.nn.Module):
                 y_pred = y_pred_torch.detach().numpy().reshape((L, self.output_dim))  # y_pred (L,13)
                 the_loss = criterion(y_torch, y_pred_torch)  #loss entre données de taillees  (1,L,13)
                 loss_test += the_loss.item()
-                if k in indices_to_plot:
+                if i in indices_to_plot:
                     self.plot_results(y, y_pred, suffix=suffix + str(i))
 
                 pearson = [0]*self.output_dim
