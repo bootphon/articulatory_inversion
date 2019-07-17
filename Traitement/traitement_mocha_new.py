@@ -225,5 +225,5 @@ def traitement_general_mocha(N_max):
         traitement_mocha(sp,N_max = N_max)
 
 
-traitement_general_mocha(N_max = "All")
+traitement_general_mocha(N_max = 30)
 
