@@ -302,9 +302,11 @@ if __name__=='__main__':
                         help='number of iterations in a row with decreasing validation score before stopping the train ')
     parser.add_argument('lr', metavar='lr', type=str,
                         help='learning rate of Adam optimizer ')
-    parser.add_argument('to_plot', metavar='to_plot', type=bool,         help='si true plot les resultats sur le test')
-    parser.add_argument('select_arti', metavar='select_arti', type=bool,         help='ssi dans la retropro on '
-                                                                                      'ne considere que les arti "bons"')
+    parser.add_argument('to_plot', metavar='to_plot', type=bool,
+                        help='si true plot les resultats sur le test')
+
+    parser.add_argument('select_arti', metavar='select_arti', type=bool,
+                        help='ssi dans la retropro on ne considere que les arti bons')
 
     args = parser.parse_args()
     test_on =  sys.argv[1]
