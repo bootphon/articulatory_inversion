@@ -95,7 +95,7 @@ def load_data(files_names,filtered=True, VT=True):
 
         if speaker in ["F01", "F02", "F03", "F04","M01", "M02", "M03", "M04"]:
             speaker_2 = "Haskins_" + speaker
-        files_path = os.path.join(folder,speaker_2)
+        files_path = os.path.join(folder,speaker)
         the_ema_file = np.load(os.path.join(files_path, "ema"+suff, file_name + ".npy"))
         the_mfcc_file = np.load(os.path.join(files_path, "mfcc", file_name+ ".npy"))
         x.append(the_mfcc_file)
