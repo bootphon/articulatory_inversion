@@ -124,11 +124,13 @@ def traitement_general_haskins(N_max):
             padding = np.zeros((window, my_mfcc.shape[1]))
             frames = np.concatenate([padding, my_mfcc, padding])
             full_window = 1 + 2 * window
-            my_mfcc = np.concatenate([frames[i:i + len(my_mfcc)] for m in range(full_window)], axis=1)
+            my_mfcc = np.concatenate([frames[i:i + len(my_mfcc)] for i in range(full_window)], axis=1)
+
             if np.isnan(my_ema).sum() != 0:
                 print("number of nan :", np.isnan(my_ema.sum()))
 
             n_frames_wanted = my_mfcc.shape[0]
+
             my_ema = scipy.signal.resample(my_ema, num=n_frames_wanted)
 
             return my_ema,my_mfcc
@@ -188,6 +190,8 @@ def traitement_general_haskins(N_max):
         for i in range(N):
             if i %100==0:
                 print("{} out of {}".format(i,N))
+                print(EMA_files[i])
+
             ema,mfcc = read_ema_and_wav(i)
             np.save(os.path.join(path_files_treated, "ema", EMA_files[i]), ema)
             np.save(os.path.join(path_files_treated, "mfcc", EMA_files[i]), mfcc)
