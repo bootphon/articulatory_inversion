@@ -144,7 +144,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
     test_files_names = []
 
     for epoch in range(n_epochs):
-        #random.shuffle(files_for_train)
+        random.shuffle(files_for_train)
         temp = 0
         for ite in range(n_iteration):
             #if ite % 50 == 0:
@@ -180,10 +180,11 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
             std_speaker = np.load(os.path.join(root_folder, "Traitement", "norm_values", "std_ema_" + test_on + ".npy"))
             model.evaluate_on_test(criterion=criterion, verbose=True, X_test=x, Y_test=y,
                                    to_plot=to_plot, std_ema=max(std_speaker), suffix=test_on)
-
+            temp = 0
             for ite_valid in range(n_iteration_validation):
-
-                x,y = load_data(files_for_valid[ite_valid:ite_valid+batch_size],filtered=data_filtered)
+    
+                x,y = load_data(files_for_valid[temp:temp+batch_size],filtered=data_filtered)
+                temp = temp+batch_size
             #    y = [y[i][:,:output_dim] for i in range(len(y))]
                 try :
                     loss_vali+= model.evaluate(x,y,criterion)
