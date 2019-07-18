@@ -177,12 +177,12 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
             idx_to_consider = [i for i,n in enumerate(arti_to_consider) if n=="1"]
             print("n train dans categ",len(files_this_categ_courant))
 
-            for ite in range(81):
-                x, y = load_data(files_for_train[ite:ite + batch_size], filtered=data_filtered)
+
+            while len(files_this_categ_courant) > 0:
+                x, y = load_data(files_this_categ_courant[:batch_size], filtered=data_filtered,VT=True)
                 x, y = model.prepare_batch(x, y)
                 y_pred = model(x).double()
                 torch.cuda.empty_cache()
-
                 if cuda_avail:
                     # y_pred = y_pred.cuda()
                     y_pred = y_pred.to(device=cuda2)
@@ -191,26 +191,9 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
                 loss = criterion(y, y_pred)
                 loss.backward()
                 optimizer.step()
-            #while len(files_this_categ_courant) > 0:
-               # print("yo, ",len(files_this_categ_courant))
-             #   files_batch = files_this_categ_courant[:batch_size]
-              #  files_this_categ_courant = files_this_categ_courant[batch_size:] #we a re going to train on this 10 files
-
-               # x, y = load_data(files_batch, filtered=data_filtered)
-                #x, y = model.prepare_batch(x, y)
-               # y_pred = model(x).double()
-               # torch.cuda.empty_cache()
-               # if cuda_avail:
-                    # y_pred = y_pred.cuda()
-                #    y_pred = y_pred.to(device=cuda2)
-                #y = y.double()
-                #optimizer.zero_grad()
-                #loss = criterion(y, y_pred)
-                #loss.backward()
-                #optimizer.step()
+                files_this_categ_courant = files_this_categ_courant[batch_size:] #we a re going to train on this 10 files
 
         if epoch%delta_test ==0:  #toutes les delta_test epochs on évalue le modèle sur validation et on sauvegarde le modele si le score est meilleur
-
             print("evaluation validation")
             loss_vali = 0
             for categ in files_per_categ.keys():  # de A à F pour le moment
@@ -218,16 +201,8 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
                 files_this_categ_courant = files_per_categ[categ]["valid"]  # on na pas encore apprit dessus au cours de cette epoch
                 arti_to_consider = categ_of_speakers[categ]["arti"]  # liste de 18 0/1 qui indique les arti à considérer
                 idx_to_consider = [i for i, n in enumerate(arti_to_consider) if n == "1"]
-                temp = 0
                 while len(files_this_categ_courant) >0 :
-                    temp+=1
-                    print("yo, ",len(files_this_categ_courant))
-                    temp = temp + batch_size
-                    files_batch = files_this_categ_courant[:batch_size]
-                    files_this_categ_courant = files_this_categ_courant[
-                                               batch_size:]  # we a re going to train on this 10 files
-                    # we a re going to train on this 10 files
-                    x, y = load_data(files_batch, filtered=data_filtered)
+                    x, y = load_data(files_this_categ_courant[:batch_size], filtered=data_filtered,VT=True)
                     x, y = model.prepare_batch(x, y)
                     y_pred = model(x).double()
                     torch.cuda.empty_cache()
@@ -239,6 +214,8 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
                         y_pred = y_pred[:, :, idx_to_consider]
                     loss_courant = criterion(y, y_pred)
                     loss_vali += loss_courant.item()
+                    files_this_categ_courant = files_this_categ_courant[batch_size:]  # on a appris sur ces 10 phrases
+
             loss_vali = loss_vali
             model.all_validation_loss.append(loss_vali)
             model.all_training_loss.append(loss)
