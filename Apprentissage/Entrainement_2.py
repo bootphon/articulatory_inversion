@@ -1,4 +1,8 @@
 ### ETUDIER ARTI 6
+import os,sys,inspect
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0,parentdir)
 
 from class_network import my_bilstm
 from modele import my_ac2art_modele
