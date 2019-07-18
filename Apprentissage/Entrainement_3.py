@@ -162,10 +162,9 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
             files_train_this_categ = files_train_this_categ + files_train_this_categ[:n_a_ajouter] #nbr de fichier par categorie multiple du batch size
             random.shuffle(files_train_this_categ)
             files_per_categ[categ]["train"] = files_train_this_categ
-
+            print("finalement ",len(files_train_this_categ))
             N_iter_categ = int(len(  files_valid_this_categ) / batch_size) + 1  # on veut qu'il y a en ait un multiple du batch size , on en double certains
-            n_a_ajouter = batch_size * N_iter_categ - len(
-                files_valid_this_categ)  # si 14 element N_iter_categ vaut 2 et n_a_ajouter vaut 6
+            n_a_ajouter = batch_size * N_iter_categ - len(files_valid_this_categ)  # si 14 element N_iter_categ vaut 2 et n_a_ajouter vaut 6
             files_valid_this_categ = files_valid_this_categ + files_valid_this_categ[:n_a_ajouter] # nbr de fichier par categorie multiple du batch size
             random.shuffle(files_valid_this_categ)
             files_per_categ[categ]["valid"] = files_valid_this_categ
