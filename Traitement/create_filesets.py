@@ -67,13 +67,13 @@ def get_fileset_names(speaker):
 
 
 
-#for corpus in ["mocha","MNGU0","usc"] :
- #   speakers = get_speakers_per_corpus(corpus)
-  #  for sp in speakers :
-   #     try:
-    #        get_fileset_names(sp)
-     #   except :
-      #      print("Pbm pour creer le fileset de sp ,",sp)
+for corpus in ["mocha","MNGU0","usc"] :
+    speakers = get_speakers_per_corpus(corpus)
+    for sp in speakers :
+        try:
+            get_fileset_names(sp)
+        except :
+            print("Pbm pour creer le fileset de sp ,",sp)
 
 
 
@@ -111,4 +111,4 @@ def read_csv_arti_ok_per_speaker():
     with open(os.path.join(root_folder,"Apprentissage","categ_of_speakers.json"), 'w') as dico:
         json.dump(categ_of_speakers, dico)
 
-read_csv_arti_ok_per_speaker()
+#read_csv_arti_ok_per_speaker()
