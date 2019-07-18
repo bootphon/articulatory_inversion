@@ -217,7 +217,6 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
                     files_batch = files_this_categ_courant[:batch_size]
                     files_this_categ_courant = files_this_categ_courant[
                                                batch_size:]  # we a re going to train on this 10 files
-
                     # we a re going to train on this 10 files
                     x, y = load_data(files_batch, filtered=data_filtered)
                     x, y = model.prepare_batch(x, y)
@@ -231,7 +230,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
                         y_pred = y_pred[:, :, idx_to_consider]
                     loss_courant = criterion(y, y_pred)
                     loss_vali += loss_courant.item()
-            loss_vali = loss_vali / temp
+            loss_vali = loss_vali
             model.all_validation_loss.append(loss_vali)
             model.all_training_loss.append(loss)
 
@@ -248,6 +247,13 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
             early_stopping(loss_vali, model)
             print("train loss ", loss.item())
             print("valid loss ", loss_vali)
+
+            
+            x, y = load_data(files_for_test)
+            print("evaluation on speaker {}".format(test_on))
+            std_speaker = np.load(os.path.join(root_folder, "Traitement", "norm_values", "std_ema_" + speaker + ".npy"))
+            model.evaluate_on_test(criterion=criterion, verbose=True, X_test=x, Y_test=y,
+                                   to_plot=to_plot, std_ema=max(std_speaker), suffix=test_on)
 
          #   logger.scalar_summary('loss_valid', loss_vali,
           #                        model.epoch_ref)
