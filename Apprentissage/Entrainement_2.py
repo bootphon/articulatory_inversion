@@ -41,7 +41,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
 
 
     train_on = ["F1","F5","M1","M3"]
-    train_on = ["F5"]
+    train_on = ["F5","M3"]
     train_on.remove(test_on)
     print("train_on :",train_on)
     print("test on:",test_on)
