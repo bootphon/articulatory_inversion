@@ -202,6 +202,13 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
                 torch.cuda.empty_cache()
 
         if epoch%delta_test ==0:  #toutes les delta_test epochs on évalue le modèle sur validation et on sauvegarde le modele si le score est meilleur
+            print("TEST")
+            x, y = load_data(files_for_test)
+            print("evaluation on speaker {}".format(test_on))
+            std_speaker = np.load(os.path.join(root_folder, "Traitement", "norm_values", "std_ema_" + speaker + ".npy"))
+            model.evaluate_on_test(criterion=criterion, verbose=True, X_test=x, Y_test=y,
+                                   to_plot=to_plot, std_ema=max(std_speaker), suffix=test_on)
+
             print("evaluation validation")
             loss_vali = 0
             for categ in files_per_categ.keys():  # de A à F pour le moment
@@ -248,12 +255,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
             print("train loss ", loss.item())
             print("valid loss ", loss_vali)
 
-            
-            x, y = load_data(files_for_test)
-            print("evaluation on speaker {}".format(test_on))
-            std_speaker = np.load(os.path.join(root_folder, "Traitement", "norm_values", "std_ema_" + speaker + ".npy"))
-            model.evaluate_on_test(criterion=criterion, verbose=True, X_test=x, Y_test=y,
-                                   to_plot=to_plot, std_ema=max(std_speaker), suffix=test_on)
+
 
          #   logger.scalar_summary('loss_valid', loss_vali,
           #                        model.epoch_ref)
