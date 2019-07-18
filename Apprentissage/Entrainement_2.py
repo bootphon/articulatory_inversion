@@ -38,7 +38,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
     modele_filtered=True
     train_on =  ["F01","F02","F03","F04","M01","M02","M03","M04","F1","F5","M1",
                  "M3","maps0","faet0",'mjjn0',"ffes0","MNGU0","fsew0","msak0"]
-    train_on = [ "F1", "M1",  "M3"]
+    train_on = [ "F1",  "M3"]
 
     train_on.remove(test_on)
     print("train_on :",train_on)
@@ -149,7 +149,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
         for ite in range(n_iteration):
             #if ite % 50 == 0:
              #   print("{} out of {}".format(ite, n_iteration))
-            files_batch  =files_for_train[ite:ite+batch_size]
+            files_batch  =files_for_train[temp:temp+batch_size]
             print("files_batch ",files_batch)
             x, y = load_data(files_batch, filtered=data_filtered)
             temp = temp + batch_size
@@ -184,7 +184,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
                                    to_plot=to_plot, std_ema=max(std_speaker), suffix=test_on)
             temp = 0
             for ite_valid in range(n_iteration_validation):
-                files_batch  = files_for_valid[ite:ite+batch_size]
+                files_batch  = files_for_valid[temp:temp+batch_size]
                 x,y = load_data(files_batch,filtered=data_filtered)
                 temp = temp+batch_size
             #    y = [y[i][:,:output_dim] for i in range(len(y))]
