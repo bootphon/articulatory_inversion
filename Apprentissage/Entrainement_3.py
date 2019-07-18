@@ -198,7 +198,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
                 if select_arti :
                     y = y[:,:,idx_to_consider]
                     y_pred = y_pred[:,:,idx_to_consider]
-                   print("selectarti")
+                    print("selectarti")
                 optimizer.zero_grad()
                 loss = criterion(y,y_pred)
                 loss.backward()
