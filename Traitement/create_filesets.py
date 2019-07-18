@@ -29,20 +29,8 @@ def get_fileset_names(speaker):
     On a donc une liste X et une liste Y, qu'on va diviser en train et test.
     """
 
-    if speaker in ["msak0","fsew0","maps0","faet0","mjjn0","ffes0","falh0"]:
-        speaker_2 = "mocha_"+speaker
-
-    elif speaker == "MNGU0":
-        speaker_2 = speaker
-
-    elif speaker in ["F1", "F5", "M1","M3"]:
-        speaker_2 = "usc_timit_" + speaker
-
-    elif speaker in ["F01","F02","F03","F04","M01","M02","M03","M04"]:
-        speaker_2 = "Haskins_" + speaker
-
     files_path =  os.path.join(donnees_path,speaker)
-    EMA_files_names = [name[:-4] for name in os.listdir(os.path.join(files_path,"ema_filtered")) if name.endswith('.npy') ]
+    EMA_files_names = [name[:-4] for name in os.listdir(os.path.join(files_path,"ema_VT")) if name.endswith('.npy') ]
     N = len(EMA_files_names)
     shuffle(EMA_files_names)
     pourcent_train = 0.7
@@ -66,14 +54,14 @@ def get_fileset_names(speaker):
     outF.close()
 
 
-
-for corpus in ["mocha","MNGU0","usc"] :
+def get_fileset_names_per_corpus(corpus):
     speakers = get_speakers_per_corpus(corpus)
     for sp in speakers :
         try:
             get_fileset_names(sp)
         except :
             print("Pbm pour creer le fileset de sp ,",sp)
+
 
 
 

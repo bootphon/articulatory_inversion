@@ -19,6 +19,7 @@ from Traitement.add_dynamic_features import get_delta_features
 import librosa
 from Apprentissage.utils import low_pass_filter_weight
 import scipy.io as sio
+from Traitement.split_sentences import split_sentences
 import shutil
 import glob
 
@@ -215,10 +216,10 @@ def traitement_general_haskins(N_max):
     n_coeff = 13
     cutoff = 10
     speakers = ["F01", "F02", "F03", "F04", "M01", "M02", "M03", "M04"]
-    speakers = ["M01", "M02", "M03", "M04"]
 
     for sp in speakers :
         print("speaker ",sp)
         traitement_haskins(sp,N_max = N_max)
+        split_sentences(sp)
 
-traitement_general_haskins(N_max = "All")
+#traitement_general_haskins(N_max = 30)

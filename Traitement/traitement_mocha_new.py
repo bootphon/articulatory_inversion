@@ -32,7 +32,7 @@ from Apprentissage.utils import low_pass_filter_weight
 import shutil
 from Traitement.normalization import normalize_data
 from Traitement.add_vocal_tract import add_vocal_tract
-
+from Traitement.split_sentences import split_sentences
 import glob
 
 
@@ -165,7 +165,7 @@ def traitement_general_mocha(N_max):
             std_mfcc = np.mean(np.array([np.std(frame, axis=0) for frame in my_list_MFCC_frames]), axis=0)
             mean_mfcc = np.mean(np.array([np.mean(frame, axis=0) for frame in my_list_MFCC_frames]), axis=0)
             np.save(os.path.join("norm_values", "moving_average_ema_" + speaker), smoothed_moving_average)
-            np.save(os.path.join("norm_values", "moving_average_ema_brute" + speaker), moving_average)
+            np.save(os.path.join("norm_values", "moving_average_ema_brute_" + speaker), moving_average)
             np.save(os.path.join("norm_values", "std_ema_" + speaker), std_ema)
             np.save(os.path.join("norm_values", "mean_ema_" + speaker), mean_ema)
             np.save(os.path.join("norm_values", "std_mfcc_" + speaker), std_mfcc)
@@ -225,7 +225,8 @@ def traitement_general_mocha(N_max):
     for sp in speakers :
         print("speaker ",sp)
         traitement_mocha(sp,N_max = N_max)
+        split_sentences(sp)
 
 
-traitement_general_mocha(N_max = "All")
+#traitement_general_mocha(N_max = 30)
 

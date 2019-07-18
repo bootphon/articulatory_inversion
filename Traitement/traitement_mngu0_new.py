@@ -22,6 +22,7 @@ from Traitement.normalization import normalize_data
 from Traitement.add_vocal_tract import add_vocal_tract
 from Apprentissage.utils import low_pass_filter_weight
 import glob
+from Traitement.split_sentences import split_sentences
 
 
 """ after this script the order of the articulators is the following : """
@@ -30,7 +31,7 @@ order_arti_MNGU0 = [
         'li_x','li_y','ul_x','ul_y',
         'll_x','ll_y']
 
-def traitement_general_mngu0(max="All"):
+def traitement_general_mngu0(N_max="All"):
     print("MNGU0")
     speaker = "MNGU0"
     root_path = dirname(dirname(os.path.realpath(__file__)))
@@ -206,10 +207,10 @@ def traitement_general_mngu0(max="All"):
     create_missing_dir()
     list_EMA_traj = []
     list_MFCC_frames = []
-    cutoff = 25
+    cutoff = 10
     N = len(EMA_files)
-    if max != "All":
-        N = max
+    if N_max != "All":
+        N = N_max
 
     for i in range(N):
         if i%200==0:
@@ -231,6 +232,6 @@ def traitement_general_mngu0(max="All"):
     print("STEP 3/4 DONE")
     add_vocal_tract(speaker)
     print("STEP 4/4 DONE")
+    split_sentences(speaker)
 
-
-traitement_general_mngu0(max="All")
+#traitement_general_mngu0(30)

@@ -18,6 +18,7 @@ import scipy.interpolate
 from Traitement.add_dynamic_features import get_delta_features
 import librosa
 from Apprentissage.utils import low_pass_filter_weight
+from Traitement.split_sentences import split_sentences
 import scipy.io as sio
 import shutil
 import glob
@@ -264,6 +265,8 @@ def traitement_general_usc(N_max):
     for sp in speakers :
         print("speaker ",sp)
         traitement_usc(sp,N_max = N_max)
+        split_sentences(sp)
 
-traitement_general_usc(N_max = "All")
+
+#traitement_general_usc(N_max = 30)
 
