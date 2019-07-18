@@ -99,8 +99,8 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
         model = model.cuda(device=cuda2)
 
     def criterion_pearson(my_y,my_y_pred): # (L,K,13)
-        y_1 = y - torch.mean(my_y,dim=1,keepdim=True)
-        y_pred_1 = y_pred - torch.mean(my_y_pred,dim=1,keepdim=True)
+        y_1 = my_y - torch.mean(my_y,dim=1,keepdim=True)
+        y_pred_1 = my_y_pred - torch.mean(my_y_pred,dim=1,keepdim=True)
         nume=  torch.sum(y_1* y_pred_1,dim=1,keepdim=True) # y*y_pred multi terme à terme puis on somme pour avoir (L,1,13)
       #pour chaque trajectoire on somme le produit de la vriae et de la predite
         deno =  torch.sqrt(torch.sum(y_1 ** 2,dim=1,keepdim=True)) * torch.sqrt(torch.sum(y_pred_1 ** 2,dim=1,keepdim=True))# use Pearson correlation
