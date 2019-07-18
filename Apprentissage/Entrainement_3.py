@@ -182,10 +182,12 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
                 files_this_categ_courant = files_this_categ_courant[batch_size:] #we a re going to train on this 10 files
 
                 x, y = load_data(files_batch, filtered=data_filtered)
+                model.evaluate_on_test(criterion=criterion, verbose=True, X_test=x, Y_test=y,
+                                   to_plot=to_plot, std_ema=1, suffix=test_on)
+
                 x, y = model.prepare_batch(x, y)
                 y_pred = model(x).double()
                 torch.cuda.empty_cache()
-
                 if cuda_avail:
                     # y_pred = y_pred.cuda()
                     y_pred = y_pred.to(device=cuda2)
@@ -194,8 +196,6 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
                 loss = criterion(y, y_pred)
                 loss.backward()
                 optimizer.step()
-                model.evaluate_on_test(criterion=criterion, verbose=True, X_test=x, Y_test=y,
-                                   to_plot=to_plot, std_ema=1, suffix=test_on)
 
         if epoch%delta_test ==0:  #toutes les delta_test epochs on évalue le modèle sur validation et on sauvegarde le modele si le score est meilleur
 
