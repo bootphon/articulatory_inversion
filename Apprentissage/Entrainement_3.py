@@ -187,7 +187,6 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
             while len(files_this_categ_courant) > 0:
                # print("yo, ",len(files_this_categ_courant))
                 files_batch = files_this_categ_courant[:batch_size]
-                print(files_batch)
                 files_this_categ_courant = files_this_categ_courant[batch_size:] #we a re going to train on this 10 files
                 x , y = load_data(files_batch, filtered=data_filtered)
                 x , y = model.prepare_batch(x, y)
@@ -199,6 +198,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
                 if select_arti :
                     y = y[:,:,idx_to_consider]
                     y_pred = y_pred[:,:,idx_to_consider]
+                   print("selectarti")
                 optimizer.zero_grad()
                 loss = criterion(y,y_pred)
                 loss.backward()
