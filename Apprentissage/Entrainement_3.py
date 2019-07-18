@@ -1,15 +1,15 @@
 ### ETUDIER ARTI 6
 
 from class_network import my_bilstm
-from modele import my_ac2art_modele
+from Apprentissage.modele import my_ac2art_modele
 import sys
 import torch
 import os
 import csv
 import sys
 from sklearn.model_selection import train_test_split
-from utils import load_filenames, load_data, load_filenames_deter
-from pytorchtools import EarlyStopping
+from Apprentissage.utils import load_filenames, load_data, load_filenames_deter
+from Apprentissage.pytorchtools import EarlyStopping
 import time
 import random
 from os.path import dirname
@@ -184,9 +184,10 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
             while len(files_this_categ_courant) > 0:
                # print("yo, ",len(files_this_categ_courant))
                 files_batch = files_this_categ_courant[:batch_size]
+                print(files_batch)
                 files_this_categ_courant = files_this_categ_courant[batch_size:] #we a re going to train on this 10 files
-                x, y = load_data(files_batch, filtered=data_filtered)
-                x, y = model.prepare_batch(x, y)
+                x , y = load_data(files_batch, filtered=data_filtered)
+                x , y = model.prepare_batch(x, y)
                 y_pred = model(x).double()
                 torch.cuda.empty_cache()
                 if cuda_avail:
@@ -202,12 +203,6 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
                 torch.cuda.empty_cache()
 
         if epoch%delta_test ==0:  #toutes les delta_test epochs on évalue le modèle sur validation et on sauvegarde le modele si le score est meilleur
-            print("TEST")
-            x, y = load_data(files_for_test)
-            print("evaluation on speaker {}".format(test_on))
-            std_speaker = np.load(os.path.join(root_folder, "Traitement", "norm_values", "std_ema_" + speaker + ".npy"))
-            model.evaluate_on_test(criterion=criterion, verbose=True, X_test=x, Y_test=y,
-                                   to_plot=to_plot, std_ema=max(std_speaker), suffix=test_on)
 
             print("evaluation validation")
             loss_vali = 0
