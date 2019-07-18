@@ -176,17 +176,15 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
         for categ in files_per_categ.keys():  # de A à F pour le moment
             print("categ ", categ)
             files_this_categ_courant = files_per_categ[categ]["train"] #on na pas encore apprit dessus au cours de cette epoch
-            temp = 0
             arti_to_consider = categ_of_speakers[categ]["arti"] #liste de 18 0/1 qui indique les arti à considérer
             idx_to_consider = [i for i,n in enumerate(arti_to_consider) if n=="1"]
             print("n train dans categ",len(files_this_categ_courant))
-            while files_this_categ_courant != []:
-                print("yo, ",len(files_this_categ_courant))
+            while len(files_this_categ_courant) > 0:
+               # print("yo, ",len(files_this_categ_courant))
                 files_batch = files_this_categ_courant[:batch_size]
                 files_this_categ_courant = files_this_categ_courant[batch_size:] #we a re going to train on this 10 files
                 x, y = load_data(files_batch, filtered=data_filtered)
                 x, y = model.prepare_batch(x, y)
-
                 y_pred = model(x).double()
                 torch.cuda.empty_cache()
                 if cuda_avail:
@@ -195,9 +193,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
                 if select_arti :
                     y = y[:,:,idx_to_consider]
                     y_pred = y_pred[:,:,idx_to_consider]
-
                 optimizer.zero_grad()
-
                 loss = criterion(y,y_pred)
                 loss.backward()
                 optimizer.step()
