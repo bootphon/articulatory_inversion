@@ -213,10 +213,12 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
                 while len(files_this_categ_courant) >0 :
                     temp+=1
                     print("yo, ",len(files_this_categ_courant))
-                    files_batch = files_this_categ_courant[:batch_size]
                     temp = temp + batch_size
-                    files_this_categ_courant = [f for f in files_this_categ_courant if
-                                                f not in files_batch]  # we a re going to train on this 10 files
+                    files_batch = files_this_categ_courant[:batch_size]
+                    files_this_categ_courant = files_this_categ_courant[
+                                               batch_size:]  # we a re going to train on this 10 files
+
+                    # we a re going to train on this 10 files
                     x, y = load_data(files_batch, filtered=data_filtered)
                     x, y = model.prepare_batch(x, y)
                     y_pred = model(x).double()
