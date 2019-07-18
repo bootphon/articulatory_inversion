@@ -168,6 +168,9 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
             files_valid_this_categ = files_valid_this_categ + files_valid_this_categ[:n_a_ajouter] # nbr de fichier par categorie multiple du batch size
             random.shuffle(files_valid_this_categ)
             files_per_categ[categ]["valid"] = files_valid_this_categ
+            print("files valid this categ", len(files_valid_this_categ))
+            print("Nitercateg", N_iter_categ)
+            print("n a ajouter", n_a_ajouter)
 
     for epoch in range(n_epochs):
         #random.shuffle(files_for_train)
