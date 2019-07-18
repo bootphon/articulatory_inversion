@@ -169,7 +169,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
     categs_to_consider = files_per_categ.keys()
     for epoch in range(n_epochs):
         #random.shuffle(files_for_train)
-        random.shuffle(categs_to_consider)
+        random.shuffle(list(categs_to_consider))
         for categ in categs_to_consider:  # de A à F pour le moment
             print("categ ", categ)
             files_this_categ_courant = files_per_categ[categ]["train"] #on na pas encore apprit dessus au cours de cette epoch
