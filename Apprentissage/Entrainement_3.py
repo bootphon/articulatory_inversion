@@ -166,28 +166,23 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
             print("files valid this categ", len(files_valid_this_categ))
             print("Nitercateg", N_iter_categ)
             print("n a ajouter", n_a_ajouter)
-
+    categs_to_consider = files_per_categ.keys()
     for epoch in range(n_epochs):
         #random.shuffle(files_for_train)
-
-        for categ in files_per_categ.keys():  # de A à F pour le moment
+        random.shuffle(categs_to_consider)
+        for categ in categs_to_consider:  # de A à F pour le moment
             print("categ ", categ)
             files_this_categ_courant = files_per_categ[categ]["train"] #on na pas encore apprit dessus au cours de cette epoch
             arti_to_consider = categ_of_speakers[categ]["arti"] #liste de 18 0/1 qui indique les arti à considérer
             idx_to_consider = [i for i,n in enumerate(arti_to_consider) if n=="1"]
             print("n train dans categ",len(files_this_categ_courant))
-            while len(files_this_categ_courant) > 0:
-               # print("yo, ",len(files_this_categ_courant))
-                files_batch = files_this_categ_courant[:batch_size]
-                files_this_categ_courant = files_this_categ_courant[batch_size:] #we a re going to train on this 10 files
 
-                x, y = load_data(files_batch, filtered=data_filtered)
-                model.evaluate_on_test(criterion=criterion, verbose=True, X_test=x, Y_test=y,
-                                   to_plot=to_plot, std_ema=1, suffix=test_on)
-
+            for ite in range(81):
+                x, y = load_data(files_for_train[ite:ite + batch_size], filtered=data_filtered)
                 x, y = model.prepare_batch(x, y)
                 y_pred = model(x).double()
                 torch.cuda.empty_cache()
+
                 if cuda_avail:
                     # y_pred = y_pred.cuda()
                     y_pred = y_pred.to(device=cuda2)
@@ -196,6 +191,23 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
                 loss = criterion(y, y_pred)
                 loss.backward()
                 optimizer.step()
+            #while len(files_this_categ_courant) > 0:
+               # print("yo, ",len(files_this_categ_courant))
+             #   files_batch = files_this_categ_courant[:batch_size]
+              #  files_this_categ_courant = files_this_categ_courant[batch_size:] #we a re going to train on this 10 files
+
+               # x, y = load_data(files_batch, filtered=data_filtered)
+                #x, y = model.prepare_batch(x, y)
+               # y_pred = model(x).double()
+               # torch.cuda.empty_cache()
+               # if cuda_avail:
+                    # y_pred = y_pred.cuda()
+                #    y_pred = y_pred.to(device=cuda2)
+                #y = y.double()
+                #optimizer.zero_grad()
+                #loss = criterion(y, y_pred)
+                #loss.backward()
+                #optimizer.step()
 
         if epoch%delta_test ==0:  #toutes les delta_test epochs on évalue le modèle sur validation et on sauvegarde le modele si le score est meilleur
 
@@ -244,8 +256,6 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
             early_stopping(loss_vali, model)
             print("train loss ", loss.item())
             print("valid loss ", loss_vali)
-
-
 
          #   logger.scalar_summary('loss_valid', loss_vali,
           #                        model.epoch_ref)
