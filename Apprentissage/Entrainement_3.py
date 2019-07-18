@@ -97,11 +97,10 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
 
     if cuda_avail:
         model = model.cuda(device=cuda2)
-        torch.backends.cuda.cufft_plan_cache.max_size
 
-    def criterion_pearson(y,y_pred): # (L,K,13)
-        y_1 = y - torch.mean(y,dim=1,keepdim=True)
-        y_pred_1 = y_pred - torch.mean(y_pred,dim=1,keepdim=True)
+    def criterion_pearson(my_y,my_y_pred): # (L,K,13)
+        y_1 = y - torch.mean(my_y,dim=1,keepdim=True)
+        y_pred_1 = y_pred - torch.mean(my_y_pred,dim=1,keepdim=True)
         nume=  torch.sum(y_1* y_pred_1,dim=1,keepdim=True) # y*y_pred multi terme à terme puis on somme pour avoir (L,1,13)
       #pour chaque trajectoire on somme le produit de la vriae et de la predite
         deno =  torch.sqrt(torch.sum(y_1 ** 2,dim=1,keepdim=True)) * torch.sqrt(torch.sum(y_pred_1 ** 2,dim=1,keepdim=True))# use Pearson correlation
@@ -112,10 +111,10 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
             deno = deno.to(device=cuda2)
             nume = nume.to(device=cuda2)
         deno = torch.max(deno,minim)
-        loss = nume/deno
-        loss = torch.sum(loss) #pearson doit etre le plus grand possible
+        my_loss = nume/deno
+        my_loss = torch.sum(my_loss) #pearson doit etre le plus grand possible
         #loss = torch.div(loss, torch.tensor(y.shape[2],dtype=torch.float64)) # correlation moyenne par arti
-        return -loss
+        return -my_loss
     criterion = criterion_pearson
 
     with open('categ_of_speakers.json', 'r') as fp:
@@ -127,12 +126,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
     plt.ioff()
     print("number of epochs : ", n_epochs)
 
-    N_train,N_valid,N_test=0,0,0
     path_files = os.path.join(os.path.dirname(os.getcwd()),"Donnees_pretraitees","fileset")
-
-    for speaker in train_on:
-        N_train = N_train + len(open(os.path.join(path_files,speaker+"_train.txt"), "r").read().split())
-        N_valid = N_valid + len(open(os.path.join(path_files,speaker+"_valid.txt"), "r").read().split())
 
     files_for_train = load_filenames_deter(train_on, part=["train", "test"])
     print("len files for train",len(files_for_train))
@@ -141,8 +135,6 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
 
     files_for_test = load_filenames_deter([test_on], part=["train", "valid", "test"])
     print("len files for test",len(files_for_test))
-
-    print('N_train',N_train)
 
     files_per_categ = dict()
     for categ in categ_of_speakers.keys():
@@ -177,6 +169,11 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
 
     for epoch in range(n_epochs):
         #random.shuffle(files_for_train)
+        x, y = load_data(files_for_test)
+        print("evaluation on speaker {}".format(test_on))
+        std_speaker = np.load(os.path.join(root_folder, "Traitement", "norm_values", "std_ema_" + speaker + ".npy"))
+        model.evaluate_on_test(criterion=criterion, verbose=True, X_test=x, Y_test=y,
+                               to_plot=to_plot, std_ema=max(std_speaker), suffix=test_on)
 
         for categ in files_per_categ.keys():  # de A à F pour le moment
             print("categ ", categ)
@@ -188,22 +185,20 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
                # print("yo, ",len(files_this_categ_courant))
                 files_batch = files_this_categ_courant[:batch_size]
                 files_this_categ_courant = files_this_categ_courant[batch_size:] #we a re going to train on this 10 files
-                x , y = load_data(files_batch, filtered=data_filtered)
-                x , y = model.prepare_batch(x, y)
+
+                x, y = load_data(files_batch, filtered=data_filtered)
+                x, y = model.prepare_batch(x, y)
                 y_pred = model(x).double()
                 torch.cuda.empty_cache()
+
                 if cuda_avail:
+                    # y_pred = y_pred.cuda()
                     y_pred = y_pred.to(device=cuda2)
-                y = y.double() #(Batchsize, maxL, 18)
-                if select_arti :
-                    y = y[:,:,idx_to_consider]
-                    y_pred = y_pred[:,:,idx_to_consider]
-                    print("selectarti")
+                y = y.double()
                 optimizer.zero_grad()
-                loss = criterion(y,y_pred)
+                loss = criterion(y, y_pred)
                 loss.backward()
                 optimizer.step()
-                torch.cuda.empty_cache()
 
         if epoch%delta_test ==0:  #toutes les delta_test epochs on évalue le modèle sur validation et on sauvegarde le modele si le score est meilleur
 
