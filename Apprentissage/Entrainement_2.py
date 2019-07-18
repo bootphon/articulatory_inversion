@@ -150,7 +150,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
             #if ite % 50 == 0:
              #   print("{} out of {}".format(ite, n_iteration))
             files_batch  =files_for_train[temp:temp+batch_size]
-          
+
             x, y = load_data(files_batch, filtered=data_filtered)
             temp = temp + batch_size
             x, y = model.prepare_batch(x, y)
