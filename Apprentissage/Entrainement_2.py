@@ -149,7 +149,9 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
         for ite in range(n_iteration):
             #if ite % 50 == 0:
              #   print("{} out of {}".format(ite, n_iteration))
-            x, y = load_data(files_for_train[temp:temp + batch_size], filtered=data_filtered)
+            files_batch  =files_for_train[ite:ite+batch_size]
+            print("files_batch ",files_batch)
+            x, y = load_data(files_batch, filtered=data_filtered)
             temp = temp + batch_size
             x, y = model.prepare_batch(x, y)
             y_pred = model(x).double()
@@ -182,8 +184,8 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
                                    to_plot=to_plot, std_ema=max(std_speaker), suffix=test_on)
             temp = 0
             for ite_valid in range(n_iteration_validation):
-
-                x,y = load_data(files_for_valid[temp:temp+batch_size],filtered=data_filtered)
+                files_batch  = files_for_valid[ite:ite+batch_size]
+                x,y = load_data(files_batch,filtered=data_filtered)
                 temp = temp+batch_size
             #    y = [y[i][:,:output_dim] for i in range(len(y))]
                 try :
