@@ -23,6 +23,7 @@ from Traitement.add_vocal_tract import add_vocal_tract
 from Apprentissage.utils import low_pass_filter_weight
 import glob
 from Traitement.split_sentences import split_sentences
+import multiprocessing as mp
 
 
 """ after this script the order of the articulators is the following : """
@@ -185,6 +186,7 @@ def traitement_general_mngu0(N_max="All"):
         weights_moving_average = low_pass_filter_weight(cut_off=10, sampling_rate=sampling_rate_ema)
         moving_average = np.concatenate([np.expand_dims(np.pad(all_mean_ema[:, k], (pad, pad), "symmetric"), 1)
                                          for k in range(all_mean_ema.shape[1])], axis=1)
+
         smoothed_moving_average = np.concatenate(
             [np.expand_dims(np.convolve(channel, weights_moving_average, mode='same'), 1)
              for channel in moving_average.T], axis=1)
@@ -204,6 +206,16 @@ def traitement_general_mngu0(N_max="All"):
         np.save(os.path.join("norm_values", "std_mfcc_" + speaker), std_mfcc)
         np.save(os.path.join("norm_values", "mean_mfcc_" + speaker), mean_mfcc)
 
+    def traitement_one_occ(k):
+        my_ema = read_ema_file(k)
+        my_mfcc = from_wav_to_mfcc(k)
+        ema, my_mfcc = synchro_ema_mfcc(k, my_ema, my_mfcc)
+        np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema", EMA_files[k]), my_ema)
+        np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "mfcc", EMA_files[k]), my_mfcc)
+        my_ema_filtered = smooth_data(my_ema)
+        np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_filtered", EMA_files[k]), my_ema_filtered)
+        return my_ema_filtered,my_mfcc
+
     create_missing_dir()
     list_EMA_traj = []
     list_MFCC_frames = []
@@ -213,25 +225,17 @@ def traitement_general_mngu0(N_max="All"):
         N = N_max
 
     for i in range(N):
-        if i%200==0:
+        if i%50==0:
             print("{} out of {}".format(i,N))
-        ema = read_ema_file(i)
-        mfcc = from_wav_to_mfcc(i)
-        ema, mfcc = synchro_ema_mfcc(i, ema, mfcc)
-        np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema", EMA_files[i]), ema)
-        np.save(os.path.join(root_path, "Donnees_pretraitees",speaker, "mfcc", EMA_files[i]), mfcc)
-        ema_filtered = smooth_data(ema)
-        np.save(os.path.join(root_path, "Donnees_pretraitees",speaker, "ema_filtered", EMA_files[i]), ema_filtered)
+        ema_filtered, mfcc = traitement_one_occ(i )
         list_EMA_traj.append(ema_filtered)
         list_MFCC_frames.append(mfcc)
-    print("STEP 1/4 DONE")
     calculate_norm_values(list_EMA_traj, list_MFCC_frames)
-    print("STEP 2/4 DONE")
-
     normalize_data(speaker)
-    print("STEP 3/4 DONE")
     add_vocal_tract(speaker)
-    print("STEP 4/4 DONE")
     split_sentences(speaker)
 
-#traitement_general_mngu0(30)
+t1 = time.clock()
+t2 = time.clock()
+
+#print("duree : ",str(t2-t1))

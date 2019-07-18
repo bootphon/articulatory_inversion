@@ -189,7 +189,7 @@ def traitement_general_haskins(N_max):
             N = int(N_max) #on coupe N fichiers
 
         for i in range(N):
-            if i %100==0:
+            if i+1 %100==0:
                 print("{} out of {}".format(i,N))
 
             ema,mfcc = read_ema_and_wav(i)
@@ -216,6 +216,7 @@ def traitement_general_haskins(N_max):
     n_coeff = 13
     cutoff = 10
     speakers = ["F01", "F02", "F03", "F04", "M01", "M02", "M03", "M04"]
+
 
     for sp in speakers :
         print("speaker ",sp)

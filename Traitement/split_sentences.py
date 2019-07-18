@@ -64,7 +64,7 @@ def split_sentences(speaker="MNGU0" ,max_length = 300,N="All"):
                 #os.remove(os.path.join(donnees_pretraitees_path,sp,"ema",f))
                 #os.remove(os.path.join(donnees_pretraitees_path,sp,"ema_filtered",f))
                 os.remove(os.path.join(donnees_pretraitees_path,speaker,"ema_VT",f))
-    print("number cut for ",speaker," : ",Number_cut)
+   # print("number cut for ",speaker," : ",Number_cut)
 
 
 #split_sentences()

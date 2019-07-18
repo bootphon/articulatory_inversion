@@ -34,11 +34,13 @@ from Traitement.normalization import normalize_data
 from Traitement.add_vocal_tract import add_vocal_tract
 from Traitement.split_sentences import split_sentences
 import glob
+import multiprocessing as mp
 
 
-def traitement_general_mocha(N_max):
 
-    def traitement_mocha(speaker,N_max=N_max):
+def traitement_general_mocha(N_max,n_procs=0):
+
+    def traitement_mocha(speaker,N_max):
 
         root_path = dirname(dirname(os.path.realpath(__file__)))
         path_files_treated = os.path.join(root_path, "Donnees_pretraitees",  speaker)
@@ -193,7 +195,7 @@ def traitement_general_mocha(N_max):
         list_MFCC_frames = []
 
         for i in range(N):
-            if i%50 == 0:
+            if i+1%50 == 0:
                 print("{} out of {}".format(i,N))
             ema = read_ema_file(i)
             mfcc = from_wav_to_mfcc(i)
@@ -222,11 +224,12 @@ def traitement_general_mocha(N_max):
     cutoff = 30
     speakers = ["fsew0","msak0","faet0","falh0","ffes0","mjjn0","maps0"]
 
+
+
     for sp in speakers :
         print("speaker ",sp)
         traitement_mocha(sp,N_max = N_max)
         split_sentences(sp)
 
 
-#traitement_general_mocha(N_max = 30)
-
+#traitement_general_mocha(N_max = 3,n_procs = 0)

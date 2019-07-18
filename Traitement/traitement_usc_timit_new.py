@@ -233,7 +233,7 @@ def traitement_general_usc(N_max):
         if N_max != "All":
             N_2 = min(N_max,N_2)
         for i in range(N_2):
-            if i%100==0:
+            if i+1%100==0:
                 print("{} out of {}".format(i,N_2))
             ema = read_ema_file(i)
             mfcc = from_wav_to_mfcc(i)
