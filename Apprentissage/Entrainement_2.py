@@ -38,7 +38,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
     modele_filtered=True
     train_on =  ["F01","F02","F03","F04","M01","M02","M03","M04","F1","F5","M1",
                  "M3","maps0","faet0",'mjjn0',"ffes0","MNGU0","fsew0","msak0"]
-    train_on = [ "F1",  "M3"]
+    train_on = [ "M1",  "M3"]
 
     train_on.remove(test_on)
     print("train_on :",train_on)
