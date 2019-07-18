@@ -145,22 +145,21 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
 
     for epoch in range(n_epochs):
         #random.shuffle(files_for_train)
+        temp = 0
         for ite in range(n_iteration):
-            if ite % 50 == 0:
-                print("{} out of {}".format(ite, n_iteration))
-            x, y = load_data(files_for_train[ite:ite + batch_size], filtered=data_filtered)
+            #if ite % 50 == 0:
+             #   print("{} out of {}".format(ite, n_iteration))
+            x, y = load_data(files_for_train[temp:temp + batch_size], filtered=data_filtered)
+            temp = temp + batch_size
             x, y = model.prepare_batch(x, y)
             y_pred = model(x).double()
-          #  print(y_pred)
             torch.cuda.empty_cache()
 
             if cuda_avail:
-                #y_pred = y_pred.cuda()
+               # y_pred = y_pred.cuda()
                 y_pred = y_pred.to(device=cuda2)
             y = y.double()
             optimizer.zero_grad()
-
-        #    print("D,E", torch.isnan(model.first_layer.weight.sum()))
             loss = criterion(y,y_pred)
             loss.backward()
             optimizer.step()
