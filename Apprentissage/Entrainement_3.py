@@ -171,7 +171,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
         #random.shuffle(files_for_train)
         x, y = load_data(files_for_test)
         print("evaluation on speaker {}".format(test_on))
-        std_speaker = np.load(os.path.join(root_folder, "Traitement", "norm_values", "std_ema_" + speaker + ".npy"))
+        std_speaker = np.load(os.path.join(root_folder, "Traitement", "norm_values", "std_ema_" + test_on + ".npy"))
         model.evaluate_on_test(criterion=criterion, verbose=True, X_test=x, Y_test=y,
                                to_plot=to_plot, std_ema=max(std_speaker), suffix=test_on)
 
@@ -267,7 +267,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
     random.shuffle(files_for_test)
     x, y = load_data(files_for_test)
     print("evaluation on speaker {}".format(test_on))
-    std_speaker=  np.load(os.path.join(root_folder, "Traitement", "norm_values","std_ema_"+speaker+".npy"))
+    std_speaker=  np.load(os.path.join(root_folder, "Traitement", "norm_values","std_ema_"+test_on+".npy"))
     model.evaluate_on_test(criterion=criterion,verbose=True, X_test=x, Y_test=y,
                            to_plot=to_plot, std_ema=max(std_speaker), suffix=test_on)
 
