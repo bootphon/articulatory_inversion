@@ -164,6 +164,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
 
 
     categs_to_consider = files_per_categ.keys()
+    print("categs to consider",categs_to_consider)
     for epoch in range(n_epochs):
         n_this_epoch = 0
         random.shuffle(list(categs_to_consider))
