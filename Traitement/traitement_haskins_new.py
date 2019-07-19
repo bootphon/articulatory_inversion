@@ -186,7 +186,7 @@ def traitement_general_haskins(N_max):
         list_MFCC_frames = []
 
         N = len(EMA_files)
-        if N_max != "All":
+        if N_max != 0:
             N = int(N_max) #on coupe N fichiers
 
         for i in range(N):

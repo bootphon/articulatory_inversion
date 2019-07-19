@@ -181,7 +181,7 @@ def traitement_general_mocha(N_max,n_procs=0):
         n_columns = 20
         wav_files = sorted([name[:-4] for name in os.listdir(path_files) if name.endswith('.wav')])
         N = len(EMA_files)
-        if N_max != "All":
+        if N_max != 0:
             N = N_max
         if speaker in sp_with_velum:  # on ne connait pas le velum
             articulators = [

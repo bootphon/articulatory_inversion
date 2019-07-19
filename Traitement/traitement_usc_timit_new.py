@@ -224,14 +224,14 @@ def traitement_general_usc(N_max):
         list_MFCC_frames = []
 
         N = len(EMA_files)
-        if N_max != "All":
+        if N_max != 0:
             N =  min(int(N_max/3),N) #on coupe N fichiers
         cut_all_files()
 
         EMA_files_2 = sorted(
         [name[:-4] for name in os.listdir(os.path.join(path_files_brutes, "wav_cut")) if name.endswith(".npy")])
         N_2 = len(EMA_files_2)
-        if N_max != "All":
+        if N_max != 0:
             N_2 = min(N_max,N_2)
         for i in range(N_2):
             if i+1%100==0:

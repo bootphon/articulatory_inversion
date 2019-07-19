@@ -223,7 +223,7 @@ def traitement_general_mngu0(N_max="All"):
     list_MFCC_frames = []
     cutoff = 10
     N = len(EMA_files)
-    if N_max != "All":
+    if N_max != 0:
         N = N_max
 
     for i in range(N):
