@@ -66,7 +66,7 @@ def load_filenames_deter(train_on,part=["train"]):
     return filenames
 
 
-def load_data(files_names,filtered=True, VT=True):
+def load_data(files_names,filtered=True,VT=True):
     """
 
     :param files_names: liste des n
@@ -86,15 +86,6 @@ def load_data(files_names,filtered=True, VT=True):
 
     for file_name in files_names :
         speaker = [s  for s in speakers if s.lower() in file_name.lower()][0] # normalement un seul speaker dans le nom du fichier
-        speaker_2=speaker
-        if speaker in ["msak0", "fsew0", "maps0", "faet0", "mjjn0", "ffes0","falh0"]:
-            speaker_2 = "mocha_" + speaker
-
-        if speaker in ["F1", "M1","F5","M3"]:
-            speaker_2 = "usc_timit_" + speaker
-
-        if speaker in ["F01", "F02", "F03", "F04","M01", "M02", "M03", "M04"]:
-            speaker_2 = "Haskins_" + speaker
         files_path = os.path.join(folder,speaker)
         the_ema_file = np.load(os.path.join(files_path, "ema"+suff, file_name + ".npy"))
         the_mfcc_file = np.load(os.path.join(files_path, "mfcc", file_name+ ".npy"))
