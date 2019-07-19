@@ -41,10 +41,12 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
             train_on = ["F01","F02","F03","F04","M01","M02","M03","M04"]
 
         elif test_on in ["F1","F5","M1","M3"]:
-            train_on = ["F1","M1","M3"]
+            train_on = ["F1","M1","M3","F5"]
 
         elif test_on in ["maps0","faet0",'mjjn0',"falh0","ffes0","fsew0","msak0"]:
             train_on = ["maps0","faet0",'mjjn0',"falh0","ffes0","fsew0","msak0"]
+            train_on = ["fsew0","msak0"]
+
 
     train_on.remove(test_on)
     print("train_on :",train_on)
@@ -68,7 +70,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
     # model = my_bilstm(hidden_dim=hidden_dim,input_dim=input_dim,name_file =name_file, output_dim=output_dim,
    #                   batch_size=batch_size,data_filtered=data_filtered,cuda_avail = cuda_avail,modele_filtered=modele_filtered)
     model = my_ac2art_modele(hidden_dim=hidden_dim, input_dim=input_dim, name_file=name_file, output_dim=output_dim,
-                      batch_size=batch_size, data_filtered=data_filtered, cuda_avail=cuda_avail,
+                      batch_size=batch_size, cuda_avail=cuda_avail,
                       modele_filtered=modele_filtered)
 
     model = model.double()
@@ -151,35 +153,29 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
             files_per_categ[categ] = dict()
             N_iter_categ = int(len(files_train_this_categ)/batch_size)+1         # on veut qu'il y a en ait un multiple du batch size , on en double certains
             n_a_ajouter = batch_size*N_iter_categ - len(files_train_this_categ) #si 14 element N_iter_categ vaut 2 et n_a_ajouter vaut 6
-            print("files train this categ",len(files_train_this_categ))
-            print("Nitercateg",N_iter_categ)
-            print("n a ajouter",n_a_ajouter)
             files_train_this_categ = files_train_this_categ + files_train_this_categ[:n_a_ajouter] #nbr de fichier par categorie multiple du batch size
             random.shuffle(files_train_this_categ)
             files_per_categ[categ]["train"] = files_train_this_categ
-            print("finalement ",len(files_train_this_categ))
             N_iter_categ = int(len(  files_valid_this_categ) / batch_size) + 1  # on veut qu'il y a en ait un multiple du batch size , on en double certains
             n_a_ajouter = batch_size * N_iter_categ - len(files_valid_this_categ)  # si 14 element N_iter_categ vaut 2 et n_a_ajouter vaut 6
             files_valid_this_categ = files_valid_this_categ + files_valid_this_categ[:n_a_ajouter] # nbr de fichier par categorie multiple du batch size
             random.shuffle(files_valid_this_categ)
             files_per_categ[categ]["valid"] = files_valid_this_categ
-            print("files valid this categ", len(files_valid_this_categ))
-            print("Nitercateg", N_iter_categ)
-            print("n a ajouter", n_a_ajouter)
+
+
     categs_to_consider = files_per_categ.keys()
     for epoch in range(n_epochs):
-        #random.shuffle(files_for_train)
         random.shuffle(list(categs_to_consider))
         for categ in categs_to_consider:  # de A à F pour le moment
-            print("categ ", categ)
+
             files_this_categ_courant = files_per_categ[categ]["train"] #on na pas encore apprit dessus au cours de cette epoch
+            random.shuffle(files_this_categ_courant)
             arti_to_consider = categ_of_speakers[categ]["arti"] #liste de 18 0/1 qui indique les arti à considérer
             idx_to_consider = [i for i,n in enumerate(arti_to_consider) if n=="1"]
-            print("n train dans categ",len(files_this_categ_courant))
-
 
             while len(files_this_categ_courant) > 0:
                 x, y = load_data(files_this_categ_courant[:batch_size], filtered=data_filtered,VT=True)
+                files_this_categ_courant = files_this_categ_courant[batch_size:] #we a re going to train on this 10 files
                 x, y = model.prepare_batch(x, y)
                 y_pred = model(x).double()
                 torch.cuda.empty_cache()
@@ -188,21 +184,28 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
                     y_pred = y_pred.to(device=cuda2)
                 y = y.double()
                 optimizer.zero_grad()
+                if select_arti:
+                    y = y[:, :, idx_to_consider]
+                    y_pred = y_pred[:, :, idx_to_consider]
                 loss = criterion(y, y_pred)
                 loss.backward()
                 optimizer.step()
-                files_this_categ_courant = files_this_categ_courant[batch_size:] #we a re going to train on this 10 files
 
         if epoch%delta_test ==0:  #toutes les delta_test epochs on évalue le modèle sur validation et on sauvegarde le modele si le score est meilleur
+         #   x, y = load_data(files_for_test)
+          #  print("evaluation on speaker {}".format(test_on))
+           # model.evaluate_on_test(x, y, verbose=True, to_plot=to_plot)
+
             print("evaluation validation")
             loss_vali = 0
-            for categ in files_per_categ.keys():  # de A à F pour le moment
-                print("categ ,",categ)
+            for categ in categs_to_consider:  # de A à F pour le moment
+
                 files_this_categ_courant = files_per_categ[categ]["valid"]  # on na pas encore apprit dessus au cours de cette epoch
                 arti_to_consider = categ_of_speakers[categ]["arti"]  # liste de 18 0/1 qui indique les arti à considérer
                 idx_to_consider = [i for i, n in enumerate(arti_to_consider) if n == "1"]
                 while len(files_this_categ_courant) >0 :
                     x, y = load_data(files_this_categ_courant[:batch_size], filtered=data_filtered,VT=True)
+                    files_this_categ_courant = files_this_categ_courant[batch_size:]  # on a appris sur ces 10 phrases
                     x, y = model.prepare_batch(x, y)
                     y_pred = model(x).double()
                     torch.cuda.empty_cache()
@@ -214,7 +217,6 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
                         y_pred = y_pred[:, :, idx_to_consider]
                     loss_courant = criterion(y, y_pred)
                     loss_vali += loss_courant.item()
-                    files_this_categ_courant = files_this_categ_courant[batch_size:]  # on a appris sur ces 10 phrases
 
             loss_vali = loss_vali
             model.all_validation_loss.append(loss_vali)
@@ -251,9 +253,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
     random.shuffle(files_for_test)
     x, y = load_data(files_for_test)
     print("evaluation on speaker {}".format(test_on))
-    std_speaker=  np.load(os.path.join(root_folder, "Traitement", "norm_values","std_ema_"+test_on+".npy"))
-    model.evaluate_on_test(criterion=criterion,verbose=True, X_test=x, Y_test=y,
-                           to_plot=to_plot, std_ema=max(std_speaker), suffix=test_on)
+    model.evaluate_on_test(x,y, to_plot=to_plot)
 
 if __name__=='__main__':
     import argparse
