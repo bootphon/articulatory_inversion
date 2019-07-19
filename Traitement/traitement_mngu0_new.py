@@ -24,6 +24,7 @@ from Apprentissage.utils import low_pass_filter_weight
 import glob
 from Traitement.split_sentences import split_sentences
 import multiprocessing as mp
+from Traitement.create_filesets import get_fileset_names
 
 
 """ after this script the order of the articulators is the following : """
@@ -33,7 +34,6 @@ order_arti_MNGU0 = [
         'll_x','ll_y']
 
 def traitement_general_mngu0(N_max="All"):
-    print("MNGU0")
     speaker = "MNGU0"
     root_path = dirname(dirname(os.path.realpath(__file__)))
     path_files_annotation = os.path.join(root_path, "Donnees_brutes",speaker,"phone_labels")
@@ -94,6 +94,7 @@ def traitement_general_mngu0(N_max="All"):
                     column_names[int(col_id.split('_', 1)[-1])] = col_name
 
             ema_data = np.fromfile(ema_annotation, "float32").reshape(n_frames, n_columns + 2)
+
             cols_index = [column_names.index(col) for col in articulators]
             ema_data = ema_data[:, cols_index]
             ema_data = ema_data*100  #données initiales en 10^-5m on les met en millimètre
@@ -122,6 +123,7 @@ def traitement_general_mngu0(N_max="All"):
         my_mfcc = librosa.feature.mfcc(y=data, sr=sampling_rate_wav, n_mfcc=n_coeff,
                                     n_fft=frame_length, hop_length=hop_length
                                     ).T
+
         dyna_features = get_delta_features(my_mfcc)
         dyna_features_2 = get_delta_features(dyna_features)
         my_mfcc = np.concatenate((my_mfcc, dyna_features, dyna_features_2), axis=1)
@@ -160,7 +162,7 @@ def traitement_general_mngu0(N_max="All"):
         end_frame_ema = int(np.ceil(end_time * sampling_rate_ema))
         my_ema = my_ema[start_frame_ema:end_frame_ema]
         #sous echantillonnage de EMA pour synchro avec WAV
-        n_frames_wanted = my_mfcc.shape[0]
+        n_frames_wanted = len(my_mfcc)
         my_ema = scipy.signal.resample(my_ema, num=n_frames_wanted)
         #  padding de sorte que l'on intègre les dépendences temporelles : on apprend la trame du milieu
         # mais on ajoute des trames précédent et suivant pour ajouter de l'informatio temporelle
@@ -209,7 +211,7 @@ def traitement_general_mngu0(N_max="All"):
     def traitement_one_occ(k):
         my_ema = read_ema_file(k)
         my_mfcc = from_wav_to_mfcc(k)
-        ema, my_mfcc = synchro_ema_mfcc(k, my_ema, my_mfcc)
+        my_ema, my_mfcc = synchro_ema_mfcc(k, my_ema, my_mfcc)
         np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema", EMA_files[k]), my_ema)
         np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "mfcc", EMA_files[k]), my_mfcc)
         my_ema_filtered = smooth_data(my_ema)
@@ -234,8 +236,11 @@ def traitement_general_mngu0(N_max="All"):
     normalize_data(speaker)
     add_vocal_tract(speaker)
     split_sentences(speaker)
+    get_fileset_names(speaker)
+    print("Done for speaker ",speaker)
 
 t1 = time.clock()
 t2 = time.clock()
 
+#traitement_general_mngu0(50)
 #print("duree : ",str(t2-t1))

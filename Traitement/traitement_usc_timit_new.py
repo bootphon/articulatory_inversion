@@ -21,6 +21,7 @@ from Apprentissage.utils import low_pass_filter_weight
 from Traitement.split_sentences import split_sentences
 import scipy.io as sio
 import shutil
+from Traitement.create_filesets import get_fileset_names
 import glob
 
 """ after this script the order of the articulators is the following : """
@@ -224,7 +225,7 @@ def traitement_general_usc(N_max):
 
         N = len(EMA_files)
         if N_max != "All":
-            N = int(N_max/3) #on coupe N fichiers
+            N =  min(int(N_max/3),N) #on coupe N fichiers
         cut_all_files()
 
         EMA_files_2 = sorted(
@@ -250,6 +251,8 @@ def traitement_general_usc(N_max):
         calculate_norm_values(list_EMA_traj,list_MFCC_frames)
         normalize_data(speaker)
         add_vocal_tract(speaker)
+        split_sentences(speaker)
+        get_fileset_names(speaker)
 
     sampling_rate_ema = 100
     sampling_rate_wav = 20000
@@ -265,8 +268,9 @@ def traitement_general_usc(N_max):
     for sp in speakers :
         print("speaker ",sp)
         traitement_usc(sp,N_max = N_max)
-        split_sentences(sp)
+
+        print("Done for speaker ",sp)
 
 
-#traitement_general_usc(N_max = 30)
+#traitement_general_usc(N_max = 50)
 

@@ -33,6 +33,7 @@ import shutil
 from Traitement.normalization import normalize_data
 from Traitement.add_vocal_tract import add_vocal_tract
 from Traitement.split_sentences import split_sentences
+from Traitement.create_filesets import get_fileset_names
 import glob
 import multiprocessing as mp
 
@@ -210,6 +211,8 @@ def traitement_general_mocha(N_max,n_procs=0):
         calculate_norm_values(list_EMA_traj,list_MFCC_frames)
         normalize_data(speaker)
         add_vocal_tract(speaker)
+        split_sentences(speaker)
+        get_fileset_names(speaker)
 
     sampling_rate_ema = 500
     sampling_rate_wav = 16000
@@ -227,9 +230,9 @@ def traitement_general_mocha(N_max,n_procs=0):
 
 
     for sp in speakers :
-        print("speaker ",sp)
         traitement_mocha(sp,N_max = N_max)
-        split_sentences(sp)
+
+        print("Done for speaker ",sp)
 
 
 #traitement_general_mocha(N_max = 3,n_procs = 0)

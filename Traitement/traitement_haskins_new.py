@@ -22,6 +22,7 @@ import scipy.io as sio
 from Traitement.split_sentences import split_sentences
 import shutil
 import glob
+from Traitement.create_filesets import get_fileset_names
 
 """ after this script the order of the articulators is the following : """
 
@@ -202,8 +203,11 @@ def traitement_general_haskins(N_max):
             list_MFCC_frames.append(mfcc)
 
         calculate_norm_values(list_EMA_traj,list_MFCC_frames)
+
         normalize_data(speaker)
         add_vocal_tract(speaker)
+        split_sentences(speaker)
+        get_fileset_names(speaker)
 
     sampling_rate_ema = 100  # toujours le même, mais lisible directement dans le fichier
     sampling_rate_wav = 44100  # toujours le même, mais lisible directement dans le fichier
@@ -217,10 +221,8 @@ def traitement_general_haskins(N_max):
     cutoff = 10
     speakers = ["F01", "F02", "F03", "F04", "M01", "M02", "M03", "M04"]
 
-
     for sp in speakers :
-        print("speaker ",sp)
         traitement_haskins(sp,N_max = N_max)
-        split_sentences(sp)
+        print("Done for speaker ",sp)
 
 #traitement_general_haskins(N_max = 30)
