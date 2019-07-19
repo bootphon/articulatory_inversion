@@ -19,6 +19,7 @@ from os.path import dirname
 import numpy as np
 from scipy import signal
 import matplotlib.pyplot as plt
+from Traitement.fonctions_utiles import get_speakers_per_corpus
 import scipy
 from os import listdir
 #from logger import Logger
@@ -30,24 +31,19 @@ fileset_path = os.path.join(root_folder, "Donnees_pretraitees", "fileset")
 
 print(sys.argv)
 
-def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,select_arti=False,only_on_corpus=True):
+def train_model(test_on ,n_epochs ,delta_test ,patience ,lr,to_plot,select_arti,corpus_to_train_on):
     data_filtered=True
     modele_filtered=True
-    train_on =  ["F01","F02","F03","F04","M01","M02","M03","M04","F1","F5","M1",
-                 "M3","maps0","faet0",'mjjn0',"falh0","ffes0","fsew0","msak0","MNGU0"]
+    train_on = []
+    name_corpus_concat = ""
 
-    if only_on_corpus :
-        if test_on in ["F01","F02","F03","F04","M01","M02","M03","M04"]:
-            train_on = ["F01","F02","F03","F04","M01","M02","M03","M04"]
-
-
-        elif test_on in ["F1","F5","M1","M3"]:
-            train_on = ["M3","M1","F1","F5"]
-
-
-        elif test_on in ["maps0","faet0",'mjjn0',"falh0","ffes0","fsew0","msak0"]:
-            train_on = ["maps0","faet0",'mjjn0',"falh0","ffes0","fsew0","msak0"]
-
+    corpus_to_train_on = corpus_to_train_on[1:-1].split(",")
+    for corpus in corpus_to_train_on :
+        print("corpus" , corpus)
+        sp = get_speakers_per_corpus(corpus)
+        train_on = train_on + sp
+        name_corpus_concat = name_corpus_concat+corpus+"_"
+    print(name_corpus_concat)
 
     train_on.remove(test_on)
     print("train_on :",train_on)
@@ -57,7 +53,8 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
     print(" cuda ?", cuda_avail)
     output_dim = 18
 
-    name_file = "test_on_" + test_on+"_idx_"+str(select_arti)+"_onlycorpus_"+str(only_on_corpus)
+   # name_file = "test_on_" + test_on+"_idx_"+str(select_arti)+"_onlycorpus_"+str(only_on_corpus)
+    name_file = "train_on_"+name_corpus_concat+"idx_"+str(select_arti)
     print("name file : ",name_file)
 #   logger = Logger('./log_' + name_file)
 
@@ -283,8 +280,10 @@ if __name__=='__main__':
     parser.add_argument('select_arti', metavar='select_arti', type=bool,
                         help='ssi dans la retropro on ne considere que les arti bons')
 
-    parser.add_argument('only_on_corpus', metavar='only_on_corpus', type=bool,
+    parser.add_argument('corpus_to_train_on', metavar='corpus_to_train_on', type=str,
                         help='ssi dans la retropro on ne considere que les arti bons')
+
+
 
     args = parser.parse_args()
     test_on =  sys.argv[1]
@@ -294,7 +293,7 @@ if __name__=='__main__':
     lr = float(sys.argv[5])
     to_plot = sys.argv[6].lower()=="true"
     select_arti = sys.argv[7].lower()=="true"
-    only_on_corpus = sys.argv[8].lower()=="true"
+    corpus_to_train_on = str(sys.argv[8])
 
     train_model(test_on = test_on,n_epochs=n_epochs,delta_test=delta_test,patience=patience,
-                lr = lr,to_plot=to_plot,select_arti=select_arti,only_on_corpus = only_on_corpus)
+                lr = lr,to_plot=to_plot,select_arti=select_arti,corpus_to_train_on = corpus_to_train_on)
