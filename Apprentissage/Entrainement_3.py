@@ -41,11 +41,12 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
             train_on = ["F01","F02","F03","F04","M01","M02","M03","M04"]
 
         elif test_on in ["F1","F5","M1","M3"]:
-            train_on = ["F1","M1","M3","F5"]
+            train_on = ["F1","M1"]
+
 
         elif test_on in ["maps0","faet0",'mjjn0',"falh0","ffes0","fsew0","msak0"]:
             train_on = ["maps0","faet0",'mjjn0',"falh0","ffes0","fsew0","msak0"]
-            train_on = ["fsew0","msak0"]
+            train_on = ["fsew0","msak0","faet0"]
 
 
     train_on.remove(test_on)
@@ -165,8 +166,10 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
 
     categs_to_consider = files_per_categ.keys()
     for epoch in range(n_epochs):
+        n_this_epoch = 0
         random.shuffle(list(categs_to_consider))
-        for categ in categs_to_consider:  # de A à F pour le moment
+        loss_train_this_epoch = 0
+        for categ in categs_to_consider:  # de A à F pour le momen
 
             files_this_categ_courant = files_per_categ[categ]["train"] #on na pas encore apprit dessus au cours de cette epoch
             random.shuffle(files_this_categ_courant)
@@ -174,6 +177,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
             idx_to_consider = [i for i,n in enumerate(arti_to_consider) if n=="1"]
 
             while len(files_this_categ_courant) > 0:
+                n_this_epoch+=1
                 x, y = load_data(files_this_categ_courant[:batch_size], filtered=data_filtered,VT=True)
                 files_this_categ_courant = files_this_categ_courant[batch_size:] #we a re going to train on this 10 files
                 x, y = model.prepare_batch(x, y)
@@ -190,7 +194,8 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
                 loss.backward()
                 optimizer.step()
                 torch.cuda.empty_cache()
-
+                loss_train_this_epoch += loss.item()
+        loss_train_this_epoch = loss_train_this_epoch/n_this_epoch
 
         if epoch%delta_test ==0:  #toutes les delta_test epochs on évalue le modèle sur validation et on sauvegarde le modele si le score est meilleur
          #   x, y = load_data(files_for_test)
@@ -199,12 +204,13 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
 
             print("evaluation validation")
             loss_vali = 0
+            n_valid = 0
             for categ in categs_to_consider:  # de A à F pour le moment
-
                 files_this_categ_courant = files_per_categ[categ]["valid"]  # on na pas encore apprit dessus au cours de cette epoch
                 arti_to_consider = categ_of_speakers[categ]["arti"]  # liste de 18 0/1 qui indique les arti à considérer
                 idx_to_consider = [i for i, n in enumerate(arti_to_consider) if n == "1"]
                 while len(files_this_categ_courant) >0 :
+                    n_valid +=1
                     x, y = load_data(files_this_categ_courant[:batch_size], filtered=data_filtered,VT=True)
                     files_this_categ_courant = files_this_categ_courant[batch_size:]  # on a appris sur ces 10 phrases
                     x, y = model.prepare_batch(x, y)
@@ -218,10 +224,10 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
                         y_pred = y_pred[:, :, idx_to_consider]
                     loss_courant = criterion(y, y_pred)
                     loss_vali += loss_courant.item()
+            loss_vali  = loss_vali/n_valid
 
-            loss_vali = loss_vali
             model.all_validation_loss.append(loss_vali)
-            model.all_training_loss.append(loss)
+            model.all_training_loss.append(loss_train_this_epoch)
 
             if epoch>0:
                 if loss_vali > model.all_validation_loss[-1]:
