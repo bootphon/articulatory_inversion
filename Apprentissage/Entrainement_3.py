@@ -35,7 +35,6 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
     modele_filtered=True
     train_on =  ["F01","F02","F03","F04","M01","M02","M03","M04","F1","F5","M1",
                  "M3","maps0","faet0",'mjjn0',"falh0","ffes0","fsew0","msak0","MNGU0"]
-    train_on = ["MNGU0","fsew0","msak0","faet0","M1","F5","F01"]
 
     if only_on_corpus :
         if test_on in ["F01","F02","F03","F04","M01","M02","M03","M04"]:
