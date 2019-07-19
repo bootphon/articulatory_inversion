@@ -39,6 +39,8 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
     if only_on_corpus :
         if test_on in ["F01","F02","F03","F04","M01","M02","M03","M04"]:
             train_on = ["F01","F02","F03","F04","M01","M02","M03","M04"]
+            train_on = ["F01","F02"]
+
 
         elif test_on in ["F1","F5","M1","M3"]:
             train_on = ["M3","M1","F1","F5"]
@@ -143,10 +145,10 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False,s
         sp_in_categ = categ_of_speakers[categ]["sp"]
         sp_in_categ = [sp for sp in sp_in_categ if sp in train_on]
         # fichiers qui appartiennent à la categorie car le nom du speaker apparait touojurs dans le nom du fichier
-        files_train_this_categ = [[f for f in files_for_train if sp.lower() in f ]for sp in sp_in_categ]
-        files_train_this_categ = [item for sublist in files_train_this_categ for item in sublist] # flatten la liste de liste
+        files_train_this_categ = [[f for f in files_for_train if sp.lower() in f.lower() ]for sp in sp_in_categ]
 
-        files_valid_this_categ = [[f for f in files_for_valid if sp.lower() in f] for sp in sp_in_categ]
+        files_train_this_categ = [item for sublist in files_train_this_categ for item in sublist] # flatten la liste de liste
+        files_valid_this_categ = [[f for f in files_for_valid if sp.lower() in f.lower()] for sp in sp_in_categ]
         files_valid_this_categ = [item for sublist in files_valid_this_categ for item in sublist]  # flatten la liste de liste
 
         if len(files_train_this_categ) > 0 : #meaning we have at least one file in this categ
