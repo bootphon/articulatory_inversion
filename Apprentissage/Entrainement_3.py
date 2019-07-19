@@ -54,7 +54,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr,to_plot,select_arti,
     output_dim = 18
 
    # name_file = "test_on_" + test_on+"_idx_"+str(select_arti)+"_onlycorpus_"+str(only_on_corpus)
-    name_file = "train_on_"+name_corpus_concat+"idx_"+str(select_arti)
+    name_file = "train_on_"+name_corpus_concat+"test_on_"+test_on+"_idx_"+str(select_arti)
     print("name file : ",name_file)
 #   logger = Logger('./log_' + name_file)
 
