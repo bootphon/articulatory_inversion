@@ -42,8 +42,11 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr,to_plot,select_arti,
         sp = get_speakers_per_corpus(corpus)
         train_on = train_on + sp
         name_corpus_concat = name_corpus_concat+corpus+"_"
+    train_on  = ["MNGU0"]
+  #  train_on = ["msak0"]
     print(name_corpus_concat)
-    train_on.remove(test_on)
+    if test_on in train_on :
+        train_on.remove(test_on)
     print("train_on :",train_on)
     print("test on:",test_on)
 
@@ -112,9 +115,10 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr,to_plot,select_arti,
         my_loss = nume/deno
         my_loss = torch.sum(my_loss) #pearson doit etre le plus grand possible
         #loss = torch.div(loss, torch.tensor(y.shape[2],dtype=torch.float64)) # correlation moyenne par arti
+       # print("myloss shape",my_loss.shape)
         return -my_loss
-    criterion = criterion_pearson
 
+    criterion_rmse = torch.nn.MSELoss(reduction='sum')
     with open('categ_of_speakers.json', 'r') as fp:
         categ_of_speakers = json.load(fp) #dictionnaire en clé la categorie en valeur un dictionnaire
                                             # #avec les speakers dans la catégorie et les arti concernées par cette categorie
@@ -169,8 +173,6 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr,to_plot,select_arti,
 
             files_this_categ_courant = files_per_categ[categ]["train"] #on na pas encore apprit dessus au cours de cette epoch
             random.shuffle(files_this_categ_courant)
-            arti_to_consider = categ_of_speakers[categ]["arti"] #liste de 18 0/1 qui indique les arti à considérer
-            idx_to_consider = [i for i,n in enumerate(arti_to_consider) if n=="1"]
 
             while len(files_this_categ_courant) > 0:
                 n_this_epoch+=1
@@ -183,13 +185,19 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr,to_plot,select_arti,
                     y_pred = y_pred.to(device=cuda2)
                 y = y.double()
                 optimizer.zero_grad()
+
                 if select_arti:
-                    y = y[:, :, idx_to_consider]
-                    y_pred = y_pred[:, :, idx_to_consider]
-                loss = criterion(y, y_pred)
+                    arti_to_consider = categ_of_speakers[categ]["arti"]  # liste de 18 0/1 qui indique les arti à considérer
+                    idx_to_ignore = [i for i, n in enumerate(arti_to_consider) if n == "0"]
+                    y[:,:,idx_to_ignore]=0
+                    y_pred[:,:,idx_to_ignore]=0
+
+                loss = criterion_pearson(y, y_pred)
+
                 loss.backward()
                 optimizer.step()
                 torch.cuda.empty_cache()
+
                 loss_train_this_epoch += loss.item()
         loss_train_this_epoch = loss_train_this_epoch/n_this_epoch
 
@@ -203,8 +211,6 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr,to_plot,select_arti,
             n_valid = 0
             for categ in categs_to_consider:  # de A à F pour le moment
                 files_this_categ_courant = files_per_categ[categ]["valid"]  # on na pas encore apprit dessus au cours de cette epoch
-                arti_to_consider = categ_of_speakers[categ]["arti"]  # liste de 18 0/1 qui indique les arti à considérer
-                idx_to_consider = [i for i, n in enumerate(arti_to_consider) if n == "1"]
                 while len(files_this_categ_courant) >0 :
                     n_valid +=1
                     x, y = load_data(files_this_categ_courant[:batch_size], filtered=data_filtered,VT=True)
@@ -215,10 +221,14 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr,to_plot,select_arti,
                     if cuda_avail:
                         y_pred = y_pred.to(device=cuda2)
                     y = y.double()  # (Batchsize, maxL, 18)
+
                     if select_arti:
-                        y = y[:, :, idx_to_consider]
-                        y_pred = y_pred[:, :, idx_to_consider]
-                    loss_courant = criterion(y, y_pred)
+                        arti_to_consider = categ_of_speakers[categ]["arti"]  # liste de 18 0/1 qui indique les arti à considérer
+                        idx_to_ignore = [i for i, n in enumerate(arti_to_consider) if n == "0"]
+                        y[:, :, idx_to_ignore] = 0
+                        y_pred[:, :, idx_to_ignore] = 0
+
+                    loss_courant = criterion_pearson(y, y_pred)
                     loss_vali += loss_courant.item()
             loss_vali  = loss_vali/n_valid
 
@@ -261,24 +271,23 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr,to_plot,select_arti,
 if __name__=='__main__':
     import argparse
     parser = argparse.ArgumentParser(description='Train and save a model.')
-    parser.add_argument('test_on', metavar='test_on', type=str,
+    parser.add_argument('test_on', type=str,
                         help='the speaker we want to test on')
 
-    parser.add_argument('n_epochs', metavar='n_epochs', type=int,
+    parser.add_argument('n_epochs', type=int,
                         help='max number of epochs to train the model')
-    parser.add_argument('delta_test', metavar='delta_test', type=int,
+    parser.add_argument('delta_test', type=int,
                         help='interval between two validation evaluation')
-    parser.add_argument('patience', metavar='patience', type=int,
+    parser.add_argument('patience',type=int,
                         help='number of iterations in a row with decreasing validation score before stopping the train ')
-    parser.add_argument('lr', metavar='lr', type=str,
-                        help='learning rate of Adam optimizer ')
-    parser.add_argument('to_plot', metavar='to_plot', type=bool,
+    parser.add_argument('lr',    help='learning rate of Adam optimizer ')
+    parser.add_argument('to_plot', type=bool,
                         help='si true plot les resultats sur le test')
 
-    parser.add_argument('select_arti', metavar='select_arti', type=bool,
+    parser.add_argument('select_arti', type=bool,
                         help='ssi dans la retropro on ne considere que les arti bons')
 
-    parser.add_argument('corpus_to_train_on', metavar='corpus_to_train_on', type=str,
+    parser.add_argument('corpus_to_train_on',  type=str,
                         help='ssi dans la retropro on ne considere que les arti bons')
 
 
