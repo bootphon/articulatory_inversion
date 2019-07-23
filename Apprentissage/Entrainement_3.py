@@ -43,7 +43,6 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr,to_plot,select_arti,
         train_on = train_on + sp
         name_corpus_concat = name_corpus_concat+corpus+"_"
     print(name_corpus_concat)
-    train_on = ["msak0","fsew0"]
     train_on.remove(test_on)
     print("train_on :",train_on)
     print("test on:",test_on)
