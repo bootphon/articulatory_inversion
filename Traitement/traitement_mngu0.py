@@ -64,11 +64,14 @@ def traitement_general_mngu0(N_max="All"):
             os.makedirs(os.path.join(path_files_treated, "ema_filtered"))
         if not os.path.exists(os.path.join(os.path.join(path_files_treated, "mfcc"))):
             os.makedirs(os.path.join(path_files_treated, "mfcc"))
-
+        if not os.path.exists(os.path.join(path_files_treated, "ema_VT")):
+            os.makedirs(os.path.join(path_files_treated, "ema_VT"))
 
         files = glob.glob(os.path.join(path_files_treated, "ema", "*"))
         files += glob.glob(os.path.join(path_files_treated, "ema_filtered", "*"))
         files += glob.glob(os.path.join(path_files_treated, "mfcc", "*"))
+        files += glob.glob(os.path.join(path_files_treated, "ema_VT", "*"))
+
         for f in files:
             os.remove(f)
     def read_ema_file(k):
@@ -233,6 +236,7 @@ def traitement_general_mngu0(N_max="All"):
         list_EMA_traj.append(ema_filtered)
         list_MFCC_frames.append(mfcc)
     calculate_norm_values(list_EMA_traj, list_MFCC_frames)
+
     normalize_data(speaker)
     add_vocal_tract(speaker)
     split_sentences(speaker)

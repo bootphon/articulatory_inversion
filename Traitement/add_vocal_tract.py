@@ -256,4 +256,63 @@ def add_vocal_tract_per_corpus(corpus, max="All") :
     for sp in speakers :
         add_vocal_tract(sp,max = max)
 
+
+def add_vocoal_tract_on_ema(ema,speaker):
+    #   print("adding vocal tracts for speaker {}".format(speaker))
+    def add_lip_aperture(ema):
+        ind_1, ind_2 = [articulators.index("ul_y"), articulators.index("ll_y")]
+        lip_aperture = ema[:, ind_1] - ema[:, ind_2]  # upperlip_y - lowerlip_y
+        return lip_aperture
+
+    def add_lip_protrusion(ema):
+        ind_1, ind_2 = [articulators.index("ul_x"), articulators.index("ll_x")]
+        lip_protrusion = (ema[:, ind_1] + ema[:, ind_2]) / 2
+        return lip_protrusion
+
+
+    def add_TTCL(ema):  # tongue tip constriction location in degree
+        ind_1, ind_2 = [articulators.index("tt_x"), articulators.index("tt_y")]
+        TTCL = ema[:, ind_1] / np.sqrt(ema[:, ind_1] ** 2 + ema[:, ind_2] ** 2)  # upperlip_y - lowerlip_y
+        return TTCL
+
+    def add_TBCL(ema):  # tongue body constriction location in degree
+        ind_1, ind_2 = [articulators.index("tb_x"), articulators.index("tb_y")]
+        TBCL = ema[:, ind_1] / np.sqrt(ema[:, ind_1] ** 2 + ema[:, ind_2] ** 2)  # upperlip_y - lowerlip_y
+        return TBCL
+
+    def get_idx_to_ignore():
+        arti_per_speaker = os.path.join(root_folder, "Traitement", "articulators_per_speaker.csv")
+        csv.register_dialect('myDialect', delimiter=';')
+        with open(arti_per_speaker, 'r') as csvFile:
+            reader = csv.reader(csvFile, dialect="myDialect")
+            next(reader)
+            for row in reader:
+                if row[0] == speaker:
+                    arti_to_consider = row[1:19]
+        idx_to_ignore = [i for i, n in enumerate(arti_to_consider) if n == "0"]
+        return idx_to_ignore
+
+    lip_aperture = add_lip_aperture(ema)
+    lip_protrusion = add_lip_protrusion(ema)
+    TTCL = add_TTCL(ema)
+    TBCL = add_TBCL(ema)
+
+    if speaker in ["fsew0", "msak0", "faet0", "ffes0", "falh0"]:  # 14 arti de 0 à 13 (2*6 + 2)
+        ema = np.concatenate((ema, np.zeros((len(ema), 4))), axis=1)
+        ema[:, 16:18] = ema[:, 12:14]  # met les velum dans les 2 dernieres arti
+        ema[:, 12:16] = 0  # les 4 autres colonnes vont etre remplies avec les VT par la suite
+
+    else :
+       ema = np.concatenate((ema, np.zeros((len(ema), 6))), axis=1)
+
+    ema[:, 12] = lip_aperture
+    ema[:, 13] = lip_protrusion
+    ema[:, 14] = TTCL
+    ema[:, 15] = TBCL
+    idx_to_ignore = get_idx_to_ignore()
+    ema[:,idx_to_ignore] = 0
+
+    return ema
+
+
 #add_vocal_tract("F01")

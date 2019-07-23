@@ -56,6 +56,28 @@ def normalize_data_per_corpus(corpus) :
     for sp in speakers :
         normalize_data(sp)
 
+def normalize_phrase(i,speaker):
+    """
+    calcule puis sauvegarde les données EMA normalisées.
+    Norma utilisée : standardisation (standard score) par speaker et par articulateur
+    sur l'ensemble des phrases prononcées.
+
+
+    """
+    root_path = os.path.dirname(os.getcwd())
+    ema = np.load(os.path.join(root_path,speaker, "ema", EMA_files[i] + ".npy"))
+    ema_filtered = np.load(os.path.join(root_path,speaker, "ema_filtered", EMA_files[i] + ".npy"))
+
+    ema = (ema - smoothed_moving_average[i, :])/std_ema
+    ema_filtered = (ema_filtered - smoothed_moving_average[i, :]) / std_ema
+
+    mfcc = np.load(os.path.join(path_speaker, "mfcc", EMA_files[i] + ".npy"))
+    mfcc = (mfcc-mean_mfcc)/std_mfcc
+
+    np.save(os.path.join(path_speaker, "ema_norma", EMA_files[i]), ema)
+    np.save(os.path.join(path_speaker, "ema_filtered_norma", EMA_files[i]), ema_filtered)
+    np.save(os.path.join(path_speaker, "mfcc", EMA_files[i]), mfcc)
+
 #normalize_data("falh0")
 
 #orpus =["Haskins"]

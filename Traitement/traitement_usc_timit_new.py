@@ -59,14 +59,29 @@ from Apprentissage.utils import low_pass_filter_weight
 import shutil
 from Traitement.normalization import normalize_data
 from Traitement.add_vocal_tract import add_vocal_tract
-
+from Traitement.class_corpus import Speaker,Corpus
 import glob
 
 
 def traitement_general_usc(N_max):
 
+    my_corpus_class = Corpus("usc")
+
+    sampling_rate_ema = 100
+    sampling_rate_wav = 20000
+    sampling_rate_wav_wanted = 16000
+    cutoff = 10
+
+    sampling_rate_ema = my_corpus_class.sampling_rate_ema
+    sampling_rate_wav = my_corpus_class.sampling_rate_wav
+    sampling_rate_wav_wanted = 16000
+    cutoff = my_corpus_class.cutoff
+
+
+
     def traitement_usc(speaker,N_max=N_max):
 
+        my_speaker_class = Speaker(speaker)
         root_path = dirname(dirname(os.path.realpath(__file__)))
         path_files_treated = os.path.join(root_path, "Donnees_pretraitees",  speaker)
         path_files_brutes = os.path.join(root_path, "Donnees_brutes", "usc_timit", speaker)
@@ -89,6 +104,7 @@ def traitement_general_usc(N_max):
             files = glob.glob(os.path.join(path_files_treated, "ema", "*"))
             files += glob.glob(os.path.join(path_files_treated, "mfcc", "*"))
             files += glob.glob(os.path.join(path_files_treated, "ema_filtered", "*"))
+            files += glob.glob(os.path.join(path_files_treated, "ema_VT", "*"))
             files += glob.glob(os.path.join(path_files_brutes, "wav_cut","*"))
             files += glob.glob(os.path.join(path_files_brutes, "mat_cut","*"))
 
@@ -190,44 +206,6 @@ def traitement_general_usc(N_max):
                 print("pbm size", EMA_files_2[k])
             return my_ema, my_mfcc
 
-        def smooth_data(my_ema):
-            pad = 30
-            weights = low_pass_filter_weight(cut_off=cutoff, sampling_rate=sampling_rate_ema)
-
-            my_ema_filtered = np.concatenate([np.expand_dims(np.pad(my_ema[:, k], (pad, pad), "symmetric"), 1)
-                                              for k in range(my_ema.shape[1])], axis=1)
-
-            my_ema_filtered = np.concatenate([np.expand_dims(np.convolve(channel, weights, mode='same'), 1)
-                                              for channel in my_ema_filtered.T], axis=1)
-            my_ema_filtered = my_ema_filtered[pad:-pad, :]
-            return my_ema_filtered
-
-        def calculate_norm_values(my_list_EMA_traj, my_list_MFCC_frames):
-            pad = 30
-            all_mean_ema = np.array([np.mean(traj, axis=0) for traj in my_list_EMA_traj])
-            weights_moving_average = low_pass_filter_weight(cut_off=10, sampling_rate=sampling_rate_ema)
-
-            moving_average = np.concatenate([np.expand_dims(np.pad(all_mean_ema[:, k], (pad, pad), "symmetric"), 1)
-                                             for k in range(all_mean_ema.shape[1])], axis=1)
-            smoothed_moving_average = np.concatenate(
-                [np.expand_dims(np.convolve(channel, weights_moving_average, mode='same'), 1)
-                 for channel in moving_average.T], axis=1)
-            smoothed_moving_average = smoothed_moving_average[pad:-pad, :]
-
-            all_EMA_concat = np.concatenate([traj for traj in my_list_EMA_traj], axis=0)
-            std_ema = np.std(all_EMA_concat, axis=0)
-
-            mean_ema = np.mean(np.array([np.mean(traj, axis=0) for traj in my_list_EMA_traj]),
-                               axis=0)  # apres que chaque phrase soit centrée
-            std_mfcc = np.mean(np.array([np.std(frame, axis=0) for frame in my_list_MFCC_frames]), axis=0)
-            mean_mfcc = np.mean(np.array([np.mean(frame, axis=0) for frame in my_list_MFCC_frames]), axis=0)
-            np.save(os.path.join("norm_values", "moving_average_ema_" + speaker), smoothed_moving_average)
-            np.save(os.path.join("norm_values", "moving_average_ema_brute" + speaker), moving_average)
-            np.save(os.path.join("norm_values", "std_ema_" + speaker), std_ema)
-            np.save(os.path.join("norm_values", "mean_ema_" + speaker), mean_ema)
-            np.save(os.path.join("norm_values", "std_mfcc_" + speaker), std_mfcc)
-            np.save(os.path.join("norm_values", "mean_mfcc_" + speaker), mean_mfcc)
-
         create_missing_dir()
         path_files = os.path.join(root_path, "Donnees_brutes","usc_timit", speaker)
         EMA_files = sorted([name[:-4] for name in os.listdir(os.path.join(path_files_brutes, "mat")) if name.endswith(".mat")])
@@ -255,27 +233,35 @@ def traitement_general_usc(N_max):
             np.save(os.path.join(root_path, "Donnees_pretraitees",  speaker, "ema", EMA_files_2[i]), ema)
             np.save(os.path.join(root_path, "Donnees_pretraitees",  speaker, "mfcc", EMA_files_2[i]), mfcc)
 
-            ema_filtered = smooth_data(ema)
+            ema_filtered = my_speaker_class.smooth_data(ema)
             np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_filtered", EMA_files_2[i]), ema_filtered)
-            list_EMA_traj.append(ema_filtered)
-            list_MFCC_frames.append(mfcc)
+            my_speaker_class.list_EMA_traj.append(ema_filtered)
+            my_speaker_class.list_MFCC_frames.append(mfcc)
 
-        calculate_norm_values(list_EMA_traj,list_MFCC_frames)
-        normalize_data(speaker)
-        add_vocal_tract(speaker)
+        my_speaker_class.calculate_norm_values()
+
+        for i in range(N_2):
+            ema = np.load(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema", EMA_files_2[i] + ".npy"))
+            ema_filtered = np.load(
+                os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_filtered", EMA_files_2[i] + ".npy"))
+            mfcc = np.load(os.path.join(root_path, "Donnees_pretraitees", speaker, "mfcc", EMA_files_2[i] + ".npy"))
+            ema_norma, ema_filtered_norma, ema_VT, mfcc = my_speaker_class.traitement_deuxieme_partie(i, ema,
+                                                                                                      ema_filtered,
+                                                                                                      mfcc)
+            np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_norma", EMA_files_2[i]), ema)
+            np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_filtered_norma", EMA_files_2[i]),
+                    ema_filtered_norma)
+            np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "mfcc", EMA_files_2[i]), mfcc)
+            np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_VT", EMA_files_2[i]), ema_VT)
         split_sentences(speaker)
         get_fileset_names(speaker)
 
-    sampling_rate_ema = 100
-    sampling_rate_wav = 20000
-    sampling_rate_wav_wanted = 16000
     frame_time = 25
     hop_time = 10  # en ms
     hop_length = int((hop_time * sampling_rate_wav) / 1000)
     frame_length = int((frame_time * sampling_rate_wav) / 1000)
     window = 5
     n_coeff = 13
-    cutoff = 10
     speakers = ["F1","F5","M1","M3"]
 
     for sp in speakers :

@@ -53,6 +53,7 @@ def traitement_general_mocha(N_max,n_procs=0):
                 os.makedirs(os.path.join(path_files_treated, "mfcc"))
             if not os.path.exists(os.path.join(path_files_treated, "ema_filtered")):
                 os.makedirs(os.path.join(path_files_treated, "ema_filtered"))
+
             files = glob.glob(os.path.join(path_files_treated, "ema", "*"))
             files += glob.glob(os.path.join(path_files_treated, "mfcc", "*"))
             files += glob.glob(os.path.join(path_files_treated, "ema_filtered", "*"))
@@ -87,7 +88,7 @@ def traitement_general_mocha(N_max,n_procs=0):
                         ema_data[j] = scipy.interpolate.splev(j, spline)
                 return ema_data
 
-        def from_wav_to_mfcc(k):
+        def from_wav_to_mfcc(k): #remove silence
             path_wav = os.path.join(path_files, wav_files[k] + '.wav')
             data, sr = librosa.load(path_wav, sr=sampling_rate_wav)  # chargement de données
 
@@ -115,6 +116,7 @@ def traitement_general_mocha(N_max,n_procs=0):
                     ]
                 start_time = float(labels[0][1])  # if labels[0][1] == '#' else 0
                 end_time = float(labels[-1][0])  # if labels[-1][1] == '#' else labels[-1][0]
+
                 start_frame_mfcc = int(
                     np.floor(
                         start_time * 1000 / hop_time))  # nombre de frame mfcc avant lesquelles il ny a que du silence
@@ -127,7 +129,6 @@ def traitement_general_mocha(N_max,n_procs=0):
                 # sous echantillonnage de EMA pour synchro avec WAV
             n_frames_wanted = my_mfcc.shape[0]
             my_ema = scipy.signal.resample(my_ema, num=n_frames_wanted)
-
 
             ## zero padding de sorte que l'on intègre les dépendences temporelles : on apprend la trame du milieu
             # mais on ajoute des trames précédent et suivant pour ajouter de l'informatio temporelle
@@ -227,12 +228,10 @@ def traitement_general_mocha(N_max,n_procs=0):
     cutoff = 30
     speakers = ["fsew0","msak0","faet0","falh0","ffes0","mjjn0","maps0"]
 
-
-
     for sp in speakers :
         traitement_mocha(sp,N_max = N_max)
 
         print("Done for speaker ",sp)
 
 
-#traitement_general_mocha(N_max = 3,n_procs = 0)
+traitement_general_mocha(N_max = 50)

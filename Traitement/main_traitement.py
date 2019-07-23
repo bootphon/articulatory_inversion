@@ -21,19 +21,18 @@ def main_traitement(corpus_to_treat=["mocha", "usc", "MNGU0", "Haskins"], max="A
     if not os.path.exists(os.path.join(os.path.join(root_path, "Traitement", "norm_values"))):
         os.makedirs(os.path.join(os.path.join(root_path, "Traitement", "norm_values")))
 
-
     if "mocha" in corpus_to_treat:
-        traitement_general_mocha(max)
+        traitement_general_mocha_new(max)
 
     if "MNGU0" in corpus_to_treat:
-        traitement_general_mngu0(max)
+        traitement_general_mngu0_new(max)
         # split = True
 
     if "usc" in corpus_to_treat:
-        traitement_general_usc(max)
+        traitement_general_usc_new(max)
 
     if "Haskins" in corpus_to_treat:
-        traitement_general_haskins(max)
+        traitement_general_haskins_new(max)
 
     for corpus in corpus_to_treat:
         get_fileset_names_per_corpus(corpus)
@@ -63,12 +62,13 @@ def traitement_general_per_corpus(corp,max):
 if __name__ == '__main__':
     corpus = ["MNGU0","mocha","usc","Haskins"]
     procs = []
+
     parser = argparse.ArgumentParser(description='Train and save a model.')
-    parser.add_argument('N_max', metavar='N_max', type=int, help='nombre de fichiers max')
+    parser.add_argument('N_max', metavar='N_max', type=int,
+                        help='nombre de fichiers max que lon veut traiter par corpus')
 
     args = parser.parse_args()
     N_max = int(sys.argv[1])
-    t1= time.clock()
     for co in corpus:
         proc = Process(target=traitement_general_per_corpus, args=(co,N_max))
         procs.append(proc)
@@ -76,5 +76,4 @@ if __name__ == '__main__':
 
     for proc in procs:
         proc.join()
-    t2 = time.clock(   )
-    print("dureee ,",str(t2-t1))
+

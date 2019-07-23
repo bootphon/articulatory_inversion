@@ -29,3 +29,17 @@ def get_speakers_per_corpus(corpus):
     else:
         raise NameError("vous navez pas choisi un des corpus")
     return speakers
+
+
+class petits_traitements():
+    def __init__(self,name,sampling_rate_ema,sampling_rate_wav,cutoff):
+        super(petits_traitements, self).__init__()
+        self.name = name
+        self.sampling_rate_ema = sampling_rate_ema
+        self.sampling_rate_wav = sampling_rate_wav
+        self.speakers = None
+        self.get_speakers(name)
+        self.cutoff = cutoff
+        self.list_EMA_traj = []
+        self.list_MFCC_frames = []
+

@@ -86,7 +86,7 @@ def read_csv_arti_ok_per_speaker():
             categ_of_speakers[categ]["arti"] = None
         for row in reader:
             categ_of_speakers[row[19]]["sp"].append(row[0])
-            if categ_of_speakers[row[19]]["arti"] != None:
+            if categ_of_speakers[row[19]]["arti"]  :
                 if categ_of_speakers[row[19]]["arti"] != row[1:19]:
                     print("check arti and category for categ {}".format(row[19]))
             else:
