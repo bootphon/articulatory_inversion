@@ -42,14 +42,11 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr,to_plot,select_arti,
         sp = get_speakers_per_corpus(corpus)
         train_on = train_on + sp
         name_corpus_concat = name_corpus_concat+corpus+"_"
-    train_on  = ["MNGU0"]
-  #  train_on = ["msak0"]
     print(name_corpus_concat)
     if test_on in train_on :
         train_on.remove(test_on)
     print("train_on :",train_on)
     print("test on:",test_on)
-
     cuda_avail = torch.cuda.is_available()
     print(" cuda ?", cuda_avail)
     output_dim = 18
@@ -176,7 +173,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr,to_plot,select_arti,
 
             while len(files_this_categ_courant) > 0:
                 n_this_epoch+=1
-                x, y = load_data(files_this_categ_courant[:batch_size], filtered=data_filtered,VT=True)
+                x, y = load_data(files_this_categ_courant[:batch_size])
                 files_this_categ_courant = files_this_categ_courant[batch_size:] #we a re going to train on this 10 files
                 x, y = model.prepare_batch(x, y)
                 y_pred = model(x).double()
@@ -213,7 +210,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr,to_plot,select_arti,
                 files_this_categ_courant = files_per_categ[categ]["valid"]  # on na pas encore apprit dessus au cours de cette epoch
                 while len(files_this_categ_courant) >0 :
                     n_valid +=1
-                    x, y = load_data(files_this_categ_courant[:batch_size], filtered=data_filtered,VT=True)
+                    x, y = load_data(files_this_categ_courant[:batch_size])
                     files_this_categ_courant = files_this_categ_courant[batch_size:]  # on a appris sur ces 10 phrases
                     x, y = model.prepare_batch(x, y)
                     y_pred = model(x).double()
