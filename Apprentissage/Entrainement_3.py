@@ -47,10 +47,10 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr,to_plot,select_arti,
         train_on.remove(test_on)
     print("train_on :",train_on)
     print("test on:",test_on)
+    #train_on = ["msak0"]
     cuda_avail = torch.cuda.is_available()
     print(" cuda ?", cuda_avail)
     output_dim = 18
-
    # name_file = "test_on_" + test_on+"_idx_"+str(select_arti)+"_onlycorpus_"+str(only_on_corpus)
     name_file = "train_on_"+name_corpus_concat+"test_on_"+test_on+"_idx_"+str(select_arti)
     print("name file : ",name_file)
