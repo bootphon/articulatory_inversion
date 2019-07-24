@@ -94,14 +94,11 @@ def traitement_general_haskins(N_max):
                 os.makedirs(os.path.join(path_files_treated, "mfcc"))
             if not os.path.exists(os.path.join(path_files_treated, "ema_final")):
                 os.makedirs(os.path.join(path_files_treated, "ema_final"))
-            if not os.path.exists(os.path.join(path_files_brutes, "wav_cut")):
-                os.makedirs(os.path.join(path_files_brutes, "wav_cut"))
 
             files = glob.glob(os.path.join(path_files_treated, "ema", "*"))
             files += glob.glob(os.path.join(path_files_treated, "mfcc", "*"))
             files += glob.glob(os.path.join(path_files_treated, "ema_VT", "*"))
             files += glob.glob(os.path.join(path_files_treated, "ema_final", "*"))
-            files += glob.glob(os.path.join(path_files_brutes, "wav_cut", "*"))
 
             for f in files:
                 os.remove(f)
