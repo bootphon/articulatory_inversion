@@ -61,6 +61,8 @@ def traitement_general_per_corpus(corp,max):
 
 if __name__ == '__main__':
     corpus = ["MNGU0","mocha","usc","Haskins"]
+    corpus = ["MNGU0","usc","Haskins"]
+
     procs = []
 
     parser = argparse.ArgumentParser(description='Train and save a model.')

@@ -30,7 +30,7 @@ def get_fileset_names(speaker):
     """
 
     files_path =  os.path.join(donnees_path,speaker)
-    EMA_files_names = [name[:-4] for name in os.listdir(os.path.join(files_path,"ema_VT")) if name.endswith('.npy') ]
+    EMA_files_names = [name[:-4] for name in os.listdir(os.path.join(files_path,"ema_final")) if name.endswith('.npy') ]
     N = len(EMA_files_names)
     shuffle(EMA_files_names)
     pourcent_train = 0.7

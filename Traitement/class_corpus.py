@@ -68,7 +68,7 @@ class Corpus():
 
         elif self.name == "MNGU0":
             self.sampling_rate_wav = 16000
-            self.sampling_rate_ema = 500
+            self.sampling_rate_ema = 200
             self.cutoff = 10
 
         elif self.name == "usc":
@@ -155,6 +155,7 @@ class Speaker():
 
             all_EMA_concat = np.concatenate([traj for traj in list_EMA_traj], axis=0)
             std_ema = np.std(all_EMA_concat, axis=0)
+            std_ema[std_ema==0]=1
 
             mean_ema = np.mean(np.array([np.mean(traj, axis=0) for traj in list_EMA_traj]),
                                axis=0)  # apres que chaque phrase soit centrée
@@ -172,72 +173,68 @@ class Speaker():
             self.mean_mfcc = mean_mfcc
             self.std_mfcc = std_mfcc
 
-    def traitement_deuxieme_partie(self,i,ema,ema_filtered,mfcc):
+    def add_vocal_tract(self,my_ema):
+        #   print("adding vocal tracts for speaker {}".format(speaker))
+        def add_lip_aperture(ema):
+            ind_1, ind_2 = [self.articulators.index("ul_y"), self.articulators.index("ll_y")]
+            lip_aperture = ema[:, ind_1] - ema[:, ind_2]  # upperlip_y - lowerlip_y
+            return lip_aperture
 
-        def normalize_phrase(i,my_ema,my_ema_filtered,my_mfcc):
-            my_ema = (my_ema - self.moving_average_ema[i, :]) / self.std_ema
-            my_ema_filtered = (my_ema_filtered - self.moving_average_ema[i, :]) / self.std_ema
-            my_mfcc = (my_mfcc - self.mean_mfcc) / self.std_mfcc
-            return my_ema,my_ema_filtered,my_mfcc
+        def add_lip_protrusion(ema):
+            ind_1, ind_2 = [self.articulators.index("ul_x"), self.articulators.index("ll_x")]
+            lip_protrusion = (ema[:, ind_1] + ema[:, ind_2]) / 2
+            return lip_protrusion
 
-        def add_vocal_tract(my_ema):
-            #   print("adding vocal tracts for speaker {}".format(speaker))
-            def add_lip_aperture(ema):
-                ind_1, ind_2 = [self.articulators.index("ul_y"), self.articulators.index("ll_y")]
-                lip_aperture = ema[:, ind_1] - ema[:, ind_2]  # upperlip_y - lowerlip_y
-                return lip_aperture
+        def add_TTCL(ema):  # tongue tip constriction location in degree
+            ind_1, ind_2 = [self.articulators.index("tt_x"), self.articulators.index("tt_y")]
+            TTCL = ema[:, ind_1] / np.sqrt(ema[:, ind_1] ** 2 + ema[:, ind_2] ** 2)  # upperlip_y - lowerlip_y
+            return TTCL
 
-            def add_lip_protrusion(ema):
-                ind_1, ind_2 = [self.articulators.index("ul_x"), self.articulators.index("ll_x")]
-                lip_protrusion = (ema[:, ind_1] + ema[:, ind_2]) / 2
-                return lip_protrusion
+        def add_TBCL(ema):  # tongue body constriction location in degree
+            ind_1, ind_2 = [self.articulators.index("tb_x"), self.articulators.index("tb_y")]
+            TBCL = ema[:, ind_1] / np.sqrt(ema[:, ind_1] ** 2 + ema[:, ind_2] ** 2)  # upperlip_y - lowerlip_y
+            return TBCL
 
-            def add_TTCL(my_ema):  # tongue tip constriction location in degree
-                ind_1, ind_2 = [self.articulators.index("tt_x"), self.articulators.index("tt_y")]
-                TTCL = ema[:, ind_1] / np.sqrt(my_ema[:, ind_1] ** 2 + my_ema[:, ind_2] ** 2)  # upperlip_y - lowerlip_y
-                return TTCL
+        def get_idx_to_ignore():
+            arti_per_speaker = os.path.join(root_folder, "Traitement", "articulators_per_speaker.csv")
+            csv.register_dialect('myDialect', delimiter=';')
+            with open(arti_per_speaker, 'r') as csvFile:
+                reader = csv.reader(csvFile, dialect="myDialect")
+                next(reader)
+                for row in reader:
+                    if row[0] == self.name:
+                        arti_to_consider = row[1:19]
+            idx_to_ignore = [k for k, n in enumerate(arti_to_consider) if n == "0"]
+            return idx_to_ignore
 
-            def add_TBCL(my_ema):  # tongue body constriction location in degree
-                ind_1, ind_2 = [self.articulators.index("tb_x"), self.articulators.index("tb_y")]
-                TBCL = my_ema[:, ind_1] / np.sqrt(ema[:, ind_1] ** 2 + ema[:, ind_2] ** 2)  # upperlip_y - lowerlip_y
-                return TBCL
+        lip_aperture = add_lip_aperture(my_ema)
+        lip_protrusion = add_lip_protrusion(my_ema)
+        TTCL = add_TTCL(my_ema)
+        TBCL = add_TBCL(my_ema)
 
-            def get_idx_to_ignore():
-                arti_per_speaker = os.path.join(root_folder, "Traitement", "articulators_per_speaker.csv")
-                csv.register_dialect('myDialect', delimiter=';')
-                with open(arti_per_speaker, 'r') as csvFile:
-                    reader = csv.reader(csvFile, dialect="myDialect")
-                    next(reader)
-                    for row in reader:
-                        if row[0] == self.name:
-                            arti_to_consider = row[1:19]
-                idx_to_ignore = [k for k, n in enumerate(arti_to_consider) if n == "0"]
-                return idx_to_ignore
+        if self.name in self.speakers_with_velum:  # 14 arti de 0 à 13 (2*6 + 2)
+            my_ema = np.concatenate((my_ema, np.zeros((len(my_ema), 4))), axis=1)
+            my_ema[:, 16:18] = my_ema[:, 12:14]  # met les velum dans les 2 dernieres arti
+            my_ema[:, 12:16] = 0  # les 4 autres colonnes vont etre remplies avec les VT par la suite
 
-            lip_aperture = add_lip_aperture(my_ema)
-            lip_protrusion = add_lip_protrusion(my_ema)
-            TTCL = add_TTCL(my_ema)
-            TBCL = add_TBCL(my_ema)
+        else:
+            my_ema = np.concatenate((my_ema, np.zeros((len(my_ema), 6))), axis=1)
 
-            if self.name in self.speakers_with_velum :  # 14 arti de 0 à 13 (2*6 + 2)
-                my_ema = np.concatenate((my_ema, np.zeros((len(my_ema), 4))), axis=1)
-                my_ema[:, 16:18] = my_ema[:, 12:14]  # met les velum dans les 2 dernieres arti
-                my_ema[:, 12:16] = 0  # les 4 autres colonnes vont etre remplies avec les VT par la suite
+        my_ema[:, 12] = lip_aperture
+        my_ema[:, 13] = lip_protrusion
+        my_ema[:, 14] = TTCL
+        my_ema[:, 15] = TBCL
+        idx_to_ignore = get_idx_to_ignore()
+        my_ema[:, idx_to_ignore] = 0
+        return my_ema
 
-            else:
-                my_ema = np.concatenate((my_ema, np.zeros((len(my_ema), 6))), axis=1)
+    def normalize_phrase(self,i,my_ema_filtered,my_mfcc):
+        my_ema_VT = (my_ema_filtered - self.moving_average_ema[i, :]) / self.std_ema
+        my_mfcc = (my_mfcc - self.mean_mfcc) / self.std_mfcc
+        return my_ema_VT,my_mfcc
 
-            my_ema[:, 12] = lip_aperture
-            my_ema[:, 13] = lip_protrusion
-            my_ema[:, 14] = TTCL
-            my_ema[:, 15] = TBCL
-            idx_to_ignore = get_idx_to_ignore()
-            my_ema[:, idx_to_ignore] = 0
-            return my_ema
 
-        ema_norma,ema_filtered_norma,mfcc = normalize_phrase(i,ema,ema_filtered,mfcc)
-        ema_VT = add_vocal_tract(ema_filtered_norma)
-        return ema_norma, ema_filtered_norma, ema_VT,mfcc
+
 
 #aa = Speaker("fsew0")
 #print(aa.speakers_with_velum)

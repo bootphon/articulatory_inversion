@@ -69,7 +69,7 @@ def traitement_general_haskins(N_max):
 
         root_path = dirname(dirname(os.path.realpath(__file__)))
         path_files_treated = os.path.join(root_path, "Donnees_pretraitees", speaker)
-        path_files_brutes = os.path.join(root_path, "Donnees_brutes", "Haskins_IEEE_Rate_Comparison_DB", speaker,
+        path_files_brutes = os.path.join(root_path, "Donnees_brutes", "Haskins", speaker,
                                          "data")
 
         def create_missing_dir():

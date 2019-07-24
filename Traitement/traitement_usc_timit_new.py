@@ -64,8 +64,8 @@ import glob
 
 
 def traitement_general_usc(N_max):
-
-    my_corpus_class = Corpus("usc")
+    corpus = "usc"
+    my_corpus_class = Corpus(corpus)
 
     sampling_rate_ema = 100
     sampling_rate_wav = 20000
@@ -78,33 +78,29 @@ def traitement_general_usc(N_max):
     cutoff = my_corpus_class.cutoff
 
 
-
     def traitement_usc(speaker,N_max=N_max):
 
         my_speaker_class = Speaker(speaker)
         root_path = dirname(dirname(os.path.realpath(__file__)))
         path_files_treated = os.path.join(root_path, "Donnees_pretraitees",  speaker)
-        path_files_brutes = os.path.join(root_path, "Donnees_brutes", "usc_timit", speaker)
-        path_files_annotation = os.path.join(root_path, "Donnees_brutes", "usc_timit", speaker, "trans")
+        path_files_brutes = os.path.join(root_path, "Donnees_brutes", corpus, speaker)
+        path_files_annotation = os.path.join(root_path, "Donnees_brutes", corpus, speaker, "trans")
 
         def create_missing_dir():
             if not os.path.exists(os.path.join(path_files_treated, "ema")):
                 os.makedirs(os.path.join(path_files_treated, "ema"))
             if not os.path.exists(os.path.join(path_files_treated, "mfcc")):
                 os.makedirs(os.path.join(path_files_treated, "mfcc"))
-            if not os.path.exists(os.path.join(path_files_treated, "ema_filtered")):
-                os.makedirs(os.path.join(path_files_treated, "ema_filtered"))
+            if not os.path.exists(os.path.join(path_files_treated, "ema_final")):
+                os.makedirs(os.path.join(path_files_treated, "ema_final"))
             if not os.path.exists(os.path.join(path_files_brutes, "mat_cut")):
                 os.makedirs(os.path.join(path_files_brutes, "mat_cut"))
             if not os.path.exists(os.path.join(path_files_brutes, "wav_cut")):
                 os.makedirs(os.path.join(path_files_brutes, "wav_cut"))
-            if not os.path.exists(os.path.join(path_files_brutes, "wav_reco")):
-                os.makedirs(os.path.join(path_files_brutes, "wav_reco"))
 
             files = glob.glob(os.path.join(path_files_treated, "ema", "*"))
             files += glob.glob(os.path.join(path_files_treated, "mfcc", "*"))
-            files += glob.glob(os.path.join(path_files_treated, "ema_filtered", "*"))
-            files += glob.glob(os.path.join(path_files_treated, "ema_VT", "*"))
+            files += glob.glob(os.path.join(path_files_treated, "ema_final", "*"))
             files += glob.glob(os.path.join(path_files_brutes, "wav_cut","*"))
             files += glob.glob(os.path.join(path_files_brutes, "mat_cut","*"))
 
@@ -116,11 +112,14 @@ def traitement_general_usc(N_max):
             for j in range(N):
 
                 path_wav = os.path.join(path_files_brutes, "wav", EMA_files[j] + '.wav')
-                wav, sr = librosa.load(path_wav, sr=sampling_rate_wav)  # chargement de données
+                wav, sr = librosa.load(path_wav, sr=sampling_rate_wav_wanted)  # chargement de données
+                wav = 0.5*wav/np.max(wav)
 
                 my_ema = sio.loadmat(os.path.join(path_files_brutes, "mat", EMA_files[j] + ".mat"))
                 my_ema = my_ema[EMA_files[j]][0]  # dictionnaire où les données sont associées à la clé EMA_files[i]pritn()
                 my_ema = np.concatenate([my_ema[arti][2][:, [0, 1]] for arti in range(1, 7)], axis=1)
+                #duree_ema = len(my_ema) / sampling_rate_ema
+                #duree_wav = len(wav) / sampling_rate_wav
 
                 with open(os.path.join(path_files_annotation, EMA_files[j] + ".trans")) as file:
                     labels = np.array([row.strip("\n").split(",") for row in file])
@@ -135,8 +134,8 @@ def traitement_general_usc(N_max):
 
                         xtrm_temp_ema = [int(np.floor(xtrm[0]* sampling_rate_ema)),int(
                                          min(np.floor(xtrm[1] * sampling_rate_ema) + 1,len(my_ema)))]
-                        xtrm_temp_wav = [int(int(np.floor(xtrm[0] * sampling_rate_wav))),
-                                        int( min(int(np.floor(xtrm[1] * sampling_rate_wav) + 1),len(wav)))]
+                        xtrm_temp_wav = [int(int(np.floor(xtrm[0] * sampling_rate_wav_wanted))),
+                                        int( min(int(np.floor(xtrm[1] * sampling_rate_wav_wanted) + 1),len(wav)))]
                       #  print("idphrase ",k)
                        # print("xtrm temp ,",xtrm)
                         ema_temp = my_ema[xtrm_temp_ema[0]:xtrm_temp_ema[1], :]
@@ -148,15 +147,14 @@ def traitement_general_usc(N_max):
                             ema_temp = np.concatenate((ema_temp, premiere_partie_ema), axis=0)
 
                             premiere_partie_wav,sr = librosa.load(
-                                os.path.join(path_files_brutes, "wav_cut", EMA_files[j][:-7] + str(k) + ".wav"),sr = sampling_rate_wav)
+                                os.path.join(path_files_brutes, "wav_cut", EMA_files[j][:-7] + str(k) + ".wav"),sr = sampling_rate_wav_wanted)
                             wav_temp = np.concatenate((wav_temp, premiere_partie_wav), axis=0)
-
 
                         np.save(os.path.join(path_files_brutes, "mat_cut", EMA_files[j][:-7] + str(k)), ema_temp)
                     #    np.save(os.path.join(path_files_brutes, "wav_cut", EMA_files[j][:-7] + str(k)), wav_temp)
 
                         librosa.output.write_wav(os.path.join(path_files_brutes,"wav_cut", EMA_files[j][:-7] + str(k)+".wav"),
-                                                 wav_temp, sampling_rate_wav)
+                                                 wav_temp, sampling_rate_wav_wanted)
 
         def read_ema_file(m):
             articulators = ["ul_x", "ul_y", "ll_x", "ll_y", "li_x", "li_y", "td_x", "td_y", "tb_x", "tb_y", "tt_x",
@@ -180,12 +178,11 @@ def traitement_general_usc(N_max):
 
         def from_wav_to_mfcc(k):
             path_wav = os.path.join(path_files_brutes, "wav_cut", EMA_files_2[k] + '.wav')
-            data, sr = librosa.load(path_wav, sr=sampling_rate_wav)  # chargement de données
-
-           # N_points_wav_wanted =int(len(data) * sampling_rate_wav / sampling_rate_wav_wanted)
+            data, sr = librosa.load(path_wav, sr=sampling_rate_wav_wanted)  # chargement de données
+           # N_points_wav_wanted =int(len(data) * sampling_rate_wav_wanted / sampling_rate_wav_wanted)
             #print(N_points_wav_wanted)
-            #data = scipy.signal.resample(data, num=N_points_wav_wanted)
-            my_mfcc = librosa.feature.mfcc(y=data, sr=sampling_rate_wav, n_mfcc=n_coeff,
+           # data = scipy.signal.resample(data, num=N_points_wav_wanted)
+            my_mfcc = librosa.feature.mfcc(y=data, sr=sampling_rate_wav_wanted, n_mfcc=n_coeff,
                                         n_fft=frame_length, hop_length=hop_length).T
             dyna_features = get_delta_features(my_mfcc)
             dyna_features_2 = get_delta_features(dyna_features)
@@ -196,18 +193,17 @@ def traitement_general_usc(N_max):
             my_mfcc = np.concatenate([frames[j:j+ len(my_mfcc)] for j in range(full_window)], axis=1)
             return my_mfcc
 
-        def synchro_ema_mfcc(k, my_ema, my_mfcc):
+        def synchro_ema_mfcc(my_ema, my_mfcc):
             ## zero padding de sorte que l'on intègre les dépendences temporelles : on apprend la trame du milieu
             # mais on ajoute des trames précédent et suivant pour ajouter de l'informatio temporelle
             n_frames_wanted = my_mfcc.shape[0]
 
             my_ema = scipy.signal.resample(my_ema, num=n_frames_wanted)
-            if len(my_ema) != len(my_mfcc):
-                print("pbm size", EMA_files_2[k])
+
             return my_ema, my_mfcc
 
         create_missing_dir()
-        path_files = os.path.join(root_path, "Donnees_brutes","usc_timit", speaker)
+        path_files = os.path.join(root_path, "Donnees_brutes",corpus, speaker)
         EMA_files = sorted([name[:-4] for name in os.listdir(os.path.join(path_files_brutes, "mat")) if name.endswith(".mat")])
 
         list_EMA_traj = []
@@ -222,44 +218,41 @@ def traitement_general_usc(N_max):
         [name[:-4] for name in os.listdir(os.path.join(path_files_brutes, "wav_cut")) if name.endswith(".wav")])
         N_2 = len(EMA_files_2)
         if N_max != 0:
+
             N_2 = min(N_max,N_2)
 
         for i in range(N_2):
-            if i%100==0:
-                print("{} out of {}".format(i,N_2))
+            if i % 50 == 0:
+                print("{} out of {}".format(i, N))
             ema = read_ema_file(i)
+            ema_VT = my_speaker_class.add_vocal_tract(ema)
+            ema_VT_smooth = my_speaker_class.smooth_data(ema_VT)  # filtrage pour meilleur calcul des norm_values
             mfcc = from_wav_to_mfcc(i)
-            ema,mfcc = synchro_ema_mfcc(i,ema,mfcc)
-            np.save(os.path.join(root_path, "Donnees_pretraitees",  speaker, "ema", EMA_files_2[i]), ema)
-            np.save(os.path.join(root_path, "Donnees_pretraitees",  speaker, "mfcc", EMA_files_2[i]), mfcc)
-
-            ema_filtered = my_speaker_class.smooth_data(ema)
-            np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_filtered", EMA_files_2[i]), ema_filtered)
-            my_speaker_class.list_EMA_traj.append(ema_filtered)
+            ema_VT_smooth, mfcc = synchro_ema_mfcc(ema_VT_smooth, mfcc)
+            np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema", EMA_files_2[i]), ema_VT)
+            np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "mfcc", EMA_files_2[i]), mfcc)
+            np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_final", EMA_files_2[i]), ema_VT_smooth)
+            my_speaker_class.list_EMA_traj.append(ema_VT_smooth)
             my_speaker_class.list_MFCC_frames.append(mfcc)
-
         my_speaker_class.calculate_norm_values()
 
         for i in range(N_2):
-            ema = np.load(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema", EMA_files_2[i] + ".npy"))
-            ema_filtered = np.load(
-                os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_filtered", EMA_files_2[i] + ".npy"))
+            ema_VT_smooth = np.load(
+                os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_final", EMA_files_2[i] + ".npy"))
             mfcc = np.load(os.path.join(root_path, "Donnees_pretraitees", speaker, "mfcc", EMA_files_2[i] + ".npy"))
-            ema_norma, ema_filtered_norma, ema_VT, mfcc = my_speaker_class.traitement_deuxieme_partie(i, ema,
-                                                                                                      ema_filtered,
-                                                                                                      mfcc)
-            np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_norma", EMA_files_2[i]), ema)
-            np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_filtered_norma", EMA_files_2[i]),
-                    ema_filtered_norma)
+            ema_VT_smooth_norma, mfcc = my_speaker_class.normalize_phrase(i, ema_VT_smooth, mfcc)
+            ema_VT_smooth_norma = my_speaker_class.smooth_data(ema_VT_smooth_norma)
             np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "mfcc", EMA_files_2[i]), mfcc)
-            np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_VT", EMA_files_2[i]), ema_VT)
+            np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_final", EMA_files_2[i]),
+                    ema_VT_smooth_norma)
+
         split_sentences(speaker)
         get_fileset_names(speaker)
 
     frame_time = 25
     hop_time = 10  # en ms
-    hop_length = int((hop_time * sampling_rate_wav) / 1000)
-    frame_length = int((frame_time * sampling_rate_wav) / 1000)
+    hop_length = int((hop_time * sampling_rate_wav_wanted) / 1000)
+    frame_length = int((frame_time * sampling_rate_wav_wanted) / 1000)
     window = 5
     n_coeff = 13
     speakers = ["F1","F5","M1","M3"]

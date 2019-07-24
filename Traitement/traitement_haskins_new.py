@@ -64,11 +64,12 @@ import glob
 
 
 def traitement_general_haskins(N_max):
-
-    my_corpus_class = Corpus("Haskins")
+    corpus = 'Haskins'
+    my_corpus_class = Corpus(corpus)
     sampling_rate_ema = 100  # toujours le même, mais lisible directement dans le fichier
     sampling_rate_wav = 44100  # toujours le même, mais lisible directement dans le fichier
     cutoff = 10
+    sampling_rate_wav_wanted=16000
 
     sampling_rate_ema = my_corpus_class.sampling_rate_ema# toujours le même, mais lisible directement dans le fichier
     sampling_rate_wav = my_corpus_class.sampling_rate_wav  # toujours le même, mais lisible directement dans le fichier
@@ -84,23 +85,23 @@ def traitement_general_haskins(N_max):
         my_speaker_class = Speaker(speaker)
         root_path = dirname(dirname(os.path.realpath(__file__)))
         path_files_treated = os.path.join(root_path, "Donnees_pretraitees", speaker)
-        path_files_brutes = os.path.join(root_path, "Donnees_brutes", "Haskins_IEEE_Rate_Comparison_DB", speaker,   "data")
+        path_files_brutes = os.path.join(root_path, "Donnees_brutes", corpus, speaker,"data")
 
         def create_missing_dir():
             if not os.path.exists(os.path.join(path_files_treated, "ema")):
                 os.makedirs(os.path.join(path_files_treated, "ema"))
             if not os.path.exists(os.path.join(path_files_treated, "mfcc")):
                 os.makedirs(os.path.join(path_files_treated, "mfcc"))
-            if not os.path.exists(os.path.join(path_files_treated, "ema_filtered")):
-                os.makedirs(os.path.join(path_files_treated, "ema_filtered"))
+            if not os.path.exists(os.path.join(path_files_treated, "ema_final")):
+                os.makedirs(os.path.join(path_files_treated, "ema_final"))
             if not os.path.exists(os.path.join(path_files_brutes, "wav_cut")):
                 os.makedirs(os.path.join(path_files_brutes, "wav_cut"))
 
             files = glob.glob(os.path.join(path_files_treated, "ema", "*"))
             files += glob.glob(os.path.join(path_files_treated, "mfcc", "*"))
             files += glob.glob(os.path.join(path_files_treated, "ema_VT", "*"))
-            files += glob.glob(os.path.join(path_files_treated, "ema_filtered_norma", "*"))
-            files += glob.glob(os.path.join(path_files_treated, "ema_filtered", "*"))
+            files += glob.glob(os.path.join(path_files_treated, "ema_final", "*"))
+            files += glob.glob(os.path.join(path_files_brutes, "wav_cut", "*"))
 
             for f in files:
                 os.remove(f)
@@ -116,6 +117,7 @@ def traitement_general_haskins(N_max):
                     ma_fin = ma_data[0][6][0][-1][1][0][0]
                 return [mon_debut, ma_fin]
 
+            marge = 0.5
             order_arti_haskins = ['td_x', 'td_y', 'tb_x', 'tb_y', 'tt_x', 'tt_y', 'ul_x', 'ul_y', "ll_x", "ll_y",
                                   "ml_x", "ml_y", "li_x", "li_y", "jl_x", "jl_y"]
 
@@ -123,25 +125,17 @@ def traitement_general_haskins(N_max):
                           'ul_x', 'ul_y', 'll_x', 'll_y']
 
             data = sio.loadmat(os.path.join(path_files_brutes, EMA_files[k] + ".mat"))[EMA_files[k]][0]
-            wav = data[0][2]
-            np.save(os.path.join(root_path, "Donnees_brutes", "Haskins_IEEE_Rate_Comparison_DB", speaker, "wav",
-                                 EMA_files[k]), wav)
-
             my_ema = np.zeros((len(data[1][2]), len(order_arti_haskins)))
+
             for arti in range(1, len(data)):  # lecture des trajectoires articulatoires dans le dicionnaire
                 my_ema[:, (arti - 1) * 2] = data[arti][2][:, 0]
                 my_ema[:, arti * 2 - 1] = data[arti][2][:, 2]
-
-            [debut, fin] = detect_silence(data)
-            xtrm_ema = [int(np.floor(debut * sampling_rate_ema)), int(np.floor(fin * sampling_rate_ema) + 1)]
-            xtrm_wav = [int(np.floor(debut * sampling_rate_wav)), int(np.floor(fin * sampling_rate_wav) + 1)]
-            my_ema = my_ema[xtrm_ema[0]:xtrm_ema[1], :]
-            wav = np.reshape(wav[xtrm_wav[0]:xtrm_wav[1]], -1)
-            librosa.output.write_wav(os.path.join(path_files_brutes, "wav_cut", EMA_files[k] + ".wav"),
-                                     wav, sampling_rate_wav)
-
             new_order_arti = [order_arti_haskins.index(col) for col in order_arti]
             my_ema = my_ema[:, new_order_arti]
+
+            wav = data[0][2][:,0]
+            np.save(os.path.join(root_path, "Donnees_brutes", corpus, speaker, "wav",
+                                 EMA_files[k]), wav)
 
             my_mfcc = librosa.feature.mfcc(y=wav, sr=sampling_rate_wav, n_mfcc=n_coeff,
                                         n_fft=frame_length, hop_length=hop_length).T
@@ -153,13 +147,19 @@ def traitement_general_haskins(N_max):
             full_window = 1 + 2 * window
             my_mfcc = np.concatenate([frames[i:i + len(my_mfcc)] for i in range(full_window)], axis=1)
 
+            [debut, fin] = detect_silence(data)
+            xtrm_temp_ema = [int(np.floor(debut * sampling_rate_ema)),
+                             int(min(np.floor(fin * sampling_rate_ema) + 1, len(my_ema)))]
+            xtrm_temp_mfcc = [int(np.floor(debut * 1000 / hop_time)),
+                              int(np.ceil(fin * 1000 / hop_time))]
+            my_ema = my_ema[xtrm_temp_ema[0]:xtrm_temp_ema[1], :]
+            my_mfcc = my_mfcc[xtrm_temp_mfcc[0]:xtrm_temp_mfcc[1]]
+
             if np.isnan(my_ema).sum() != 0:
                 print("number of nan :", np.isnan(my_ema.sum()))
 
             n_frames_wanted = my_mfcc.shape[0]
-
             my_ema = scipy.signal.resample(my_ema, num=n_frames_wanted)
-
             return my_ema,my_mfcc
 
         create_missing_dir()
@@ -169,31 +169,30 @@ def traitement_general_haskins(N_max):
             N = int(N_max) #on coupe N fichiers
 
         for i in range(N):
-            if i+1 %100==0:
-                print("{} out of {}".format(i,N))
+            if i % 50 == 0:
+                print("{} out of {}".format(i, N))
             ema,mfcc = read_ema_and_wav(i)
-            np.save(os.path.join(path_files_treated, "ema", EMA_files[i]), ema)
-            np.save(os.path.join(path_files_treated, "mfcc", EMA_files[i]), mfcc)
-            ema_filtered = my_speaker_class.smooth_data(ema)
-            np.save(os.path.join(path_files_treated, "ema_filtered", EMA_files[i]), ema_filtered)
-            my_speaker_class.list_EMA_traj.append(ema_filtered)
+            ema_VT = my_speaker_class.add_vocal_tract(ema)
+            ema_VT_smooth = my_speaker_class.smooth_data(ema_VT)  # filtrage pour meilleur calcul des norm_values
+            np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema", EMA_files[i]), ema_VT)
+            np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "mfcc", EMA_files[i]), mfcc)
+            np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_final", EMA_files[i]), ema_VT_smooth)
+            my_speaker_class.list_EMA_traj.append(ema_VT_smooth)
             my_speaker_class.list_MFCC_frames.append(mfcc)
-
         my_speaker_class.calculate_norm_values()
 
         for i in range(N):
-            ema = np.load(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema", EMA_files[i] + ".npy"))
-            ema_filtered = np.load(
-                os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_filtered", EMA_files[i] + ".npy"))
+            # ema = np.load(os.path.join(root_path, "Donnees_pretraitees",  speaker, "ema", EMA_files[i]+".npy"))
+            ema_VT_smooth = np.load(
+                os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_final", EMA_files[i] + ".npy"))
             mfcc = np.load(os.path.join(root_path, "Donnees_pretraitees", speaker, "mfcc", EMA_files[i] + ".npy"))
-            ema_norma, ema_filtered_norma, ema_VT, mfcc = my_speaker_class.traitement_deuxieme_partie(i, ema,
-                                                                                                      ema_filtered,
-                                                                                                      mfcc)
-            np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_norma", EMA_files[i]), ema)
-            np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_filtered_norma", EMA_files[i]),
-                    ema_filtered_norma)
+            ema_VT_smooth_norma, mfcc = my_speaker_class.normalize_phrase(i, ema_VT_smooth, mfcc)
+            ema_VT_smooth_norma = my_speaker_class.smooth_data(ema_VT_smooth_norma)
+
+            #  np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_norma", EMA_files[i]), ema)
             np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "mfcc", EMA_files[i]), mfcc)
-            np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_VT", EMA_files[i]), ema_VT)
+            np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_final", EMA_files[i]),
+                    ema_VT_smooth_norma)
 
         split_sentences(speaker)
         get_fileset_names(speaker)
@@ -202,4 +201,4 @@ def traitement_general_haskins(N_max):
         traitement_haskins(sp,N_max = N_max)
         print("Done for speaker ",sp)
 
-#traitement_general_haskins(N_max = 10)
+#traitement_general_haskins(N_max = 5)

@@ -48,7 +48,6 @@ def traitement_general_mocha(N_max,n_procs=0):
 
     def traitement_mocha(speaker,N_max):
         my_speaker_class = Speaker(speaker)
-
         root_path = dirname(dirname(os.path.realpath(__file__)))
         path_files_treated = os.path.join(root_path, "Donnees_pretraitees",  speaker)
         path_files_brutes = os.path.join(root_path, "Donnees_brutes", "mocha", speaker)
@@ -58,18 +57,14 @@ def traitement_general_mocha(N_max,n_procs=0):
                 os.makedirs(os.path.join(path_files_treated, "ema"))
             if not os.path.exists(os.path.join(path_files_treated, "mfcc")):
                 os.makedirs(os.path.join(path_files_treated, "mfcc"))
-            if not os.path.exists(os.path.join(path_files_treated, "ema_filtered")):
-                os.makedirs(os.path.join(path_files_treated, "ema_filtered"))
+            if not os.path.exists(os.path.join(path_files_treated, "ema_final")):
+                os.makedirs(os.path.join(path_files_treated, "ema_final"))
 
-            if not os.path.exists(os.path.join(path_files_treated, "ema_VT")):
-                os.makedirs(os.path.join(path_files_treated, "ema_VT"))
             if not os.path.exists(os.path.join(path_files_brutes, "wav_cut")):
                 os.makedirs(os.path.join(path_files_brutes, "wav_cut"))
             files = glob.glob(os.path.join(path_files_treated, "ema", "*"))
             files += glob.glob(os.path.join(path_files_treated, "mfcc", "*"))
-            files += glob.glob(os.path.join(path_files_treated, "ema_VT", "*"))
-
-            files += glob.glob(os.path.join(path_files_treated, "ema_filtered", "*"))
+            files += glob.glob(os.path.join(path_files_treated, "ema_final", "*"))
             files += glob.glob(os.path.join(path_files_brutes, "wav_cut", "*"))
 
             for f in files:
@@ -89,7 +84,7 @@ def traitement_general_mocha(N_max,n_procs=0):
                         col_id, col_name = line.split(' ', 1)
                         column_names[int(col_id.split('_', 1)[-1])] = col_name.replace(" ",
                                                                                        "")  # v_x has sometimes a space
-                ema_data = np.fromfile(ema_annotation, "float32").reshape(n_frames, n_columns + 2)
+                ema_data = np.fromfile(ema_annotation, "float32").reshape(n_frames, -1)
                 cols_index = [column_names.index(col) for col in my_speaker_class.articulators]
                 ema_data = ema_data[:, cols_index]
                 ema_data = ema_data / 100  # met en mm, initallement en 10^-1m
@@ -103,7 +98,8 @@ def traitement_general_mocha(N_max,n_procs=0):
                         ema_data[j] = scipy.interpolate.splev(j, spline)
                 return ema_data
 
-        def remove_silences(my_ema,my_wav,k):
+        def remove_silences(my_ema,my_mfcc,k):
+            marge=0
             if speaker in sp_with_trans:
                 path_annotation = os.path.join(path_files_brutes, wav_files[k] + '.lab')
                 with open(path_annotation) as file:
@@ -111,17 +107,23 @@ def traitement_general_mocha(N_max,n_procs=0):
                         row.strip('\n').strip('\t').replace(' 26 ', '').split(' ')
                         for row in file
                     ]
-                xtrm = [max(float(labels[0][1]) , 0), float(labels[-1][0])]
+                xtrm = [max(float(labels[0][1])-marge , 0), float(labels[-1][0])+marge]
                 xtrm_temp_ema = [int(np.floor(xtrm[0] * sampling_rate_ema)), int(
                     min(np.floor(xtrm[1] * sampling_rate_ema) + 1, len(my_ema)))]
-                xtrm_temp_wav = [int(int(np.floor(xtrm[0] * sampling_rate_wav))),
-                                 int(min(int(np.floor(xtrm[1] * sampling_rate_wav) + 1), len(my_wav)))]
-                my_ema = my_ema[xtrm_temp_ema[0]:xtrm_temp_ema[1], :]
-                my_wav  = my_wav[xtrm_temp_wav[0]:xtrm_temp_wav[1]]
-                librosa.output.write_wav(os.path.join(path_files_brutes, "wav_cut", wav_files[k] + ".wav"),
-                                         my_wav, sampling_rate_wav)
 
-            return my_ema, my_wav
+                xtrm_temp_mfcc =[ int(np.floor( xtrm[0] * 1000 / hop_time)) ,
+                                   int(np.ceil(xtrm[1] * 1000 / hop_time))]
+
+                my_mfcc = my_mfcc[xtrm_temp_mfcc[0]:xtrm_temp_mfcc[1]]
+                my_ema = my_ema[xtrm_temp_ema[0]:xtrm_temp_ema[1], :]
+
+           #     xtrm_temp_wav = [int(np.floor(xtrm[0] * sampling_rate_wav)),
+            #                     int(min(int(np.floor(xtrm[1] * sampling_rate_wav) + 1), len(my_wav)))]
+                #
+                #my_wav  = my_wav[xtrm_temp_wav[0]:xtrm_temp_wav[1]]
+                #librosa.output.write_wav(os.path.join(path_files_brutes, "wav_cut", wav_files[k] + ".wav"),
+                 #                        my_wav, sampling_rate_wav)
+            return my_ema, my_mfcc
 
         def from_wav_to_mfcc(my_wav):
             my_mfcc = librosa.feature.mfcc(y=my_wav, sr=sampling_rate_wav, n_mfcc=n_coeff,
@@ -144,7 +146,6 @@ def traitement_general_mocha(N_max,n_procs=0):
 
 
         create_missing_dir()
-
         EMA_files = sorted([name for name in os.listdir(path_files_brutes) if "palate" not in name])
         EMA_files = sorted([name[:-4] for name in EMA_files if name.endswith('.ema')])
         n_columns = 20
@@ -157,32 +158,34 @@ def traitement_general_mocha(N_max,n_procs=0):
             if i+1%50 == 0:
                 print("{} out of {}".format(i,N))
             ema = read_ema_file(i)
+            ema_VT = my_speaker_class.add_vocal_tract(ema)
+            ema_VT_smooth = my_speaker_class.smooth_data(ema_VT) # filtrage pour meilleur calcul des norm_values
             path_wav = os.path.join(path_files_brutes, wav_files[i] + '.wav')
-            wav, sr = librosa.load(path_wav, sr=sampling_rate_wav)  # chargement de données
-            ema,wav = remove_silences(ema,wav,i)
+            wav, sr = librosa.load(path_wav, sr=None)  # chargement de données
             mfcc = from_wav_to_mfcc(wav)
-            ema,mfcc = synchro_ema_mfcc(ema,mfcc)
-            np.save(os.path.join(root_path, "Donnees_pretraitees",  speaker, "ema", EMA_files[i]), ema)
+            ema_VT_smooth,mfcc = remove_silences(ema_VT_smooth,mfcc,i)
+            ema_VT_smooth,mfcc = synchro_ema_mfcc(ema_VT_smooth,mfcc)
+            np.save(os.path.join(root_path, "Donnees_pretraitees",  speaker, "ema", EMA_files[i]), ema_VT)
             np.save(os.path.join(root_path, "Donnees_pretraitees",  speaker, "mfcc", EMA_files[i]), mfcc)
-            ema_filtered = my_speaker_class.smooth_data(ema)
-            np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_filtered", EMA_files[i]), ema_filtered)
-            my_speaker_class.list_EMA_traj.append(ema_filtered)
+            np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_final", EMA_files[i]), ema_VT_smooth)
+            my_speaker_class.list_EMA_traj.append(ema_VT_smooth)
             my_speaker_class.list_MFCC_frames.append(mfcc)
         my_speaker_class.calculate_norm_values()
 
+
         for i in range(N):
-            ema = np.load(os.path.join(root_path, "Donnees_pretraitees",  speaker, "ema", EMA_files[i]+".npy"))
-            ema_filtered = np.load(os.path.join(root_path, "Donnees_pretraitees",  speaker, "ema_filtered", EMA_files[i]+".npy"))
+           # ema = np.load(os.path.join(root_path, "Donnees_pretraitees",  speaker, "ema", EMA_files[i]+".npy"))
+            ema_VT_smooth = np.load(os.path.join(root_path, "Donnees_pretraitees",  speaker, "ema_final", EMA_files[i]+".npy"))
             mfcc = np.load(os.path.join(root_path, "Donnees_pretraitees",  speaker, "mfcc", EMA_files[i]+".npy"))
-            ema_norma, ema_filtered_norma, ema_VT, mfcc = my_speaker_class.traitement_deuxieme_partie(i,ema,ema_filtered,mfcc)
-            np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_norma", EMA_files[i]), ema)
-            np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_filtered_norma", EMA_files[i]), ema_filtered_norma)
+            ema_VT_smooth_norma , mfcc = my_speaker_class.normalize_phrase(i, ema_VT_smooth,mfcc)
+            ema_VT_smooth_norma = my_speaker_class.smooth_data(ema_VT_smooth_norma)
+
+          #  np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_norma", EMA_files[i]), ema)
             np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "mfcc", EMA_files[i]), mfcc)
-            np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_VT", EMA_files[i]), ema_VT)
+            np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_final", EMA_files[i]), ema_VT_smooth_norma)
 
         split_sentences(speaker)
         get_fileset_names(speaker)
-
 
     frame_time = 25
     hop_time = 10  # en ms
@@ -192,9 +195,8 @@ def traitement_general_mocha(N_max,n_procs=0):
     n_coeff = 13
     sp_with_trans = ["fsew0", "msak0", "mjjn0", "ffes0"]
 
-    for sp in my_corpus_class.speakers :
+    for sp in my_corpus_class.speakers:
         traitement_mocha(sp,N_max = N_max)
         print("Done for speaker ",sp)
 
-
-#traitement_general_mocha(N_max = 20)
+#traitement_general_mocha(N_max = 50)

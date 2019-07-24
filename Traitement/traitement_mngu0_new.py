@@ -67,26 +67,14 @@ def traitement_general_mngu0(N_max="All"):
     def create_missing_dir():
         if not os.path.exists(os.path.join(os.path.join(path_files_treated, "ema"))):
             os.makedirs(os.path.join(path_files_treated, "ema"))
-        if not os.path.exists(os.path.join(os.path.join(path_files_treated, "ema_filtered"))):
-            os.makedirs(os.path.join(path_files_treated, "ema_filtered"))
+        if not os.path.exists(os.path.join(os.path.join(path_files_treated, "ema_final"))):
+            os.makedirs(os.path.join(path_files_treated, "ema_final"))
         if not os.path.exists(os.path.join(os.path.join(path_files_treated, "mfcc"))):
             os.makedirs(os.path.join(path_files_treated, "mfcc"))
 
-        if not (os.path.exists(os.path.join(path_files_treated, "ema_filtered_norma"))):
-            os.mkdir(os.path.join(path_files_treated, "ema_filtered_norma"))
-
-        if not (os.path.exists(os.path.join(path_files_treated, "ema_norma"))):
-            os.mkdir(os.path.join(path_files_treated, "ema_norma"))
-        if not (os.path.exists(os.path.join(path_files_brutes, "wav_cut"))):
-            os.mkdir(os.path.join(path_files_brutes, "wav_cut"))
-
         files = glob.glob(os.path.join(path_files_treated, "ema", "*"))
-        files += glob.glob(os.path.join(path_files_treated, "ema_filtered", "*"))
+        files += glob.glob(os.path.join(path_files_treated, "ema_final", "*"))
         files += glob.glob(os.path.join(path_files_treated, "mfcc", "*"))
-        files += glob.glob(os.path.join(path_files_treated, "ema_norma", "*"))
-        files += glob.glob(os.path.join(path_files_treated, "ema_VT", "*"))
-        files += glob.glob(os.path.join(path_files_treated, "ema_filtered_norma", "*"))
-        files += glob.glob(os.path.join(path_files_brutes, "wav_cut", "*"))
 
         for f in files:
             os.remove(f)
@@ -126,8 +114,7 @@ def traitement_general_mngu0(N_max="All"):
                 for j in np.argwhere(np.isnan(ema_data)).ravel():
                     ema_data[j] = scipy.interpolate.splev(j, spline)
             return ema_data
-
-    def remove_silences(k, my_ema, my_wav):
+    def remove_silences(k, my_ema, my_mfcc):
         """
         :param k:  index de l'uttérence (ie numero de phrase) pour laquelle on va traiter le fichier EMA et MFCC
         :param my_ema: Données EMA en format .npy en sortie de la fonction first_step_ema_data(i)
@@ -138,8 +125,8 @@ def traitement_general_mngu0(N_max="All"):
         On ajoute le 'contexte' aux données MFCC ie les 5 frames précédent et les 5 frames suivant chaque frame,
         d'où la taille de mfcc 429 = 5*39 + 5*39 + 39
         """
-
         # remove blanks at the beginning and the end, en sortie autant de lignes pour les deux
+        marge= 0
         path_annotation = os.path.join(path_files_annotation, EMA_files[k] + '.lab')
         with open(path_annotation) as file:
             while next(file) != '#\n':
@@ -148,16 +135,18 @@ def traitement_general_mngu0(N_max="All"):
         labels = [(round(float(label[0]), 2), label[1]) for label in labels]
         start_time = labels[0][0] if labels[0][1] == '#' else 0
         end_time = labels[-2][0] if labels[-1][1] == '#' else labels[-1][0]
-        xtrm = [start_time, end_time]
-        xtrm_temp_ema = [int(np.floor(xtrm[0] * sampling_rate_ema)), int(
-            min(np.floor(xtrm[1] * sampling_rate_ema) + 1, len(my_ema)))]
-        xtrm_temp_wav = [int(int(np.floor(xtrm[0] * sampling_rate_wav))),
-                         int(min(int(np.floor(xtrm[1] * sampling_rate_wav) + 1), len(my_wav)))]
+        xtrm = [max(start_time-marge,0), end_time+marge]
+
+        xtrm_temp_ema = [int(np.floor(xtrm[0] * sampling_rate_ema)),
+                         int(min(np.floor(xtrm[1] * sampling_rate_ema) + 1, len(my_ema)))]
+
+        xtrm_temp_mfcc = [int(np.floor(xtrm[0] * 1000 / hop_time)),
+                          int(np.ceil(xtrm[1] * 1000 / hop_time))]
+
+        my_mfcc = my_mfcc[xtrm_temp_mfcc[0]:xtrm_temp_mfcc[1]]
         my_ema = my_ema[xtrm_temp_ema[0]:xtrm_temp_ema[1], :]
-        my_wav = my_wav[xtrm_temp_wav[0]:xtrm_temp_wav[1]]
-        librosa.output.write_wav(os.path.join(path_files_brutes, "wav_cut", EMA_files[k] + ".wav"),
-                                 my_wav, sampling_rate_wav)
-        return my_ema, my_wav
+
+        return my_ema, my_mfcc
 
     def from_wav_to_mfcc(my_wav): #reste à enlever les blancs et normaliser et ajouter trames passées et futures
         """
@@ -195,31 +184,27 @@ def traitement_general_mngu0(N_max="All"):
         if i%50==0:
             print("{} out of {}".format(i,N))
         ema = read_ema_file(i)
+        ema_VT = my_speaker_class.add_vocal_tract(ema)
+        ema_VT_smooth = my_speaker_class.smooth_data(ema_VT)  # filtrage pour meilleur calcul des norm_values
         path_wav = os.path.join(path_wav_files, EMA_files[i] + '.wav')
         wav, sr = librosa.load(path_wav, sr=sampling_rate_wav)  # chargement de données
-        ema, wav = remove_silences(i, ema, wav)
         mfcc  = from_wav_to_mfcc(wav)
-        ema,mfcc = synchro_ema_mfcc(ema,mfcc)
-        np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema", EMA_files[i]), ema)
+        ema_VT_smooth, mfcc = remove_silences(i,ema_VT_smooth, mfcc)
+        ema_VT_smooth, mfcc = synchro_ema_mfcc(ema_VT_smooth, mfcc)
+        np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema", EMA_files[i]), ema_VT)
         np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "mfcc", EMA_files[i]), mfcc)
-        ema_filtered = my_speaker_class.smooth_data(ema)
-        np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_filtered", EMA_files[i]), ema_filtered)
-        my_speaker_class.list_EMA_traj.append(ema_filtered)
+        np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_final", EMA_files[i]), ema_VT_smooth)
+        my_speaker_class.list_EMA_traj.append(ema_VT_smooth)
         my_speaker_class.list_MFCC_frames.append(mfcc)
-
     my_speaker_class.calculate_norm_values()
 
     for i in range(N):
-        ema = np.load(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema", EMA_files[i] + ".npy"))
-        ema_filtered = np.load(
-            os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_filtered", EMA_files[i] + ".npy"))
+        ema_VT_smooth = np.load(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_final", EMA_files[i] + ".npy"))
         mfcc = np.load(os.path.join(root_path, "Donnees_pretraitees", speaker, "mfcc", EMA_files[i] + ".npy"))
-        ema_norma, ema_filtered_norma, ema_VT, mfcc = my_speaker_class.traitement_deuxieme_partie(i, ema, ema_filtered,
-                                                                                                  mfcc)
-        np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_norma", EMA_files[i]), ema)
-        np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_filtered_norma", EMA_files[i]),ema_filtered_norma)
+        ema_VT_smooth_norma, mfcc = my_speaker_class.normalize_phrase(i, ema_VT_smooth, mfcc)
+        ema_VT_smooth_norma = my_speaker_class.smooth_data(ema_VT_smooth_norma)
         np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "mfcc", EMA_files[i]), mfcc)
-        np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_VT", EMA_files[i]), ema_VT)
+        np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_final", EMA_files[i]), ema_VT_smooth_norma)
 
     split_sentences(speaker)
     get_fileset_names(speaker)
@@ -227,5 +212,5 @@ def traitement_general_mngu0(N_max="All"):
 
 
 
-#traitement_general_mngu0(10)
+#traitement_general_mngu0(50)
 #print("duree : ",str(t2-t1))
