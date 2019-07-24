@@ -242,10 +242,10 @@ class my_ac2art_modele(torch.nn.Module):
         all_pearson=all_pearson[1:]
 
         pearson_per_arti_mean = np.mean(all_pearson, axis=0)
-       # pearson_per_arti_std = np.std(all_pearson, axis=0)
+        pearson_per_arti_std = np.std(all_pearson, axis=0)
         print("pearson final : ", np.mean(pearson_per_arti_mean[pearson_per_arti_mean!=0]))
         print("pearson mean per arti : \n", pearson_per_arti_mean)
-     #   print("pearson std per arti : \n", pearson_per_arti_std)
+        print("pearson std per arti : \n", pearson_per_arti_std)
 
 
 
