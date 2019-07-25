@@ -43,12 +43,12 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr,to_plot,select_arti,
         train_on = train_on + sp
         name_corpus_concat = name_corpus_concat+corpus+"_"
     print(name_corpus_concat)
-    if "mocha" in corpus_to_train_on:
-        train_on = ["msak0"]
-    elif "usc" in corpus_to_train_on:
-        train_on = ["M3"]
-    elif "Haskins" in corpus_to_train_on:
-        train_on = ["F02"]
+    #if "mocha" in corpus_to_train_on:
+    #    train_on = ["msak0"]
+    #elif "usc" in corpus_to_train_on:
+     #   train_on = ["M3"]
+   # elif "Haskins" in corpus_to_train_on:
+    #    train_on = ["F02"]
 
     if test_on in train_on :
         train_on.remove(test_on)
