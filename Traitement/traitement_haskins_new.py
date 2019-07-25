@@ -206,7 +206,8 @@ def traitement_general_haskins(N_max):
       #  split_sentences(speaker)
         get_fileset_names(speaker)
 
-    for sp in ["F02","F01"]:#my_corpus_class.speakers :
+    for sp in my_corpus_class.speakers :
+        print("sp ,",sp)
         traitement_haskins(sp,N_max = N_max)
         print("Done for speaker ",sp)
 

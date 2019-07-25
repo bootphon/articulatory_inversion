@@ -275,9 +275,9 @@ def traitement_general_usc(N_max):
     frame_length = int(frame_time * sampling_rate_wav_wanted)
     window = 5
     n_coeff = 13
-    speakers = ["F1","F5","M1","M3"]
+  #  speakers = ["F1","F5","M1","M3"]
 
-    for sp in speakers :
+    for sp in my_corpus_class.speakers :
         print("speaker ",sp)
         traitement_usc(sp,N_max = N_max)
         print("Done for speaker ",sp)
