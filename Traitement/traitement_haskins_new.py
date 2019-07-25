@@ -151,7 +151,7 @@ def traitement_general_haskins(N_max):
             full_window = 1 + 2 * window
             my_mfcc = np.concatenate([frames[i:i + len(my_mfcc)] for i in range(full_window)], axis=1)
 
-            marge=0.1
+            marge=0
             xtrm = detect_silence(data)
             xtrm = [max(xtrm[0]-marge,0),xtrm[1]+marge]
 
@@ -180,8 +180,8 @@ def traitement_general_haskins(N_max):
        #         print("{} out of {}".format(i, N))
             ema,mfcc = read_ema_and_wav(i)
             ema_VT = my_speaker_class.add_vocal_tract(ema)
-            ema_VT_smooth = ema_VT
-           # ema_VT_smooth = my_speaker_class.smooth_data(ema_VT)  # filtrage pour meilleur calcul des norm_values
+          #  ema_VT_smooth = ema_VT
+            ema_VT_smooth = my_speaker_class.smooth_data(ema_VT)  # filtrage pour meilleur calcul des norm_values
             np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema", EMA_files[i]), ema_VT)
             np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "mfcc", EMA_files[i]), mfcc)
             np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_final", EMA_files[i]), ema_VT_smooth)
@@ -203,8 +203,8 @@ def traitement_general_haskins(N_max):
             np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_final", EMA_files[i]),
                     ema_VT_smooth_norma)
 
-        split_sentences(speaker)
-      #  get_fileset_names(speaker)
+      #  split_sentences(speaker)
+        get_fileset_names(speaker)
 
     for sp in ["F02","F01"]:#my_corpus_class.speakers :
         traitement_haskins(sp,N_max = N_max)

@@ -267,7 +267,7 @@ def traitement_general_usc(N_max):
                     ema_VT_smooth_norma)
 
         split_sentences(speaker)
-      #  get_fileset_names(speaker)
+        get_fileset_names(speaker)
 
     frame_time = 0.025
     hop_time =0.01  # en seconde
@@ -276,7 +276,6 @@ def traitement_general_usc(N_max):
     window = 5
     n_coeff = 13
     speakers = ["F1","F5","M1","M3"]
-    speakers = ["M3","F1"]
 
     for sp in speakers :
         print("speaker ",sp)

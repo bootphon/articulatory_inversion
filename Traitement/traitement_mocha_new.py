@@ -178,7 +178,7 @@ def traitement_general_mocha(N_max,n_procs=0):
             np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_final", EMA_files[i]), ema_VT_smooth_norma)
 
         split_sentences(speaker)
-     #   get_fileset_names(speaker)
+        get_fileset_names(speaker)
 
     frame_time = 0.025
     hop_time = 0.010  # en ms
