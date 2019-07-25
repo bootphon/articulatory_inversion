@@ -178,7 +178,7 @@ def traitement_general_mocha(N_max,n_procs=0):
             np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "mfcc", EMA_files[i]), mfcc)
             np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_final", EMA_files[i]), ema_VT_smooth_norma)
 
-        split_sentences(speaker)
+      #  split_sentences(speaker)
         get_fileset_names(speaker)
 
     frame_time = 0.025
@@ -194,4 +194,4 @@ def traitement_general_mocha(N_max,n_procs=0):
         traitement_mocha(sp,N_max = N_max)
         print("Done for speaker ",sp)
 
-#traitement_general_mocha(N_max =120)
+traitement_general_mocha(N_max =0)
