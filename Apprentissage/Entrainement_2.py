@@ -34,14 +34,12 @@ print(sys.argv)
 
 
 def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
-    data_filtered=True
+    data_filtered = True
     modele_filtered=True
     train_on =  ["F01","F02","F03","F04","M01","M02","M03","M04","F1","F5","M1",
                  "M3","maps0","faet0",'mjjn0',"ffes0","MNGU0","fsew0","msak0"]
 
-
-    train_on = ["F1","F5","M1","M3"]
-    train_on = ["F5","M3"]
+    train_on = ["fsew0","msak0"]
     train_on.remove(test_on)
     print("train_on :",train_on)
     print("test on:",test_on)
@@ -65,7 +63,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
     # model = my_bilstm(hidden_dim=hidden_dim,input_dim=input_dim,name_file =name_file, output_dim=output_dim,
    #                   batch_size=batch_size,data_filtered=data_filtered,cuda_avail = cuda_avail,modele_filtered=modele_filtered)
     model = my_ac2art_modele(hidden_dim=hidden_dim, input_dim=input_dim, name_file=name_file, output_dim=output_dim,
-                      batch_size=batch_size, data_filtered=data_filtered, cuda_avail=cuda_avail,
+                      batch_size=batch_size, cuda_avail=cuda_avail,
                       modele_filtered=modele_filtered)
 
     model = model.double()
@@ -128,33 +126,40 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
     path_files = os.path.join(os.path.dirname(os.getcwd()),"Donnees_pretraitees","fileset")
 
 
-    files_for_train = load_filenames_deter(train_on, part=["train", "test"])
+    files_for_train = load_filenames_deter(train_on, part=["train", "test"]) #6
+    Niter = int(len(files_for_train)/batch_size) +1
+    n_a_ajouter = batch_size*Niter - len(files_for_train)
+    files_for_train = files_for_train + files_for_train[:n_a_ajouter]
+
     files_for_valid = load_filenames_deter(train_on, part=["valid"])
+    Niter = int(len(files_for_valid) / batch_size) + 1
+    n_a_ajouter = batch_size * Niter - len(files_for_valid)
+    files_for_valid = files_for_valid + files_for_valid[:n_a_ajouter]
+
     files_for_test = load_filenames_deter([test_on], part=["train", "valid", "test"])
-    print("len files for train",len(files_for_train))
-    print("len files for test",len(files_for_test))
+
+
     N_train = len(files_for_train)
     N_valid = len(files_for_valid)
     N_test = len(files_for_test)
-    print('N_train',N_train)
     n_iteration = int(N_train / batch_size)
-
+    print("len files for train,test,valid",N_train,N_test,N_valid)
     n_iteration_validation = int(N_valid/batch_size)
    # n_iteration_validation=2
     #  n_iteration  =1
     n_iteration_test = int(N_test/batch_size)
     test_files_names = []
+    patience_temp = 0
 
     for epoch in range(n_epochs):
-       # random.shuffle(files_for_train)
+        random.shuffle(files_for_train)
         temp = 0
         for ite in range(n_iteration):
             #if ite % 50 == 0:
              #   print("{} out of {}".format(ite, n_iteration))
             files_batch  =files_for_train[temp:temp+batch_size]
-
-            x, y = load_data(files_batch, filtered=data_filtered)
             temp = temp + batch_size
+            x, y = load_data(files_batch, filtered=data_filtered)
             x, y = model.prepare_batch(x, y)
             y_pred = model(x).double()
             torch.cuda.empty_cache()
@@ -181,9 +186,8 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
             print("TEST")
             x, y = load_data(files_for_test)
             print("evaluation on speaker {}".format(test_on))
-            std_speaker = np.load(os.path.join(root_folder, "Traitement", "norm_values", "std_ema_" + test_on + ".npy"))
-            model.evaluate_on_test(criterion=criterion, verbose=True, X_test=x, Y_test=y,
-                                   to_plot=to_plot, std_ema=max(std_speaker), suffix=test_on)
+           # model.evaluate_on_test(criterion=criterion, verbose=True, X_test=x, Y_test=y,
+           #                        to_plot=to_plot,  suffix=test_on)
             temp = 0
             for ite_valid in range(n_iteration_validation):
                 files_batch  = files_for_valid[temp:temp+batch_size]
@@ -194,6 +198,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
                     loss_vali+= model.evaluate(x,y,criterion)
                 except :
                     print("surmenet pbm de shape pour",files_for_valid[ite_valid:ite_valid+batch_size])
+
             if epoch>0:
                 if loss_vali > model.all_validation_loss[-1]:
                     patience_temp +=1
@@ -236,9 +241,7 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr=0.09,to_plot=False):
     random.shuffle(files_for_test)
     x, y = load_data(files_for_test)
     print("evaluation on speaker {}".format(test_on))
-    std_speaker=  np.load(os.path.join(root_folder, "Traitement", "norm_values","std_ema_"+test_on+".npy"))
-    model.evaluate_on_test(criterion=criterion,verbose=True, X_test=x, Y_test=y,
-                           to_plot=to_plot, std_ema=max(std_speaker), suffix=test_on)
+    model.evaluate_on_test(x,y,verbose=True,to_plot=to_plot)
 
 if __name__=='__main__':
     import argparse

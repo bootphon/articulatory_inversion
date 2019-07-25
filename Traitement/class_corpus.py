@@ -146,25 +146,19 @@ class Speaker():
             pad = 30
             all_mean_ema = np.array([np.mean(traj, axis=0) for traj in list_EMA_traj])
             np.save(os.path.join("norm_values", "all_mean_ema_" + self.name), all_mean_ema)
-        #    weights_moving_average = low_pass_filter_weight(cut_off=10, sampling_rate=self.sampling_rate_ema)
+            #    weights_moving_average = low_pass_filter_weight(cut_off=10, sampling_rate=self.sampling_rate_ema)
             all_mean_ema = np.concatenate([np.expand_dims(np.pad(all_mean_ema[:, k], (pad, pad), "symmetric"), 1)
-                                           for k in range(all_mean_ema.shape[1])], axis=1) #rajoute pad avant et apres
+                                           for k in range(all_mean_ema.shape[1])], axis=1)  # rajoute pad avant et apres
 
-
-            moving_average = np.array([np.mean(all_mean_ema[k-pad:k+pad],axis=0) for k in range(pad,len(all_mean_ema)-pad)])
+            moving_average = np.array(
+                [np.mean(all_mean_ema[k - pad:k + pad], axis=0) for k in range(pad, len(all_mean_ema) - pad)])
 
             np.save(os.path.join("norm_values", "moving_average_ema_" + self.name), moving_average)
 
-          #  moving_average = np.concatenate(
-           #     [np.expand_dims(np.convolve(channel, weights_moving_average, mode='same'), 1)
-            #     for channel in all_mean_ema.T], axis=1)
-            #print("b",moving_average.shape)
-            #moving_average = moving_average[pad:-pad, :]
-           # print("c",moving_average.shape)
+
             all_EMA_concat = np.concatenate([traj for traj in list_EMA_traj], axis=0)
             std_ema = np.std(all_EMA_concat, axis=0)
             std_ema[std_ema < 1e-3]=1
-
 
             mean_ema = np.mean(np.array([np.mean(traj, axis=0) for traj in list_EMA_traj]),
                                axis=0)  # apres que chaque phrase soit centrée

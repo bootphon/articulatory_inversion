@@ -66,7 +66,7 @@ def load_filenames_deter(train_on,part=["train"]):
     return filenames
 
 
-def load_data(files_names):
+def load_data(files_names,filtered=True):
     """
 
     :param files_names: liste des n
@@ -78,7 +78,9 @@ def load_data(files_names):
     y = []
     speakers = ["F01", "F02", "F03", "F04", "M01", "M02", "M03", "M04","F1", "F5", "M1", "M3"
         , "maps0", "faet0", 'mjjn0', "ffes0", "MNGU0", "fsew0", "msak0","falh0"]
-    suff = "_final"
+    suff =""
+    if filtered :
+        suff = "_final"
 
     for file_name in files_names :
         speaker = [s  for s in speakers if s.lower() in file_name.lower()][0] # normalement un seul speaker dans le nom du fichier

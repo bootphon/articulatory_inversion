@@ -275,6 +275,7 @@ def train_learn_velum(n_epochs=10,patience=5):
         model.evaluate_on_test(criterion=criterion, verbose=True, X_test=x, Y_test=y,
                                to_plot=True, std_ema=max(std_speaker), suffix=speaker)
 
+
 if __name__=='__main__':
     import argparse
     parser = argparse.ArgumentParser(description='Train and save a model.')

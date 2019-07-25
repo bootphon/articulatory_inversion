@@ -73,7 +73,7 @@ class my_ac2art_modele(torch.nn.Module):
             x,y = x.to(device=self.cuda2),y.to(device=self.cuda2)
         return x, y
 
-    def forward(self, x) :
+    def forward(self, x,filtered = True) :
         dense_out =  torch.nn.functional.relu(self.first_layer(x))
         dense_out_2 = torch.nn.functional.relu(self.second_layer(dense_out))
         lstm_out, hidden_dim = self.lstm_layer(dense_out_2)
@@ -81,7 +81,8 @@ class my_ac2art_modele(torch.nn.Module):
         lstm_out, hidden_dim = self.lstm_layer_2(lstm_out)
         lstm_out=torch.nn.functional.relu(lstm_out)
         y_pred = self.readout_layer(lstm_out)
-        y_pred = self.filter_layer(y_pred)
+        if filtered:
+            y_pred = self.filter_layer(y_pred)
         return y_pred
 
     def init_filter_layer(self):
@@ -204,7 +205,7 @@ class my_ac2art_modele(torch.nn.Module):
         loss = criterion( y_temp,y_pred).item()
         return loss
 
-    def evaluate_on_test(self,X_test,Y_test, to_plot=False,suffix= ""):
+    def evaluate_on_test(self,X_test,Y_test, to_plot=False,filtered=False,suffix= ""):
         """
         :param X_test:  list of all the input of the test set
         :param Y_test:  list of all the target of the test set
@@ -225,7 +226,7 @@ class my_ac2art_modele(torch.nn.Module):
                 y = Y_test[i].reshape((L, self.output_dim))                     #y (L,13)
                 if self.cuda_avail:
                     x_torch = x_torch.to(device=self.cuda2)
-                y_pred_torch = self(x_torch).double() #sortie y_pred (1,L,13)
+                y_pred_torch = self(x_torch,filtered).double() #sortie y_pred (1,L,13)
 
                 if self.cuda_avail:
                     y_pred_torch = y_pred_torch.cpu()
@@ -241,10 +242,10 @@ class my_ac2art_modele(torch.nn.Module):
         all_pearson=all_pearson[1:]
 
         pearson_per_arti_mean = np.mean(all_pearson, axis=0)
-        pearson_per_arti_std = np.std(all_pearson, axis=0)
+        #pearson_per_arti_std = np.std(all_pearson, axis=0)
         print("pearson final : ", np.mean(pearson_per_arti_mean[pearson_per_arti_mean!=0]))
         print("pearson mean per arti : \n", pearson_per_arti_mean)
-        print("pearson std per arti : \n", pearson_per_arti_std)
+      #  print("pearson std per arti : \n", pearson_per_arti_std)
 
 
 

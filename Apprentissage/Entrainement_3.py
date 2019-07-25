@@ -270,7 +270,12 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr,to_plot,select_arti,
     random.shuffle(files_for_test)
     x, y = load_data(files_for_test)
     print("evaluation on speaker {}".format(test_on))
-    model.evaluate_on_test(x,y, to_plot=to_plot)
+    #print("DATA AND MODELE FILTERED")
+    model.evaluate_on_test(x,y, to_plot=to_plot,filtered=True)
+    #x, y = load_data(files_for_test,filtered=False)
+   # print("DATA AND MODELE NOT FILTERED")
+    #model.evaluate_on_test(x,y, to_plot=to_plot,filtered=False)
+
 
 if __name__=='__main__':
     import argparse

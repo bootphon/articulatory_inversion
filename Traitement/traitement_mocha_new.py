@@ -115,7 +115,7 @@ def traitement_general_mocha(N_max,n_procs=0):
                 xtrm_temp_mfcc =[ int( xtrm[0]  / hop_time) ,
                                    int(np.ceil(xtrm[1]  / hop_time))]
 
-                y_mfcc = my_mfcc[xtrm_temp_mfcc[0]:xtrm_temp_mfcc[1]]
+                my_mfcc = my_mfcc[xtrm_temp_mfcc[0]:xtrm_temp_mfcc[1]]
 
                 my_ema = my_ema[xtrm_temp_ema[0]:xtrm_temp_ema[1], :]
 
@@ -155,11 +155,13 @@ def traitement_general_mocha(N_max,n_procs=0):
             path_wav = os.path.join(path_files_brutes, wav_files[i] + '.wav')
             wav, sr = librosa.load(path_wav, sr=None)  # chargement de données
             wav = 0.5*wav/np.max(wav)
-
             mfcc = from_wav_to_mfcc(wav)
             ema_VT_smooth,mfcc = remove_silences(ema_VT_smooth,mfcc,i)
-           # print("diff",len(ema_VT_smooth),len(mfcc))
             ema_VT_smooth,mfcc = my_speaker_class.synchro_ema_mfcc(ema_VT_smooth,mfcc)
+
+            ema_VT_,rien = remove_silences(ema_VT, mfcc, i)
+            ema_VT, rien = my_speaker_class.synchro_ema_mfcc(ema_VT, mfcc)
+
             np.save(os.path.join(root_path, "Donnees_pretraitees",  speaker, "ema", EMA_files[i]), ema_VT)
             np.save(os.path.join(root_path, "Donnees_pretraitees",  speaker, "mfcc", EMA_files[i]), mfcc)
             np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_final", EMA_files[i]), ema_VT_smooth)
@@ -168,13 +170,15 @@ def traitement_general_mocha(N_max,n_procs=0):
 
         my_speaker_class.calculate_norm_values()
         for i in range(N):
-           # ema = np.load(os.path.join(root_path, "Donnees_pretraitees",  speaker, "ema", EMA_files[i]+".npy"))
+            ema_pas_smooth = np.load(os.path.join(root_path, "Donnees_pretraitees",  speaker, "ema", EMA_files[i]+".npy"))
             ema_VT_smooth = np.load(os.path.join(root_path, "Donnees_pretraitees",  speaker, "ema_final", EMA_files[i]+".npy"))
             mfcc = np.load(os.path.join(root_path, "Donnees_pretraitees",  speaker, "mfcc", EMA_files[i]+".npy"))
             ema_VT_smooth_norma , mfcc = my_speaker_class.normalize_phrase(i, ema_VT_smooth,mfcc)
+            ema_pas_smooth_norma , rien =  my_speaker_class.normalize_phrase(i, ema_pas_smooth,mfcc)
             new_sr = 1/hop_time #on a rééchantillonner pour avoir autant de points que dans mfcc : 1 points toutes les 10ms : 100 points par sec
+
             ema_VT_smooth_norma = my_speaker_class.smooth_data(ema_VT_smooth_norma,new_sr)
-          #  np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_norma", EMA_files[i]), ema)
+            np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema", EMA_files[i]), ema_pas_smooth_norma)
             np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "mfcc", EMA_files[i]), mfcc)
             np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_final", EMA_files[i]), ema_VT_smooth_norma)
 
@@ -194,4 +198,4 @@ def traitement_general_mocha(N_max,n_procs=0):
         traitement_mocha(sp,N_max = N_max)
         print("Done for speaker ",sp)
 
-traitement_general_mocha(N_max =50)
+#traitement_general_mocha(N_max =50)
