@@ -203,7 +203,7 @@ def traitement_general_haskins(N_max):
             np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_final", EMA_files[i]),
                     ema_VT_smooth_norma)
 
-      #  split_sentences(speaker)
+        split_sentences(speaker)
         get_fileset_names(speaker)
 
     for sp in my_corpus_class.speakers :
