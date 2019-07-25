@@ -131,6 +131,7 @@ def traitement_general_haskins(N_max):
             my_ema = my_ema[:, new_order_arti]
 
             wav = data[0][2][:,0]
+
             np.save(os.path.join(root_path, "Donnees_brutes", corpus, speaker, "wav",
                                  EMA_files[k]), wav)
 
@@ -198,4 +199,4 @@ def traitement_general_haskins(N_max):
         traitement_haskins(sp,N_max = N_max)
         print("Done for speaker ",sp)
 
-#traitement_general_haskins(N_max = 5)
+traitement_general_haskins(N_max = 0)
