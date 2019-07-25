@@ -240,8 +240,8 @@ def traitement_general_usc(N_max):
         if N_max != 0:
             N_2 = min(N_max,N_2)
         for i in range(N_2):
-            if i % 50 == 0:
-                print("{} out of {}".format(i, N))
+        #    if i % 50 == 0:
+         #       print("{} out of {}".format(i, N))
             ema = read_ema_file(i)
             ema_VT = my_speaker_class.add_vocal_tract(ema)
             ema_VT_smooth = my_speaker_class.smooth_data(ema_VT)  # filtrage pour meilleur calcul des norm_values

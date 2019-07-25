@@ -38,6 +38,7 @@ import glob
 import multiprocessing as mp
 from Traitement.class_corpus import Corpus,Speaker
 
+np.seterr(all='raise')
 
 
 def traitement_general_mocha(N_max,n_procs=0):
@@ -164,8 +165,8 @@ def traitement_general_mocha(N_max,n_procs=0):
             np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_final", EMA_files[i]), ema_VT_smooth)
             my_speaker_class.list_EMA_traj.append(ema_VT_smooth)
             my_speaker_class.list_MFCC_frames.append(mfcc)
-        my_speaker_class.calculate_norm_values()
 
+        my_speaker_class.calculate_norm_values()
         for i in range(N):
            # ema = np.load(os.path.join(root_path, "Donnees_pretraitees",  speaker, "ema", EMA_files[i]+".npy"))
             ema_VT_smooth = np.load(os.path.join(root_path, "Donnees_pretraitees",  speaker, "ema_final", EMA_files[i]+".npy"))
@@ -189,7 +190,8 @@ def traitement_general_mocha(N_max,n_procs=0):
     sp_with_trans = ["fsew0", "msak0", "mjjn0", "ffes0"]
 
     for sp in my_corpus_class.speakers:
+        print("sp ",sp)
         traitement_mocha(sp,N_max = N_max)
         print("Done for speaker ",sp)
 
-#traitement_general_mocha(N_max =50)
+#traitement_general_mocha(N_max =120)
