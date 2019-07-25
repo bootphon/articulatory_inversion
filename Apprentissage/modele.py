@@ -18,7 +18,7 @@ from Apprentissage import utils
 
 
 class my_ac2art_modele(torch.nn.Module):
-    def __init__(self, hidden_dim, input_dim, output_dim, batch_size,name_file, sampling_rate=200,
+    def __init__(self, hidden_dim, input_dim, output_dim, batch_size,name_file, sampling_rate=100,
                  window=5, cutoff=10,cuda_avail =False,modele_filtered=False):
         root_folder = os.path.dirname(os.getcwd())
         super(my_ac2art_modele, self).__init__()
@@ -102,7 +102,6 @@ class my_ac2art_modele(torch.nn.Module):
             h = torch.div(torch.sin(alpha), alpha)
             #        h = np.sinc(2 * fc * (n - (N - 1) / 2))  # Compute sinc filter.
             beta = n * 2 * math.pi * (N - 1)
-
             """ n = torch.from_numpy(np.arange(N) ) # int of [0,N]
         h = np.sinc(2 * fc * (n - (N - 1) / 2))  # Compute sinc filter.
         h = torch.from_numpy(h)
