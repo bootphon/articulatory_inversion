@@ -198,4 +198,4 @@ def traitement_general_mocha(N_max,n_procs=0):
         traitement_mocha(sp,N_max = N_max)
         print("Done for speaker ",sp)
 
-traitement_general_mocha(N_max =0)
+#traitement_general_mocha(N_max =0)
