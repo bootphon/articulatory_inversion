@@ -181,13 +181,14 @@ def traitement_general_mngu0(N_max="All"):
         N = N_max
 
     for i in range(N):
-        if i%50==0:
-            print("{} out of {}".format(i,N))
+      #  if i%50==0:
+       #     print("{} out of {}".format(i,N))
         ema = read_ema_file(i)
         ema_VT = my_speaker_class.add_vocal_tract(ema)
         ema_VT_smooth = my_speaker_class.smooth_data(ema_VT)  # filtrage pour meilleur calcul des norm_values
         path_wav = os.path.join(path_wav_files, EMA_files[i] + '.wav')
         wav, sr = librosa.load(path_wav, sr=sampling_rate_wav)  # chargement de données
+        wav = 0.5 * wav / np.max(wav)
         mfcc  = from_wav_to_mfcc(wav)
         ema_VT_smooth, mfcc = remove_silences(i,ema_VT_smooth, mfcc)
         ema_VT_smooth, mfcc = synchro_ema_mfcc(ema_VT_smooth, mfcc)
@@ -202,7 +203,7 @@ def traitement_general_mngu0(N_max="All"):
         ema_VT_smooth = np.load(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_final", EMA_files[i] + ".npy"))
         mfcc = np.load(os.path.join(root_path, "Donnees_pretraitees", speaker, "mfcc", EMA_files[i] + ".npy"))
         ema_VT_smooth_norma, mfcc = my_speaker_class.normalize_phrase(i, ema_VT_smooth, mfcc)
-        ema_VT_smooth_norma = my_speaker_class.smooth_data(ema_VT_smooth_norma)
+        #ema_VT_smooth_norma = my_speaker_class.smooth_data(ema_VT_smooth_norma)
         np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "mfcc", EMA_files[i]), mfcc)
         np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_final", EMA_files[i]), ema_VT_smooth_norma)
 
@@ -212,5 +213,5 @@ def traitement_general_mngu0(N_max="All"):
 
 
 
-#traitement_general_mngu0(50)
+#traitement_general_mngu0(40)
 #print("duree : ",str(t2-t1))

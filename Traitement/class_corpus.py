@@ -64,7 +64,7 @@ class Corpus():
         if self.name == "mocha":
             self.sampling_rate_wav = 16000
             self.sampling_rate_ema = 500
-            self.cutoff = 30
+            self.cutoff = 10
 
         elif self.name == "MNGU0":
             self.sampling_rate_wav = 16000
@@ -79,7 +79,7 @@ class Corpus():
         elif self.name == "Haskins":
             self.sampling_rate_wav = 44100
             self.sampling_rate_ema = 100
-            self.cutoff = 10
+            self.cutoff = 20
 
 
 class Speaker():
@@ -125,17 +125,17 @@ class Speaker():
             raise NameError("vous navez pas choisi un des speasker")
         self.corpus_name =  corpus
 
-    def smooth_data(self,ema):
+    def smooth_data(self,ema,sr = 0):
         pad = 30
-        weights = low_pass_filter_weight(cut_off=self.cutoff, sampling_rate=self.sampling_rate_ema)
-
+        if sr == 0:
+            sr = self.sampling_rate_ema
+        weights = low_pass_filter_weight(cut_off=self.cutoff,sampling_rate= sr)
         my_ema_filtered = np.concatenate([np.expand_dims(np.pad(ema[:, k], (pad, pad), "symmetric"), 1)
                                           for k in range(ema.shape[1])], axis=1)
 
         my_ema_filtered = np.concatenate([np.expand_dims(np.convolve(channel, weights, mode='same'), 1)
                                           for channel in my_ema_filtered.T], axis=1)
         my_ema_filtered = my_ema_filtered[pad:-pad, :]
-
         return my_ema_filtered
 
 
@@ -145,14 +145,22 @@ class Speaker():
 
             pad = 30
             all_mean_ema = np.array([np.mean(traj, axis=0) for traj in list_EMA_traj])
-            weights_moving_average = low_pass_filter_weight(cut_off=10, sampling_rate=self.sampling_rate_ema)
-            moving_average = np.concatenate([np.expand_dims(np.pad(all_mean_ema[:, k], (pad, pad), "symmetric"), 1)
-                                             for k in range(all_mean_ema.shape[1])], axis=1)
-            smoothed_moving_average = np.concatenate(
-                [np.expand_dims(np.convolve(channel, weights_moving_average, mode='same'), 1)
-                 for channel in moving_average.T], axis=1)
-            smoothed_moving_average = smoothed_moving_average[pad:-pad, :]
+            np.save(os.path.join("norm_values", "all_mean_ema_" + self.name), all_mean_ema)
 
+        #    weights_moving_average = low_pass_filter_weight(cut_off=10, sampling_rate=self.sampling_rate_ema)
+         #   all_mean_ema = np.concatenate([np.expand_dims(np.pad(all_mean_ema[:, k], (pad, pad), "symmetric"), 1)
+          #                                   for k in range(all_mean_ema.shape[1])], axis=1) #rajoute pad avant et apres
+
+            moving_average = np.array([np.mean(all_mean_ema[k-pad:k+pad],axis=0) for k in range(len(all_mean_ema))])
+
+            np.save(os.path.join("norm_values", "moving_average_ema_" + self.name), moving_average)
+
+          #  moving_average = np.concatenate(
+           #     [np.expand_dims(np.convolve(channel, weights_moving_average, mode='same'), 1)
+            #     for channel in all_mean_ema.T], axis=1)
+            #print("b",moving_average.shape)
+            #moving_average = moving_average[pad:-pad, :]
+           # print("c",moving_average.shape)
             all_EMA_concat = np.concatenate([traj for traj in list_EMA_traj], axis=0)
             std_ema = np.std(all_EMA_concat, axis=0)
             std_ema[std_ema==0]=1
@@ -161,8 +169,7 @@ class Speaker():
                                axis=0)  # apres que chaque phrase soit centrée
             std_mfcc = np.mean(np.array([np.std(frame, axis=0) for frame in list_MFCC_frames]), axis=0)
             mean_mfcc = np.mean(np.array([np.mean(frame, axis=0) for frame in list_MFCC_frames]), axis=0)
-            np.save(os.path.join("norm_values", "moving_average_ema_" + self.name), smoothed_moving_average)
-            np.save(os.path.join("norm_values", "moving_average_ema_brute_" + self.name), moving_average)
+            np.save(os.path.join("norm_values", "moving_average_ema_" + self.name), moving_average)
             np.save(os.path.join("norm_values", "std_ema_" + self.name), std_ema)
             np.save(os.path.join("norm_values", "mean_ema_" + self.name), mean_ema)
             np.save(os.path.join("norm_values", "std_mfcc_" + self.name), std_mfcc)
@@ -233,6 +240,9 @@ class Speaker():
         my_mfcc = (my_mfcc - self.mean_mfcc) / self.std_mfcc
         return my_ema_VT,my_mfcc
 
+    def synchro_ema_mfcc(self,my_ema, my_mfcc):
+        my_ema = scipy.signal.resample(my_ema, num=len(my_mfcc))
+        return my_ema, my_mfcc
 
 
 

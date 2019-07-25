@@ -23,6 +23,7 @@ import scipy.io as sio
 import shutil
 from Traitement.create_filesets import get_fileset_names
 import glob
+import json
 
 """ after this script the order of the articulators is the following : """
 
@@ -107,8 +108,9 @@ def traitement_general_usc(N_max):
             for f in files:
                 os.remove(f)
 
-        def cut_all_files():
-            marge = 0.1
+        def cut_all_files(marge):
+            #xtrm_temp_all_sentences = dict()
+
             for j in range(N):
 
                 path_wav = os.path.join(path_files_brutes, "wav", EMA_files[j] + '.wav')
@@ -132,14 +134,23 @@ def traitement_general_usc(N_max):
                         temp = phone_details[phone_details[:, 2] == str(k)]
                         xtrm = [max(float(temp[:, 0][0])-marge,0), float(temp[:, 1][-1])+marge]
 
+
+                      #  if k not in xtrm_temp_all_sentences.keys():
+                       #     xtrm_temp_all_sentences[k]=xtrm
+                        #else :  #on a deja lu le début de cette phrase donc on updata juste la fin de la phrase
+                        #    xtrm_temp_all_sentences[k] = [xtrm_temp_all_sentences[k][0], xtrm[1]]
+
+
                         xtrm_temp_ema = [int(np.floor(xtrm[0]* sampling_rate_ema)),int(
                                          min(np.floor(xtrm[1] * sampling_rate_ema) + 1,len(my_ema)))]
                         xtrm_temp_wav = [int(int(np.floor(xtrm[0] * sampling_rate_wav_wanted))),
                                         int( min(int(np.floor(xtrm[1] * sampling_rate_wav_wanted) + 1),len(wav)))]
-                      #  print("idphrase ",k)
+                      #  print("idpihrase ",k)
                        # print("xtrm temp ,",xtrm)
                         ema_temp = my_ema[xtrm_temp_ema[0]:xtrm_temp_ema[1], :]
                         wav_temp = wav[xtrm_temp_wav[0]:xtrm_temp_wav[1]]
+
+
 
                         if os.path.exists(os.path.join(path_files_brutes, "mat_cut", EMA_files[j][:-7] + str(k) + ".npy")):
                             premiere_partie_ema = np.load(
@@ -155,6 +166,10 @@ def traitement_general_usc(N_max):
 
                         librosa.output.write_wav(os.path.join(path_files_brutes,"wav_cut", EMA_files[j][:-7] + str(k)+".wav"),
                                                  wav_temp, sampling_rate_wav_wanted)
+
+
+    #        with open(os.path.join(root_path, "Donnees_brutes", "usc",speaker,"extremites_phrases.json"), 'w') as dico:
+     #           json.dump(xtrm_temp_all_sentences, dico)
 
         def read_ema_file(m):
             articulators = ["ul_x", "ul_y", "ll_x", "ll_y", "li_x", "li_y", "td_x", "td_y", "tb_x", "tb_y", "tt_x",
@@ -179,9 +194,6 @@ def traitement_general_usc(N_max):
         def from_wav_to_mfcc(k):
             path_wav = os.path.join(path_files_brutes, "wav_cut", EMA_files_2[k] + '.wav')
             data, sr = librosa.load(path_wav, sr=sampling_rate_wav_wanted)  # chargement de données
-           # N_points_wav_wanted =int(len(data) * sampling_rate_wav_wanted / sampling_rate_wav_wanted)
-            #print(N_points_wav_wanted)
-           # data = scipy.signal.resample(data, num=N_points_wav_wanted)
             my_mfcc = librosa.feature.mfcc(y=data, sr=sampling_rate_wav_wanted, n_mfcc=n_coeff,
                                         n_fft=frame_length, hop_length=hop_length).T
             dyna_features = get_delta_features(my_mfcc)
@@ -193,34 +205,40 @@ def traitement_general_usc(N_max):
             my_mfcc = np.concatenate([frames[j:j+ len(my_mfcc)] for j in range(full_window)], axis=1)
             return my_mfcc
 
-        def synchro_ema_mfcc(my_ema, my_mfcc):
-            ## zero padding de sorte que l'on intègre les dépendences temporelles : on apprend la trame du milieu
-            # mais on ajoute des trames précédent et suivant pour ajouter de l'informatio temporelle
-            n_frames_wanted = my_mfcc.shape[0]
+        def remove_silences(k, my_ema, my_mfcc,marge):
+            # remove blanks at the beginning and the end, en sortie autant de lignes pour les deux
+            id_phrase = EMA_files_2[k][16:]
+         #   print("id_phrase",id_phrase)
 
-            my_ema = scipy.signal.resample(my_ema, num=n_frames_wanted)
+            n_points_de_silences_ema = int(np.floor(marge*sampling_rate_ema))
+            xtrm_temp_ema = [n_points_de_silences_ema,len(my_ema)-n_points_de_silences_ema]
 
+            n_frames_de_silences_mfcc=  int(np.floor(marge/hop_time))
+            xtrm_temp_mfcc = [n_frames_de_silences_mfcc,len(mfcc)-n_frames_de_silences_mfcc]
+         #   print("avant ",my_mfcc.shape)
+            my_mfcc = my_mfcc[xtrm_temp_mfcc[0]:xtrm_temp_mfcc[1]]
+            my_ema = my_ema[xtrm_temp_ema[0]:xtrm_temp_ema[1], :]
+           # print("apres",my_mfcc.shape)
             return my_ema, my_mfcc
 
         create_missing_dir()
-        path_files = os.path.join(root_path, "Donnees_brutes",corpus, speaker)
         EMA_files = sorted([name[:-4] for name in os.listdir(os.path.join(path_files_brutes, "mat")) if name.endswith(".mat")])
-
-        list_EMA_traj = []
-        list_MFCC_frames = []
 
         N = len(EMA_files)
         if N_max != 0:
             N =  min(int(N_max/3),N) #on coupe N fichiers
-        cut_all_files()
+        marge = 0
+
+        cut_all_files(marge)
+
+    #    with open(os.path.join(root_path, "Donnees_brutes", "usc",speaker,"extremites_phrases.json"), 'r') as fp:
+     #       extremites_phrases = json.load(fp)
 
         EMA_files_2 = sorted(
         [name[:-4] for name in os.listdir(os.path.join(path_files_brutes, "wav_cut")) if name.endswith(".wav")])
         N_2 = len(EMA_files_2)
         if N_max != 0:
-
             N_2 = min(N_max,N_2)
-
         for i in range(N_2):
             if i % 50 == 0:
                 print("{} out of {}".format(i, N))
@@ -228,7 +246,8 @@ def traitement_general_usc(N_max):
             ema_VT = my_speaker_class.add_vocal_tract(ema)
             ema_VT_smooth = my_speaker_class.smooth_data(ema_VT)  # filtrage pour meilleur calcul des norm_values
             mfcc = from_wav_to_mfcc(i)
-            ema_VT_smooth, mfcc = synchro_ema_mfcc(ema_VT_smooth, mfcc)
+            ema_VT_smooth, mfcc = remove_silences(i,ema_VT_smooth,mfcc,marge)
+            ema_VT_smooth, mfcc = my_speaker_class.synchro_ema_mfcc(ema_VT_smooth, mfcc)
             np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema", EMA_files_2[i]), ema_VT)
             np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "mfcc", EMA_files_2[i]), mfcc)
             np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_final", EMA_files_2[i]), ema_VT_smooth)
@@ -241,21 +260,23 @@ def traitement_general_usc(N_max):
                 os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_final", EMA_files_2[i] + ".npy"))
             mfcc = np.load(os.path.join(root_path, "Donnees_pretraitees", speaker, "mfcc", EMA_files_2[i] + ".npy"))
             ema_VT_smooth_norma, mfcc = my_speaker_class.normalize_phrase(i, ema_VT_smooth, mfcc)
-            ema_VT_smooth_norma = my_speaker_class.smooth_data(ema_VT_smooth_norma)
+            new_sr = 1/hop_time
+            ema_VT_smooth_norma = my_speaker_class.smooth_data(ema_VT_smooth_norma,new_sr)
             np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "mfcc", EMA_files_2[i]), mfcc)
             np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_final", EMA_files_2[i]),
                     ema_VT_smooth_norma)
 
         split_sentences(speaker)
-        get_fileset_names(speaker)
+      #  get_fileset_names(speaker)
 
-    frame_time = 25
-    hop_time = 10  # en ms
-    hop_length = int((hop_time * sampling_rate_wav_wanted) / 1000)
-    frame_length = int((frame_time * sampling_rate_wav_wanted) / 1000)
+    frame_time = 0.025
+    hop_time =0.01  # en seconde
+    hop_length = int(hop_time * sampling_rate_wav_wanted)
+    frame_length = int(frame_time * sampling_rate_wav_wanted)
     window = 5
     n_coeff = 13
     speakers = ["F1","F5","M1","M3"]
+    speakers = ["M3","F1"]
 
     for sp in speakers :
         print("speaker ",sp)

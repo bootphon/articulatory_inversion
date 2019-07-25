@@ -108,21 +108,16 @@ def traitement_general_mocha(N_max,n_procs=0):
                         for row in file
                     ]
                 xtrm = [max(float(labels[0][1])-marge , 0), float(labels[-1][0])+marge]
-                xtrm_temp_ema = [int(np.floor(xtrm[0] * sampling_rate_ema)), int(
-                    min(np.floor(xtrm[1] * sampling_rate_ema) + 1, len(my_ema)))]
+                xtrm_temp_ema = [int( xtrm[0] * sampling_rate_ema ),
+                                   min(int((xtrm[1] * sampling_rate_ema)+ 1 ) , len(my_ema))   ]
 
-                xtrm_temp_mfcc =[ int(np.floor( xtrm[0] * 1000 / hop_time)) ,
-                                   int(np.ceil(xtrm[1] * 1000 / hop_time))]
+                xtrm_temp_mfcc =[ int( xtrm[0]  / hop_time) ,
+                                   int(np.ceil(xtrm[1]  / hop_time))]
 
-                my_mfcc = my_mfcc[xtrm_temp_mfcc[0]:xtrm_temp_mfcc[1]]
+                y_mfcc = my_mfcc[xtrm_temp_mfcc[0]:xtrm_temp_mfcc[1]]
+
                 my_ema = my_ema[xtrm_temp_ema[0]:xtrm_temp_ema[1], :]
 
-           #     xtrm_temp_wav = [int(np.floor(xtrm[0] * sampling_rate_wav)),
-            #                     int(min(int(np.floor(xtrm[1] * sampling_rate_wav) + 1), len(my_wav)))]
-                #
-                #my_wav  = my_wav[xtrm_temp_wav[0]:xtrm_temp_wav[1]]
-                #librosa.output.write_wav(os.path.join(path_files_brutes, "wav_cut", wav_files[k] + ".wav"),
-                 #                        my_wav, sampling_rate_wav)
             return my_ema, my_mfcc
 
         def from_wav_to_mfcc(my_wav):
@@ -139,11 +134,6 @@ def traitement_general_mocha(N_max,n_procs=0):
             my_mfcc = np.concatenate([frames[j:j + len(my_mfcc)] for j in range(full_window)], axis=1)
             return my_mfcc
 
-        def synchro_ema_mfcc(my_ema,my_mfcc):
-            n_frames_wanted = my_mfcc.shape[0]
-            my_ema = scipy.signal.resample(my_ema, num=n_frames_wanted)
-            return my_ema,my_mfcc
-
 
         create_missing_dir()
         EMA_files = sorted([name for name in os.listdir(path_files_brutes) if "palate" not in name])
@@ -155,16 +145,20 @@ def traitement_general_mocha(N_max,n_procs=0):
             N = N_max
 
         for i in range(N):
-            if i+1%50 == 0:
-                print("{} out of {}".format(i,N))
+         #   if i+1%50 == 0:
+          #      print("{} out of {}".format(i,N))
             ema = read_ema_file(i)
             ema_VT = my_speaker_class.add_vocal_tract(ema)
             ema_VT_smooth = my_speaker_class.smooth_data(ema_VT) # filtrage pour meilleur calcul des norm_values
+           # ema_VT_smooth = ema_VT
             path_wav = os.path.join(path_files_brutes, wav_files[i] + '.wav')
             wav, sr = librosa.load(path_wav, sr=None)  # chargement de données
+            wav = 0.5*wav/np.max(wav)
+
             mfcc = from_wav_to_mfcc(wav)
             ema_VT_smooth,mfcc = remove_silences(ema_VT_smooth,mfcc,i)
-            ema_VT_smooth,mfcc = synchro_ema_mfcc(ema_VT_smooth,mfcc)
+           # print("diff",len(ema_VT_smooth),len(mfcc))
+            ema_VT_smooth,mfcc = my_speaker_class.synchro_ema_mfcc(ema_VT_smooth,mfcc)
             np.save(os.path.join(root_path, "Donnees_pretraitees",  speaker, "ema", EMA_files[i]), ema_VT)
             np.save(os.path.join(root_path, "Donnees_pretraitees",  speaker, "mfcc", EMA_files[i]), mfcc)
             np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_final", EMA_files[i]), ema_VT_smooth)
@@ -172,25 +166,24 @@ def traitement_general_mocha(N_max,n_procs=0):
             my_speaker_class.list_MFCC_frames.append(mfcc)
         my_speaker_class.calculate_norm_values()
 
-
         for i in range(N):
            # ema = np.load(os.path.join(root_path, "Donnees_pretraitees",  speaker, "ema", EMA_files[i]+".npy"))
             ema_VT_smooth = np.load(os.path.join(root_path, "Donnees_pretraitees",  speaker, "ema_final", EMA_files[i]+".npy"))
             mfcc = np.load(os.path.join(root_path, "Donnees_pretraitees",  speaker, "mfcc", EMA_files[i]+".npy"))
             ema_VT_smooth_norma , mfcc = my_speaker_class.normalize_phrase(i, ema_VT_smooth,mfcc)
-            ema_VT_smooth_norma = my_speaker_class.smooth_data(ema_VT_smooth_norma)
-
+            new_sr = 1/hop_time #on a rééchantillonner pour avoir autant de points que dans mfcc : 1 points toutes les 10ms : 100 points par sec
+            ema_VT_smooth_norma = my_speaker_class.smooth_data(ema_VT_smooth_norma,new_sr)
           #  np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_norma", EMA_files[i]), ema)
             np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "mfcc", EMA_files[i]), mfcc)
             np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_final", EMA_files[i]), ema_VT_smooth_norma)
 
         split_sentences(speaker)
-        get_fileset_names(speaker)
+     #   get_fileset_names(speaker)
 
-    frame_time = 25
-    hop_time = 10  # en ms
-    hop_length = int((hop_time * sampling_rate_wav) / 1000)
-    frame_length = int((frame_time * sampling_rate_wav) / 1000)
+    frame_time = 0.025
+    hop_time = 0.010  # en ms
+    hop_length = int(hop_time * sampling_rate_wav)
+    frame_length = int(frame_time * sampling_rate_wav)
     window = 5
     n_coeff = 13
     sp_with_trans = ["fsew0", "msak0", "mjjn0", "ffes0"]
@@ -199,4 +192,4 @@ def traitement_general_mocha(N_max,n_procs=0):
         traitement_mocha(sp,N_max = N_max)
         print("Done for speaker ",sp)
 
-#traitement_general_mocha(N_max = 50)
+#traitement_general_mocha(N_max =50)

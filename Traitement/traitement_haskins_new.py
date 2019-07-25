@@ -74,10 +74,10 @@ def traitement_general_haskins(N_max):
     sampling_rate_ema = my_corpus_class.sampling_rate_ema# toujours le même, mais lisible directement dans le fichier
     sampling_rate_wav = my_corpus_class.sampling_rate_wav  # toujours le même, mais lisible directement dans le fichier
 
-    frame_time = 25
-    hop_time = 10  # en ms
-    hop_length = int((hop_time * sampling_rate_wav) / 1000)
-    frame_length = int((frame_time * sampling_rate_wav) / 1000)
+    frame_time = 25/1000
+    hop_time = 10/1000  # en ms
+    hop_length = int(hop_time * sampling_rate_wav_wanted)
+    frame_length = int(frame_time * sampling_rate_wav_wanted)
     window = 5
     n_coeff = 13
 
@@ -95,11 +95,13 @@ def traitement_general_haskins(N_max):
             if not os.path.exists(os.path.join(path_files_treated, "ema_final")):
                 os.makedirs(os.path.join(path_files_treated, "ema_final"))
 
+            if not os.path.exists(os.path.join(root_path,"Donnees_brutes",corpus,speaker,"wav")):
+                os.makedirs(os.path.join(root_path,"Donnees_brutes",corpus,speaker,"wav"))
+
             files = glob.glob(os.path.join(path_files_treated, "ema", "*"))
             files += glob.glob(os.path.join(path_files_treated, "mfcc", "*"))
-            files += glob.glob(os.path.join(path_files_treated, "ema_VT", "*"))
             files += glob.glob(os.path.join(path_files_treated, "ema_final", "*"))
-
+            files+= glob.glob(os.path.join(root_path,"Donnees_brutes",corpus,speaker,"wav","*"))
             for f in files:
                 os.remove(f)
 
@@ -114,7 +116,7 @@ def traitement_general_haskins(N_max):
                     ma_fin = ma_data[0][6][0][-1][1][0][0]
                 return [mon_debut, ma_fin]
 
-            marge = 0.5
+
             order_arti_haskins = ['td_x', 'td_y', 'tb_x', 'tb_y', 'tt_x', 'tt_y', 'ul_x', 'ul_y', "ll_x", "ll_y",
                                   "ml_x", "ml_y", "li_x", "li_y", "jl_x", "jl_y"]
 
@@ -130,12 +132,16 @@ def traitement_general_haskins(N_max):
             new_order_arti = [order_arti_haskins.index(col) for col in order_arti]
             my_ema = my_ema[:, new_order_arti]
 
-            wav = data[0][2][:,0]
+            wav_data = data[0][2][:,0]
+            librosa.output.write_wav(os.path.join(root_path,"Donnees_brutes",corpus,speaker,"wav",EMA_files[k]+".wav"),wav_data, sampling_rate_wav)
 
-            np.save(os.path.join(root_path, "Donnees_brutes", corpus, speaker, "wav",
-                                 EMA_files[k]), wav)
 
-            my_mfcc = librosa.feature.mfcc(y=wav, sr=sampling_rate_wav, n_mfcc=n_coeff,
+            wav,sr = librosa.load(os.path.join(root_path,"Donnees_brutes",corpus,speaker,"wav",EMA_files[k]+".wav"),sr=sampling_rate_wav_wanted)
+          #  np.save(os.path.join(root_path, "Donnees_brutes", corpus, speaker, "wav",
+           #                      EMA_files[k]), wav)
+            wav = 0.5*wav/np.max(wav)
+
+            my_mfcc = librosa.feature.mfcc(y=wav, sr=sampling_rate_wav_wanted, n_mfcc=n_coeff,
                                         n_fft=frame_length, hop_length=hop_length).T
             dyna_features = get_delta_features(my_mfcc)
             dyna_features_2 = get_delta_features(dyna_features)
@@ -145,11 +151,14 @@ def traitement_general_haskins(N_max):
             full_window = 1 + 2 * window
             my_mfcc = np.concatenate([frames[i:i + len(my_mfcc)] for i in range(full_window)], axis=1)
 
-            [debut, fin] = detect_silence(data)
-            xtrm_temp_ema = [int(np.floor(debut * sampling_rate_ema)),
-                             int(min(np.floor(fin * sampling_rate_ema) + 1, len(my_ema)))]
-            xtrm_temp_mfcc = [int(np.floor(debut * 1000 / hop_time)),
-                              int(np.ceil(fin * 1000 / hop_time))]
+            marge=0.1
+            xtrm = detect_silence(data)
+            xtrm = [max(xtrm[0]-marge,0),xtrm[1]+marge]
+
+            xtrm_temp_ema = [int(np.floor(xtrm[0] * sampling_rate_ema)),
+                             int(min(np.floor(xtrm[1] * sampling_rate_ema) + 1, len(my_ema)))]
+            xtrm_temp_mfcc = [int(np.floor(xtrm[0]  / hop_time)),
+                              int(np.ceil(xtrm[1]  / hop_time))]
             my_ema = my_ema[xtrm_temp_ema[0]:xtrm_temp_ema[1], :]
             my_mfcc = my_mfcc[xtrm_temp_mfcc[0]:xtrm_temp_mfcc[1]]
 
@@ -167,11 +176,12 @@ def traitement_general_haskins(N_max):
             N = int(N_max) #on coupe N fichiers
 
         for i in range(N):
-            if i % 50 == 0:
-                print("{} out of {}".format(i, N))
+      #      if i % 50 == 0:
+       #         print("{} out of {}".format(i, N))
             ema,mfcc = read_ema_and_wav(i)
             ema_VT = my_speaker_class.add_vocal_tract(ema)
-            ema_VT_smooth = my_speaker_class.smooth_data(ema_VT)  # filtrage pour meilleur calcul des norm_values
+            ema_VT_smooth = ema_VT
+           # ema_VT_smooth = my_speaker_class.smooth_data(ema_VT)  # filtrage pour meilleur calcul des norm_values
             np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema", EMA_files[i]), ema_VT)
             np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "mfcc", EMA_files[i]), mfcc)
             np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_final", EMA_files[i]), ema_VT_smooth)
@@ -185,7 +195,8 @@ def traitement_general_haskins(N_max):
                 os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_final", EMA_files[i] + ".npy"))
             mfcc = np.load(os.path.join(root_path, "Donnees_pretraitees", speaker, "mfcc", EMA_files[i] + ".npy"))
             ema_VT_smooth_norma, mfcc = my_speaker_class.normalize_phrase(i, ema_VT_smooth, mfcc)
-            ema_VT_smooth_norma = my_speaker_class.smooth_data(ema_VT_smooth_norma)
+            new_sr = 1/hop_time
+            ema_VT_smooth_norma = my_speaker_class.smooth_data(ema_VT_smooth_norma,new_sr)
 
             #  np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_norma", EMA_files[i]), ema)
             np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "mfcc", EMA_files[i]), mfcc)
@@ -193,10 +204,10 @@ def traitement_general_haskins(N_max):
                     ema_VT_smooth_norma)
 
         split_sentences(speaker)
-        get_fileset_names(speaker)
+      #  get_fileset_names(speaker)
 
-    for sp in my_corpus_class.speakers :
+    for sp in ["F02","F01"]:#my_corpus_class.speakers :
         traitement_haskins(sp,N_max = N_max)
         print("Done for speaker ",sp)
 
-traitement_general_haskins(N_max = 0)
+#traitement_general_haskins(N_max = 50)
