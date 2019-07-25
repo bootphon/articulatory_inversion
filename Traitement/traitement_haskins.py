@@ -231,4 +231,4 @@ def traitement_general_haskins(N_max):
         traitement_haskins(sp,N_max = N_max)
         print("Done for speaker ",sp)
 
-traitement_general_haskins(N_max = 30)
+#traitement_general_haskins(N_max = 30)
