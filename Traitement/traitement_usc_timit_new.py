@@ -266,7 +266,7 @@ def traitement_general_usc(N_max):
             np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_final", EMA_files_2[i]),
                     ema_VT_smooth_norma)
 
-        split_sentences(speaker)
+      #  split_sentences(speaker)
         get_fileset_names(speaker)
 
     frame_time = 0.025

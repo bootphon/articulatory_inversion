@@ -159,7 +159,7 @@ def traitement_general_mocha(N_max,n_procs=0):
             ema_VT_smooth,mfcc = remove_silences(ema_VT_smooth,mfcc,i)
             ema_VT_smooth,mfcc = my_speaker_class.synchro_ema_mfcc(ema_VT_smooth,mfcc)
 
-            ema_VT_,rien = remove_silences(ema_VT, mfcc, i)
+            ema_VT ,rien = remove_silences(ema_VT, mfcc, i)
             ema_VT, rien = my_speaker_class.synchro_ema_mfcc(ema_VT, mfcc)
 
             np.save(os.path.join(root_path, "Donnees_pretraitees",  speaker, "ema", EMA_files[i]), ema_VT)
@@ -182,7 +182,7 @@ def traitement_general_mocha(N_max,n_procs=0):
             np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "mfcc", EMA_files[i]), mfcc)
             np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_final", EMA_files[i]), ema_VT_smooth_norma)
 
-      #  split_sentences(speaker)
+        #split_sentences(speaker)
         get_fileset_names(speaker)
 
     frame_time = 0.025
@@ -198,4 +198,4 @@ def traitement_general_mocha(N_max,n_procs=0):
         traitement_mocha(sp,N_max = N_max)
         print("Done for speaker ",sp)
 
-#traitement_general_mocha(N_max =0)
+#traitement_general_mocha(N_max = )

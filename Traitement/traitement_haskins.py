@@ -226,9 +226,10 @@ def traitement_general_haskins(N_max):
     n_coeff = 13
     cutoff = 10
     speakers = ["F01", "F02", "F03", "F04", "M01", "M02", "M03", "M04"]
+   # speakers = ["F01", "F02", "F03", "M01", "M02", "M03", "M04"]
 
     for sp in speakers :
         traitement_haskins(sp,N_max = N_max)
         print("Done for speaker ",sp)
 
-#traitement_general_haskins(N_max = 30)
+#traitement_general_haskins(N_max = 0)
