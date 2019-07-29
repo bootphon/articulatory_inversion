@@ -38,7 +38,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     train_on = []
     delta_test=  1
     lr = 0.001
-    to_plot=False
+    to_plot=True
     corpus_to_train_on = corpus_to_train_on[1:-1].split(",")
     for corpus in corpus_to_train_on :
         print("corpus" , corpus)
@@ -146,7 +146,11 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     elif loss_train[:4] == "both":
         lbd = int(loss_train[5:])
         def new_criterion(y,y_pred):
-            new_loss  =lbd*criterion_pearson(y,y_pred)+criterion_rmse(y,y_pred)
+            a =lbd*criterion_pearson(y,y_pred)/10000
+            b = criterion_rmse(y,y_pred)/10000
+            new_loss  =a+b
+           # print("pear {}, rmse {}".format(a,b))
+
             return new_loss
         criterion = new_criterion
     with open('categ_of_speakers.json', 'r') as fp:
