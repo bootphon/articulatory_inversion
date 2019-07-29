@@ -147,10 +147,10 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     elif loss_train[:4] == "both":
         lbd = int(loss_train[5:])
         def new_criterion(y,y_pred):
-            a =lbd*criterion_pearson(y,y_pred)/10000
-            b = criterion_rmse(y,y_pred)/10000
-            new_loss  =a+b
-           # print("pear {}, rmse {}".format(a,b))
+            a =lbd*criterion_pearson(y,y_pred)
+            b = criterion_rmse(y,y_pred)
+            new_loss  =(a+b)/(lbd+1)
+            print("pear {}, rmse {}".format(a,b))
 
             return new_loss
         criterion = new_criterion
