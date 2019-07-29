@@ -150,7 +150,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
             a =lbd*criterion_pearson(y,y_pred)
             b = criterion_rmse(y,y_pred)
             new_loss  =(a+b)/(lbd+1)
-            print("pear {}, rmse {}".format(a,b))
+          #  print("pear {}, rmse {}".format(a,b))
 
             return new_loss
         criterion = new_criterion
