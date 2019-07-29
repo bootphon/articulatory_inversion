@@ -31,24 +31,33 @@ fileset_path = os.path.join(root_folder, "Donnees_pretraitees", "fileset")
 
 print(sys.argv)
 
-def train_model(test_on ,n_epochs ,delta_test ,patience ,lr,to_plot,select_arti,corpus_to_train_on):
+def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_train_on,only_one_sp):
     data_filtered=True
     modele_filtered=True
     name_corpus_concat = ""
     train_on = []
+    delta_test=  1
+    lr = 0.001
+    to_plot=False
     corpus_to_train_on = corpus_to_train_on[1:-1].split(",")
     for corpus in corpus_to_train_on :
         print("corpus" , corpus)
         sp = get_speakers_per_corpus(corpus)
         train_on = train_on + sp
         name_corpus_concat = name_corpus_concat+corpus+"_"
-    print(name_corpus_concat)
-    #if "mocha" in corpus_to_train_on:
-    #    train_on = ["msak0"]
-    #elif "usc" in corpus_to_train_on:
-     #   train_on = ["M3"]
-   # elif "Haskins" in corpus_to_train_on:
-    #    train_on = ["F02"]
+    if only_one_sp:
+        if test_on == "fsew0":
+            train_on = ["msak0"]
+        elif test_on == "msak0":
+            train_on = ["fsew0"]
+        else :
+
+            print("vous voulez apprendre sur un speaker et tester sur autre que fsew0")
+            train_on = []
+       # elif "usc" in corpus_to_train_on:
+        #    train_on = ["M3","MNGU0"]
+       # elif "Haskins" in corpus_to_train_on:
+        #    train_on = ["F02"]
 
     if test_on in train_on :
         train_on.remove(test_on)
@@ -58,8 +67,10 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr,to_plot,select_arti,
     cuda_avail = torch.cuda.is_available()
     print(" cuda ?", cuda_avail)
     output_dim = 18
-   # name_file = "test_on_" + test_on+"_idx_"+str(select_arti)+"_onlycorpus_"+str(only_on_corpus)
-    name_file = "train_on_"+name_corpus_concat+"test_on_"+test_on+"_idx_"+str(select_arti)
+    if not(only_one_sp):
+        name_file = "train_on_"+name_corpus_concat+"test_on_"+test_on+"_idx_"+str(select_arti)
+    else :
+        name_file = "train_on_" +train_on[0] + "_test_on_" + test_on + "_idx_" + str(select_arti)
     print("name file : ",name_file)
 #   logger = Logger('./log_' + name_file)
 
@@ -117,12 +128,24 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr,to_plot,select_arti,
             nume = nume.to(device=cuda2)
         deno = torch.max(deno,minim)
         my_loss = nume/deno
+     #   if idx_to_ignore:
+      #      my_loss[:,:,idx_to_ignore].requires_grad = False
+      #  print(my_loss[:,0,5])
+
         my_loss = torch.sum(my_loss) #pearson doit etre le plus grand possible
+
         #loss = torch.div(loss, torch.tensor(y.shape[2],dtype=torch.float64)) # correlation moyenne par arti
        # print("myloss shape",my_loss.shape)
         return -my_loss
 
     criterion_rmse = torch.nn.MSELoss(reduction='sum')
+    if loss_train == "rmse":
+        criterion = criterion_rmse
+    elif loss_train == "pearson":
+        criterion = criterion_pearson
+    elif loss_train == "both":
+        lbd = 1
+        criterion = criterion_pearson+ lbd * criterion_rmse
     with open('categ_of_speakers.json', 'r') as fp:
         categ_of_speakers = json.load(fp) #dictionnaire en clé la categorie en valeur un dictionnaire
                                             # #avec les speakers dans la catégorie et les arti concernées par cette categorie
@@ -174,7 +197,6 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr,to_plot,select_arti,
         random.shuffle(list(categs_to_consider))
         loss_train_this_epoch = 0
         for categ in categs_to_consider:  # de A à F pour le momen
-
             files_this_categ_courant = files_per_categ[categ]["train"] #on na pas encore apprit dessus au cours de cette epoch
             random.shuffle(files_this_categ_courant)
 
@@ -193,12 +215,16 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr,to_plot,select_arti,
                 if select_arti:
                     arti_to_consider = categ_of_speakers[categ]["arti"]  # liste de 18 0/1 qui indique les arti à considérer
                     idx_to_ignore = [i for i, n in enumerate(arti_to_consider) if n == "0"]
-                    y[:,:,idx_to_ignore]=0
-                    y_pred[:,:,idx_to_ignore]=0
+                    y_pred[:, :, idx_to_ignore] = 0
+                   # y_pred[:,:,idx_to_ignore].detach()
+                    #y[:,:,idx_to_ignore].requires_grad = False
 
-                loss = criterion_pearson(y, y_pred)
+                loss = criterion(y, y_pred)
 
                 loss.backward()
+                #a partir de là y_pred.grad a des elements
+         #       print("ypred grad shape", y_pred.grad.shape)
+
                 optimizer.step()
                 torch.cuda.empty_cache()
 
@@ -229,10 +255,11 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr,to_plot,select_arti,
                     if select_arti:
                         arti_to_consider = categ_of_speakers[categ]["arti"]  # liste de 18 0/1 qui indique les arti à considérer
                         idx_to_ignore = [i for i, n in enumerate(arti_to_consider) if n == "0"]
-                        y[:, :, idx_to_ignore] = 0
                         y_pred[:, :, idx_to_ignore] = 0
+                    #    y_pred[:, :, idx_to_ignore].detach()
+                   #     y[:, :, idx_to_ignore].requires_grad = False
 
-                    loss_courant = criterion_pearson(y, y_pred)
+                    loss_courant = criterion(y, y_pred)
                     loss_vali += loss_courant.item()
             loss_vali  = loss_vali/n_valid
 
@@ -243,15 +270,15 @@ def train_model(test_on ,n_epochs ,delta_test ,patience ,lr,to_plot,select_arti,
                 if loss_vali > model.all_validation_loss[-1]:
                     for param_group in optimizer.param_groups:
                         param_group['lr'] = param_group['lr'] / 2
-                        print(param_group["lr"])
+                        (param_group["lr"])
                         patience_temp=0
 
             #model.all_test_loss += [model.all_test_loss[-1]] * (epoch+previous_epoch - len(model.all_test_loss))
-            print("\n ---------- epoch" + str(epoch) + " ---------")
+           # print("\n ---------- epoch" + str(epoch) + " ---------")
             #early_stopping.epoch = previous_epoch+epoch
             early_stopping(loss_vali, model)
-            print("train loss ", loss.item())
-            print("valid loss ", loss_vali)
+          #  print("train loss ", loss.item())
+          #  print("valid loss ", loss_vali)
 
          #   logger.scalar_summary('loss_valid', loss_vali,
           #                        model.epoch_ref)
@@ -285,31 +312,41 @@ if __name__=='__main__':
 
     parser.add_argument('n_epochs', type=int,
                         help='max number of epochs to train the model')
-    parser.add_argument('delta_test', type=int,
-                        help='interval between two validation evaluation')
-    parser.add_argument('patience',type=int,
+   # parser.add_argument('delta_test', type=int,
+    #                    help='interval between two validation evaluation')
+
+    parser.add_argument('loss_train', type=str,
+                        help="rmse or pearson or both")
+    parser.add_argument('patience', type=int,
                         help='number of iterations in a row with decreasing validation score before stopping the train ')
-    parser.add_argument('lr',    help='learning rate of Adam optimizer ')
-    parser.add_argument('to_plot', type=bool,
-                        help='si true plot les resultats sur le test')
+
+    # parser.add_argument('lr',    help='learning rate of Adam optimizer ')
+#    parser.add_argument('to_plot', type=bool,
+ #                       help='si true plot les resultats sur le test')
 
     parser.add_argument('select_arti', type=bool,
                         help='ssi dans la retropro on ne considere que les arti bons')
 
     parser.add_argument('corpus_to_train_on',  type=str,
                         help='ssi dans la retropro on ne considere que les arti bons')
-
+    parser.add_argument('only_one_sp', type=bool,
+                        help='ssi dans la retropro on ne considere que les arti bons')
 
 
     args = parser.parse_args()
     test_on =  sys.argv[1]
     n_epochs = int(sys.argv[2])
-    delta_test = int(sys.argv[3])
+    loss_train = sys.argv[3]
+  #  delta_test = int(sys.argv[3])
     patience = int(sys.argv[4])
-    lr = float(sys.argv[5])
-    to_plot = sys.argv[6].lower()=="true"
-    select_arti = sys.argv[7].lower()=="true"
-    corpus_to_train_on = str(sys.argv[8])
+ #   lr = float(sys.argv[5])
+ #   to_plot = sys.argv[6].lower()=="true"
+    select_arti = sys.argv[5].lower()=="true"
+    corpus_to_train_on = str(sys.argv[6])
+    only_one_sp = sys.argv[7].lower()=="true"
 
-    train_model(test_on = test_on,n_epochs=n_epochs,delta_test=delta_test,patience=patience,
-                lr = lr,to_plot=to_plot,select_arti=select_arti,corpus_to_train_on = corpus_to_train_on)
+
+
+    train_model(test_on = test_on,n_epochs=n_epochs,loss_train = loss_train,patience=patience,
+               select_arti=select_arti,corpus_to_train_on = corpus_to_train_on,
+                only_one_sp = only_one_sp)

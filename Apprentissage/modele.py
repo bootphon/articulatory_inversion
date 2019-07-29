@@ -57,7 +57,7 @@ class my_ac2art_modele(torch.nn.Module):
             self.cuda2 = torch.device('cuda:1')
         self.epoch_ref = 0
 
-    def prepare_batch(self, x, y):
+    def prepare_batch(self, x, y): #zero pad
         max_length = np.max([len(phrase) for phrase in x])
         B = len(x)  # often batch size but not for validation
         new_x = torch.zeros((B, max_length, self.input_dim), dtype=torch.double)
@@ -90,31 +90,23 @@ class my_ac2art_modele(torch.nn.Module):
             cutoff = torch.tensor(self.cutoff, dtype=torch.float64).view(1, 1)
             fc = torch.div(cutoff,
                   self.sampling_rate)  # Cutoff frequency as a fraction of the sampling rate (in (0, 0.5)).
-            if fc > 0.5:
-                raise Exception("La frequence de coupure doit etre au moins deux fois la frequence dechantillonnage")
+           # if fc > 0.5:
+            #    raise Exception("La frequence de coupure doit etre au moins deux fois la frequence dechantillonnage")
             b = 0.08  # Transition band, as a fraction of the sampling rate (in (0, 0.5)).
             N = int(np.ceil((4 / b)))  # le window
             if not N % 2:
                 N += 1  # Make sure that N is odd.
             n = torch.arange(N).double()
             alpha = torch.mul(fc, 2 * (n - (N - 1) / 2)).double()
-            minim = torch.tensor(0.01, dtype=torch.float64)
-            alpha = torch.max(alpha,minim)
+            minim = torch.tensor(0.01, dtype=torch.float64) #utile ?
+            alpha = torch.max(alpha,minim)#utile ?
             h = torch.div(torch.sin(alpha), alpha)
-            #        h = np.sinc(2 * fc * (n - (N - 1) / 2))  # Compute sinc filter.
-            beta = n * 2 * math.pi * (N - 1)
-            """ n = torch.from_numpy(np.arange(N) ) # int of [0,N]
-        h = np.sinc(2 * fc * (n - (N - 1) / 2))  # Compute sinc filter.
-        h = torch.from_numpy(h)
-        w = 0.5 * (1 - np.cos(2 * np.pi * n / (N - 1)))  # Compute hanning window.
-        h = h * w  # Multiply sinc filter with window.
-       """
-           # print("2.5",beta)
+            beta = n * 2 * math.pi / (N - 1)
+
             w = 0.5 * (1 - torch.cos(beta))  # Compute hanning window.
-            #print("3",w)
             h = torch.mul(h, w)  # Multiply sinc filter with window.
             h = torch.div(h, torch.sum(h))
-            #print("4",h)
+
            # h.require_grads = True
           #  self.cutoff = Variable(cutoff, requires_grad=True)
          #   self.cutoff.require_grads = True
@@ -214,7 +206,7 @@ class my_ac2art_modele(torch.nn.Module):
         :return: print the mean pearson correlation between real and predicted trajectories per articulators.
         Also print the overall mean among the correct articulators
         """
-
+        all_diff = np.zeros((1, self.output_dim))
         all_pearson = np.zeros((1, self.output_dim))
         indices_to_plot=[]
         if to_plot :
@@ -226,13 +218,18 @@ class my_ac2art_modele(torch.nn.Module):
                 y = Y_test[i].reshape((L, self.output_dim))                     #y (L,13)
                 if self.cuda_avail:
                     x_torch = x_torch.to(device=self.cuda2)
+               # with torch.no_grad():
                 y_pred_torch = self(x_torch,filtered).double() #sortie y_pred (1,L,13)
-
                 if self.cuda_avail:
                     y_pred_torch = y_pred_torch.cpu()
                 y_pred = y_pred_torch.detach().numpy().reshape((L, self.output_dim))  # y_pred (L,13)
                 if i in indices_to_plot:
                     self.plot_results(y, y_pred, suffix=suffix + str(i))
+
+                rmse = np.sqrt(np.mean(np.square(y - y_pred), axis=0))  # calcule du rmse à la main
+                rmse = np.reshape(rmse, (1, self.output_dim))  # dénormalisation et taille (1,13)
+                all_diff = np.concatenate((all_diff, rmse))
+
                 pearson = [0]*self.output_dim
                 for k in range(self.output_dim):
                     pearson[k]= np.corrcoef(y[:,k].T,y_pred[:,k].T)[0,1]
@@ -240,9 +237,13 @@ class my_ac2art_modele(torch.nn.Module):
                 pearson[np.isnan(pearson)] = 0
                 all_pearson = np.concatenate((all_pearson,pearson))
         all_pearson=all_pearson[1:]
-
+        all_diff = all_diff[1:]
         pearson_per_arti_mean = np.mean(all_pearson, axis=0)
+        rmse_per_arti_mean = np.mean(all_diff, axis=0)
+
         #pearson_per_arti_std = np.std(all_pearson, axis=0)
+        print("rmse final : ", np.mean(all_diff[pearson_per_arti_mean != 0]))
+        print("rmse mean per arti : \n", rmse_per_arti_mean)
         print("pearson final : ", np.mean(pearson_per_arti_mean[pearson_per_arti_mean!=0]))
         print("pearson mean per arti : \n", pearson_per_arti_mean)
       #  print("pearson std per arti : \n", pearson_per_arti_std)
