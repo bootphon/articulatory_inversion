@@ -197,7 +197,7 @@ class my_ac2art_modele(torch.nn.Module):
         loss = criterion( y_temp,y_pred).item()
         return loss
 
-    def evaluate_on_test(self,X_test,Y_test, to_plot=False,filtered=False,suffix= ""):
+    def evaluate_on_test(self,X_test,Y_test, std_speaker = 1,to_plot=False,filtered=False,suffix= ""):
         """
         :param X_test:  list of all the input of the test set
         :param Y_test:  list of all the target of the test set
@@ -228,6 +228,7 @@ class my_ac2art_modele(torch.nn.Module):
 
                 rmse = np.sqrt(np.mean(np.square(y - y_pred), axis=0))  # calcule du rmse à la main
                 rmse = np.reshape(rmse, (1, self.output_dim))  # dénormalisation et taille (1,13)
+                rmse = rmse*std_speaker #unormalize
                 all_diff = np.concatenate((all_diff, rmse))
 
                 pearson = [0]*self.output_dim
