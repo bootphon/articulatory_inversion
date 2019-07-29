@@ -68,9 +68,9 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     print(" cuda ?", cuda_avail)
     output_dim = 18
     if not(only_one_sp):
-        name_file = "train_on_"+name_corpus_concat+"test_on_"+test_on+"_idx_"+str(select_arti)
+        name_file = "train_on_"+name_corpus_concat+"test_on_"+test_on+"_idx_"+str(select_arti)+"_loss_"+str(loss_train)
     else :
-        name_file = "train_on_" +train_on[0] + "_test_on_" + test_on + "_idx_" + str(select_arti)
+        name_file = "train_on_" +train_on[0] + "_test_on_" + test_on + "_idx_" + str(select_arti)+"_loss_"+str(loss_train)
     print("name file : ",name_file)
 #   logger = Logger('./log_' + name_file)
 
@@ -236,7 +236,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
           #  print("evaluation on speaker {}".format(test_on))
            # model.evaluate_on_test(x, y, verbose=True, to_plot=to_plot)
 
-            print("evaluation validation")
+          #  print("evaluation validation")
             loss_vali = 0
             n_valid = 0
             for categ in categs_to_consider:  # de A à F pour le moment
