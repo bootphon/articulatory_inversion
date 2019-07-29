@@ -287,7 +287,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
             torch.cuda.empty_cache()
 
         if early_stopping.early_stop:
-            print("Early stopping")
+            print("Early stopping, n epochs : ",epoch)
             break
 
     if n_epochs>0:
