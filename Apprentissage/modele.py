@@ -240,9 +240,11 @@ class my_ac2art_modele(torch.nn.Module):
         all_diff = all_diff[1:]
         pearson_per_arti_mean = np.mean(all_pearson, axis=0)
         rmse_per_arti_mean = np.mean(all_diff, axis=0)
+        rmse_per_arti_mean[pearson_per_arti_mean == 0]  = 0
+
 
         #pearson_per_arti_std = np.std(all_pearson, axis=0)
-        print("rmse final : ", np.mean(rmse_per_arti_mean[pearson_per_arti_mean != 0]))
+        print("rmse final : ", np.mean(rmse_per_arti_mean[rmse_per_arti_mean != 0]))
         print("rmse mean per arti : \n", rmse_per_arti_mean)
         print("pearson final : ", np.mean(pearson_per_arti_mean[pearson_per_arti_mean!=0]))
         print("pearson mean per arti : \n", pearson_per_arti_mean)
