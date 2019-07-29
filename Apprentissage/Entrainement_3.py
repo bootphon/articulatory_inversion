@@ -145,11 +145,12 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     elif loss_train == "pearson":
         criterion = criterion_pearson
     elif loss_train[:4] == "both":
-        lbd = int(loss_train[5:])
+        lbd = int(loss_train[5:]) #de type 20 000, 20 000 versus 1
+        lbd = lbd / 100
         def new_criterion(y,y_pred):
             a =lbd*criterion_pearson(y,y_pred)
-            b = criterion_rmse(y,y_pred)
-            new_loss  =(a+b)/(lbd+1)
+            b = (1-lbd)*criterion_rmse(y,y_pred)/1000
+            new_loss  =a+b
           #  print("pear {}, rmse {}".format(a,b))
 
             return new_loss
