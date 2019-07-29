@@ -139,6 +139,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
         return -my_loss
 
     criterion_rmse = torch.nn.MSELoss(reduction='sum')
+
     if loss_train == "rmse":
         criterion = criterion_rmse
     elif loss_train == "pearson":
@@ -305,7 +306,8 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     x, y = load_data(files_for_test)
     print("evaluation on speaker {}".format(test_on))
     #print("DATA AND MODELE FILTERED")
-    model.evaluate_on_test(x,y, to_plot=to_plot,filtered=True)
+    std_speaker = np.load(os.path.join(root_folder,"Traitement","norm_values","std_ema_"+test_on+".npy"))
+    model.evaluate_on_test(x,y, std_speaker = std_speaker, to_plot=to_plot,filtered=True)
     #x, y = load_data(files_for_test,filtered=False)
    # print("DATA AND MODELE NOT FILTERED")
     #model.evaluate_on_test(x,y, to_plot=to_plot,filtered=False)
