@@ -41,7 +41,7 @@ from Traitement.class_corpus import Corpus,Speaker
 np.seterr(all='raise')
 
 
-def traitement_general_mocha(N_max,n_procs=0):
+def traitement_general_mocha(N_max,on_speaker = None):
 
     my_corpus_class = Corpus("mocha")
     sampling_rate_ema = my_corpus_class.sampling_rate_ema
@@ -127,14 +127,12 @@ def traitement_general_mocha(N_max,n_procs=0):
                                            ).T
             dyna_features = get_delta_features(my_mfcc)
             dyna_features_2 = get_delta_features(dyna_features)
-
             my_mfcc = np.concatenate((my_mfcc, dyna_features, dyna_features_2), axis=1)
             padding = np.zeros((window, my_mfcc.shape[1]))
             frames = np.concatenate([padding, my_mfcc, padding])
             full_window = 1 + 2 * window
             my_mfcc = np.concatenate([frames[j:j + len(my_mfcc)] for j in range(full_window)], axis=1)
             return my_mfcc
-
 
         create_missing_dir()
         EMA_files = sorted([name for name in os.listdir(path_files_brutes) if "palate" not in name])
@@ -151,7 +149,7 @@ def traitement_general_mocha(N_max,n_procs=0):
             ema = read_ema_file(i)
             ema_VT = my_speaker_class.add_vocal_tract(ema)
             ema_VT_smooth = my_speaker_class.smooth_data(ema_VT) # filtrage pour meilleur calcul des norm_values
-           # ema_VT_smooth = ema_VT
+
             path_wav = os.path.join(path_files_brutes, wav_files[i] + '.wav')
             wav, sr = librosa.load(path_wav, sr=None)  # chargement de données
             wav = 0.5*wav/np.max(wav)
@@ -182,7 +180,7 @@ def traitement_general_mocha(N_max,n_procs=0):
             np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "mfcc", EMA_files[i]), mfcc)
             np.save(os.path.join(root_path, "Donnees_pretraitees", speaker, "ema_final", EMA_files[i]), ema_VT_smooth_norma)
 
-        #split_sentences(speaker)
+      #  split_sentences(speaker)
         get_fileset_names(speaker)
 
     frame_time = 0.025
@@ -192,10 +190,15 @@ def traitement_general_mocha(N_max,n_procs=0):
     window = 5
     n_coeff = 13
     sp_with_trans = ["fsew0", "msak0", "mjjn0", "ffes0"]
+    if on_speaker :
+        speakers = on_speaker
+    else :
+        speakers = my_corpus_class.speakers
 
-    for sp in my_corpus_class.speakers:
+    for sp in speakers:
         print("sp ",sp)
         traitement_mocha(sp,N_max = N_max)
         print("Done for speaker ",sp)
 
-#traitement_general_mocha(N_max = )
+
+traitement_general_mocha(N_max =0 , on_speaker = ["falh0"] )
