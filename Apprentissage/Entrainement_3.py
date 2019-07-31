@@ -292,7 +292,9 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
             print("Early stopping, n epochs : ",model.epoch_ref+epoch)
             break
     model.epoch_ref = model.epoch_ref + epoch
+    total_epoch = 0
     if n_epochs>0:
+        total_epoch = model.epoch_ref
         model.load_state_dict(torch.load(os.path.join("saved_models",name_file+'.pt')))
         torch.save(model.state_dict(), os.path.join( "saved_models",name_file+".txt"))
 
