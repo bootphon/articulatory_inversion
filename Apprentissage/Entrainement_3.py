@@ -128,17 +128,19 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
             nume = nume.to(device=cuda2)
         deno = torch.max(deno,minim)
         my_loss = nume/deno
-     #   if idx_to_ignore:
-      #      my_loss[:,:,idx_to_ignore].requires_grad = False
-      #  print(my_loss[:,0,5])
-
         my_loss = torch.sum(my_loss) #pearson doit etre le plus grand possible
-
-        #loss = torch.div(loss, torch.tensor(y.shape[2],dtype=torch.float64)) # correlation moyenne par arti
-       # print("myloss shape",my_loss.shape)
         return -my_loss
 
     criterion_rmse = torch.nn.MSELoss(reduction='sum')
+
+    def criterion_both(lbd):
+        lbd = lbd/100
+        def criterion_both_lbd(my_y,my_ypred):
+            a = lbd * criterion_pearson(my_y, my_ypred)
+            b = (1 - lbd) * criterion_rmse(my_y, my_ypred) / 1000
+            new_loss = a + b
+            return new_loss
+        return criterion_both_lbd
 
     if loss_train == "rmse":
         criterion = criterion_rmse
@@ -146,18 +148,10 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
         criterion = criterion_pearson
     elif loss_train[:4] == "both":
         lbd = int(loss_train[5:]) #de type 20 000, 20 000 versus 1
-        lbd = lbd / 100
-        def new_criterion(y_1,y_2):
-            a =lbd*criterion_pearson(y_1,y_2)
-            b = (1-lbd)*criterion_rmse(y_1,y_2)/1000
-            new_loss  =a+b
-       #     print("pear {}, rmse {}".format(a,b))
-            return new_loss
-        criterion = new_criterion
+        criterion = criterion_both(lbd)
     with open('categ_of_speakers.json', 'r') as fp:
         categ_of_speakers = json.load(fp) #dictionnaire en clé la categorie en valeur un dictionnaire
                                             # #avec les speakers dans la catégorie et les arti concernées par cette categorie
-
     optimizer = torch.optim.Adam(model.parameters(), lr=lr ) #, betas = beta_param)
 
     plt.ioff()
