@@ -289,9 +289,9 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
             torch.cuda.empty_cache()
 
         if early_stopping.early_stop:
-            print("Early stopping, n epochs : ",epoch)
+            print("Early stopping, n epochs : ",model.epoch_ref+epoch)
             break
-
+    model.epoch_ref = model.epoch_ref + epoch
     if n_epochs>0:
         model.load_state_dict(torch.load(os.path.join("saved_models",name_file+'.pt')))
         torch.save(model.state_dict(), os.path.join( "saved_models",name_file+".txt"))
@@ -301,7 +301,16 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     print("evaluation on speaker {}".format(test_on))
     #print("DATA AND MODELE FILTERED")
     std_speaker = np.load(os.path.join(root_folder,"Traitement","norm_values","std_ema_"+test_on+".npy"))
-    model.evaluate_on_test(x,y, std_speaker = std_speaker, to_plot=to_plot,filtered=True)
+    rmse_per_arti_mean, pearson_per_arti_mean = model.evaluate_on_test(x,y, std_speaker = std_speaker, to_plot=to_plot,filtered=True)
+
+    with open('resultats_modeles.csv', 'a') as f:
+        writer = csv.writer(f)
+        row_rmse = [name_file]+rmse_per_arti_mean.tolist()+[model.epoch_ref]
+        row_pearson  =[name_file]+pearson_per_arti_mean.tolist() + [model.epoch_ref]
+        writer.writerow(row_rmse)
+        writer.writerow(row_pearson)
+
+
     #x, y = load_data(files_for_test,filtered=False)
    # print("DATA AND MODELE NOT FILTERED")
     #model.evaluate_on_test(x,y, to_plot=to_plot,filtered=False)
