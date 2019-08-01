@@ -133,12 +133,13 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
 
     criterion_rmse = torch.nn.MSELoss(reduction='sum')
 
-    def criterion_both(lbd):
-        lbd = lbd/100
+    def criterion_both(L):
+        L = L/100 #% de pearson dans la loss
         def criterion_both_lbd(my_y,my_ypred):
-            a = lbd * criterion_pearson(my_y, my_ypred)
-            b = (1 - lbd) * criterion_rmse(my_y, my_ypred) / 1000
+            a = L * criterion_pearson(my_y, my_ypred)
+            b = (1 - L) * criterion_rmse(my_y, my_ypred) / 1000
             new_loss = a + b
+           # print(a,b,new_loss)
             return new_loss
         return criterion_both_lbd
 
@@ -147,7 +148,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     elif loss_train == "pearson":
         criterion = criterion_pearson
     elif loss_train[:4] == "both":
-        lbd = int(loss_train[5:]) #de type 20 000, 20 000 versus 1
+        lbd = int(loss_train[5:])
         criterion = criterion_both(lbd)
     with open('categ_of_speakers.json', 'r') as fp:
         categ_of_speakers = json.load(fp) #dictionnaire en clé la categorie en valeur un dictionnaire
