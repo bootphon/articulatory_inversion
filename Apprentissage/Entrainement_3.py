@@ -38,7 +38,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     train_on = []
     delta_test=  1
     lr = 0.001
-    to_plot=False
+    to_plot = True
     corpus_to_train_on = corpus_to_train_on[1:-1].split(",")
     for corpus in corpus_to_train_on :
         print("corpus" , corpus)
@@ -127,7 +127,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
             deno = deno.to(device=cuda2)
             nume = nume.to(device=cuda2)
         deno = torch.max(deno,minim)
-        my_loss = nume/deno
+        my_loss = torch.div(nume,deno)
         my_loss = torch.sum(my_loss) #pearson doit etre le plus grand possible
         return -my_loss
 
@@ -139,8 +139,9 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
             a = L * criterion_pearson(my_y, my_ypred)
             b = (1 - L) * criterion_rmse(my_y, my_ypred) / 1000
             new_loss = a + b
-           # print(a,b,new_loss)
-            return new_loss
+          #  print(a,b,new_loss)
+           # return new_loss
+            return criterion_pearson(my_y,my_ypred)
         return criterion_both_lbd
 
     if loss_train == "rmse":
@@ -196,9 +197,18 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     categs_to_consider = files_per_categ.keys()
     print("categs to consider",categs_to_consider)
     for epoch in range(n_epochs):
+        weight_avant = model.lowpass.weight.data[0, 0, :]
+     #   print(weight_avant[20:35])
+        #print("weight avant ,", weight_avant.shape)
+       # plt.plot(list(weight_avant))
+        #plt.show()
+        #TF_weight = np.fft.fft(np.array(list(weight_avant)))
+        #plt.plot(abs(TF_weight))
+        #plt.show()
         n_this_epoch = 0
         random.shuffle(list(categs_to_consider))
         loss_train_this_epoch = 0
+
         for categ in categs_to_consider:  # de A à F pour le momen
             files_this_categ_courant = files_per_categ[categ]["train"] #on na pas encore apprit dessus au cours de cette epoch
             random.shuffle(files_this_categ_courant)
@@ -293,6 +303,9 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
             print("Early stopping, n epochs : ",model.epoch_ref+epoch)
             break
     total_epoch = 0
+
+
+
     if n_epochs>0:
         model.epoch_ref = model.epoch_ref + epoch
         total_epoch =model.epoch_ref
@@ -359,7 +372,6 @@ if __name__=='__main__':
     select_arti = sys.argv[5].lower()=="true"
     corpus_to_train_on = str(sys.argv[6])
     only_one_sp = sys.argv[7].lower()=="true"
-
 
 
     train_model(test_on = test_on,n_epochs=n_epochs,loss_train = loss_train,patience=patience,
