@@ -144,26 +144,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
            # return new_loss
             return new_loss
 
-        def criterion_pearson(my_y, my_y_pred):  # (L,K,13)
-            y_1 = my_y - torch.mean(my_y, dim=1, keepdim=True)
-            y_pred_1 = my_y_pred - torch.mean(my_y_pred, dim=1, keepdim=True)
-            nume = torch.sum(y_1 * y_pred_1, dim=1,
-                             keepdim=True)  # y*y_pred multi terme à terme puis on somme pour avoir (L,1,13)
-            # pour chaque trajectoire on somme le produit de la vriae et de la predite
-            deno = torch.sqrt(torch.sum(y_1 ** 2, dim=1, keepdim=True)) * torch.sqrt(
-                torch.sum(y_pred_1 ** 2, dim=1, keepdim=True))  # use Pearson correlation
-            # deno zero veut dire ema constant à 0 on remplace par des 1
-            minim = torch.tensor(0.01, dtype=torch.float64)
-            if cuda_avail:
-                minim = minim.to(device=cuda2)
-                deno = deno.to(device=cuda2)
-                nume = nume.to(device=cuda2)
-            deno = torch.max(deno, minim)
-            my_loss = torch.div(nume, deno)
-            my_loss = torch.sum(my_loss)  # pearson doit etre le plus grand possible
-            return -my_loss
-
-        return criterion_pearson
+        return criterion_both_lbd
 
 
     if loss_train == "rmse":
@@ -172,6 +153,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
         criterion = criterion_pearson
     elif loss_train[:4] == "both":
         lbd = int(loss_train[5:])
+        print("criterion both with lbd ",lbd)
        # criterion = criterion_both(lbd)
 
         criterion = criterion_pearson
