@@ -140,8 +140,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
             new_loss = a + b
           #  print(a,b,new_loss)
            # return new_loss
-            return criterion_pearson(my_y,my_ypred)
-
+            return new_loss
         return criterion_both_lbd
 
 
@@ -153,7 +152,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
         lbd = int(loss_train[5:])
         print("criterion both with lbd ",lbd)
         criterion = criterion_both(lbd)
-       # criterion = criterion_pearson
+        criterion = criterion_pearson
     with open('categ_of_speakers.json', 'r') as fp:
         categ_of_speakers = json.load(fp) #dictionnaire en clé la categorie en valeur un dictionnaire
                                             # #avec les speakers dans la catégorie et les arti concernées par cette categorie
