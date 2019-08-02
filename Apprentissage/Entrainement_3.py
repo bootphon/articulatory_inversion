@@ -67,7 +67,6 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     #train_on = ["msak0"]
     cuda_avail = torch.cuda.is_available()
     print(" cuda ?", cuda_avail)
-    output_dim = 18
     if not(only_one_sp):
         name_file = "train_on_"+name_corpus_concat+"test_on_"+test_on+"_idx_"+str(select_arti)+"_loss_"+str(loss_train)
     else :
@@ -78,6 +77,8 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     hidden_dim = 300
     input_dim = 429
     batch_size = 10
+    output_dim = 18
+
     print("batch size",batch_size)
 
     early_stopping = EarlyStopping(name_file,patience=patience, verbose=True)
@@ -87,10 +88,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     model = my_ac2art_modele(hidden_dim=hidden_dim, input_dim=input_dim, name_file=name_file, output_dim=output_dim,
                       batch_size=batch_size, cuda_avail=cuda_avail,
                       modele_filtered=modele_filtered)
-
     model = model.double()
-
-   # try :
     file_weights = os.path.join("saved_models", name_file +".txt")
     if not os.path.exists(file_weights):
         print("premiere fois que ce modèle est crée")
@@ -144,7 +142,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
            # return new_loss
             return new_loss
 
-        return criterion_both_lbd
+        return criterion_pearson
 
 
     if loss_train == "rmse":
@@ -154,8 +152,8 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     elif loss_train[:4] == "both":
         lbd = int(loss_train[5:])
         print("criterion both with lbd ",lbd)
-       # criterion = criterion_both(lbd)
-        criterion = criterion_pearson
+        criterion = criterion_both(lbd)
+       # criterion = criterion_pearson
     with open('categ_of_speakers.json', 'r') as fp:
         categ_of_speakers = json.load(fp) #dictionnaire en clé la categorie en valeur un dictionnaire
                                             # #avec les speakers dans la catégorie et les arti concernées par cette categorie
