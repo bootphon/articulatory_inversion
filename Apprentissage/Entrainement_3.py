@@ -31,6 +31,7 @@ fileset_path = os.path.join(root_folder, "Donnees_pretraitees", "fileset")
 
 print(sys.argv)
 
+
 def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_train_on,only_one_sp):
     data_filtered=True
     modele_filtered=True
@@ -141,8 +142,8 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
             new_loss = a + b
           #  print(a,b,new_loss)
            # return new_loss
-            return criterion_pearson(my_y,my_ypred)
-        return criterion_both_lbd
+            return new_loss
+        return criterion_pearson()
 
     if loss_train == "rmse":
         criterion = criterion_rmse
@@ -151,6 +152,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     elif loss_train[:4] == "both":
         lbd = int(loss_train[5:])
         criterion = criterion_both(lbd)
+        # criterion = criterion_pearson
     with open('categ_of_speakers.json', 'r') as fp:
         categ_of_speakers = json.load(fp) #dictionnaire en clé la categorie en valeur un dictionnaire
                                             # #avec les speakers dans la catégorie et les arti concernées par cette categorie
