@@ -39,7 +39,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     train_on = []
     delta_test=  1
     lr = 0.001
-    to_plot = True
+    to_plot = False
     corpus_to_train_on = corpus_to_train_on[1:-1].split(",")
     for corpus in corpus_to_train_on :
         print("corpus" , corpus)
@@ -143,16 +143,16 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
             return new_loss
         return criterion_both_lbd
 
-
     if loss_train == "rmse":
         criterion = criterion_rmse
-    elif loss_train == "pearson":
+    elif loss_train == "pearson" :
+        print("pearson")
         criterion = criterion_pearson
     elif loss_train[:4] == "both":
         lbd = int(loss_train[5:])
         print("criterion both with lbd ",lbd)
         criterion = criterion_both(lbd)
-        criterion = criterion_pearson
+     
     with open('categ_of_speakers.json', 'r') as fp:
         categ_of_speakers = json.load(fp) #dictionnaire en clé la categorie en valeur un dictionnaire
                                             # #avec les speakers dans la catégorie et les arti concernées par cette categorie
