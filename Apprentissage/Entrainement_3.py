@@ -203,7 +203,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     for epoch in range(n_epochs):
         weight_apres = model.lowpass.weight.data[0, 0, :]
       #  freqs, h = signal.freqz(weight_apres)
-        freqs = freqs * 100 / (2 * np.pi)  # freq in hz
+       # freqs = freqs * 100 / (2 * np.pi)  # freq in hz
    #     plt.plot(freqs, 20 * np.log10(abs(h)), 'r')
     #    plt.title("EPOCH {}".format(epoch))
      #   plt.ylabel('Amplitude [dB]')
