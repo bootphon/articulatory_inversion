@@ -8,6 +8,9 @@ from __future__ import division
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+from scipy import signal
+from scipy.fftpack import fft, ifft
+
 from os.path import dirname
 from numpy.random import choice
 
@@ -156,7 +159,8 @@ def low_pass_filter_weight_old(cut_off,sampling_rate,len_window,window_type="han
 
 def low_pass_filter_weight(cut_off,sampling_rate):
 
-    fc = cut_off/sampling_rate# Cutoff frequency as a fraction of the sampling rate (in (0, 0.5)).
+    fc = cut_off/sampling_rate # Cutoff frequency as a fraction of the sampling rate (in (0, 0.5)).
+    print(fc)
     if fc > 0.5:
         raise Exception("La frequence de coupure doit etre au moins deux fois la frequence dechantillonnage")
     b = 0.08  # Transition band, as a fraction of the sampling rate (in (0, 0.5)).
@@ -165,13 +169,55 @@ def low_pass_filter_weight(cut_off,sampling_rate):
     if not N % 2:
         N += 1  # Make sure that N is odd.
     n = np.arange(N) #int of [0,N]
-    h = np.sinc(2 * fc * (n - (N - 1) / 2))  # Compute sinc filter.
-    w = 0.5 * (1 - np.cos(2 * np.pi * n / (N-1))) # Compute hanning window.
-    h = h * w  # Multiply sinc filter with window.
+    h = np.sinc(2*fc * (n - (N - 1) / 2))  # Compute sinc filter.
+
+    w_hanning = 0.5 * (1 - np.cos(2 * np.pi * n / (N-1))) # Compute hanning window.
+    w_blackman = 0.42 - 0.5 * np.cos(2 * np.pi * n / (N - 1)) +  0.08 * np.cos(4 * np.pi * n / (N - 1))
+
+    h = h * w_hanning  # Multiply sinc filter with window.
     h = h / np.sum(h)
-    return h
+    h_hanning  = h
+
+    h = h * w_blackman  # Multiply sinc filter with window.
+    h = h / np.sum(h)
+    h_blackman = h
+
+    to_plot= True
+    if to_plot :
+        plt.plot(h, ".-", c="b")
+        plt.xlabel("reduced frequency ")
+        plt.title("sinus cardinal filter, with cutoff {} and sr {}".format(cut_off, sampling_rate))
+        plt.show()
+
+        plt.plot(w_hanning, ".-", c="b")
+        plt.plot(w_blackman, ".-", c='r')
+        plt.title("hanning and blackman filter, with cutoff {} sr {} and N {}".format(cut_off, sampling_rate, N))
+        plt.legend(['hanning', "blackman"])
+        plt.show()
+
+        plt.plot(h_hanning, ".-", c="b")
+        plt.plot(h_blackman, ".-", c="r")
+
+        plt.title("filter (sinc + window ), with cutoff {} and sr {}".format(cut_off, sampling_rate))
+        plt.legend(['hanning', 'blackman'])
+        plt.show()
+
+        freqs, h_blackman_f = signal.freqz(h_blackman)
+        freqs, h_hanning_f = signal.freqz(h_hanning) #The normalized frequencies at which h was computed, in radians/sample en Hz ?
+        freqs = freqs*sampling_rate /(2*np.pi )# freq in hz
+        plt.plot(freqs, 20 * np.log10(abs(h_blackman_f)), 'r')
+        plt.plot(freqs, 20 * np.log10(abs(h_hanning_f)), 'b')
+        plt.title("frequency response of filteres for wituff {} and sr {}".format(cut_off,sampling_rate))
+        plt.legend(["blackman","hanning"])
+        plt.ylabel('Amplitude [dB]')
+        plt.xlabel("real frequency")
+        plt.show()
+
+    return h_hanning
 
 
+
+#weights = low_pass_filter_weight(30,500)
 """
 f_1=20
 s_r = 500
