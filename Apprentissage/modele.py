@@ -18,8 +18,8 @@ from Apprentissage import utils
 
 
 class my_ac2art_modele(torch.nn.Module):
-    def __init__(self, hidden_dim, input_dim, output_dim, batch_size,name_file, sampling_rate=100,
-                 window=5, cutoff=10,cuda_avail =False,modele_filtered=False):
+    def __init__(self, hidden_dim, input_dim, output_dim, batch_size,name_file="", sampling_rate=100,
+                 window=5, cutoff=40,cuda_avail =False,modele_filtered=False):
         root_folder = os.path.dirname(os.getcwd())
         super(my_ac2art_modele, self).__init__()
         self.input_dim = input_dim
@@ -31,9 +31,13 @@ class my_ac2art_modele(torch.nn.Module):
         self.lstm_layer = torch.nn.LSTM(input_size=hidden_dim,
                                         hidden_size=hidden_dim, num_layers=1,
                                         bidirectional=True)
+        self.batch_norm_layer =  torch.nn.BatchNorm1d(hidden_dim*2)
+
         self.lstm_layer_2= torch.nn.LSTM(input_size=hidden_dim*2,
                                        hidden_size=hidden_dim, num_layers=1,
                                       bidirectional=True)
+        self.batch_norm_layer_2 =  torch.nn.BatchNorm1d(hidden_dim*2)
+
         self.readout_layer = torch.nn.Linear(hidden_dim *2 , output_dim)
         self.batch_size = batch_size
         self.sigmoid = torch.nn.Sigmoid()
@@ -56,8 +60,16 @@ class my_ac2art_modele(torch.nn.Module):
         if self.cuda_avail:
             self.cuda2 = torch.device('cuda:1')
         self.epoch_ref = 0
+        self.batch_norma = False #tester par la suite si améliore la perf
 
-    def prepare_batch(self, x, y): #zero pad
+
+    def prepare_batch(self, x, y):
+        """
+        :param x: liste de B données accoustiques de longueurs variables  (B souvent 10 batchsize sauf pour l'éval)
+        :param y: liste de B données articulatoires correspondantes de longueurs variables (B souvent 10 batchsize sauf pour l'éval)
+        :return: les x et y zeropaddé de telle sorte que chacun ait la même longueur.
+        Les tailles des output sont [B, max lenght, 429] et [B, max lenght, 18]
+        """
         max_length = np.max([len(phrase) for phrase in x])
         B = len(x)  # often batch size but not for validation
         new_x = torch.zeros((B, max_length, self.input_dim), dtype=torch.double)
@@ -77,21 +89,32 @@ class my_ac2art_modele(torch.nn.Module):
         dense_out =  torch.nn.functional.relu(self.first_layer(x))
         dense_out_2 = torch.nn.functional.relu(self.second_layer(dense_out))
         lstm_out, hidden_dim = self.lstm_layer(dense_out_2)
+        B = lstm_out.shape[0] #presque tjrs batch size
+        if self.batch_norma :
+            lstm_out_temp = lstm_out.view(B,2*self.hidden_dim,-1)
+            lstm_out_temp = torch.nn.functional.relu(self.batch_norm_layer(lstm_out_temp))
+            lstm_out= lstm_out_temp.view(B,  -1,2 * self.hidden_dim)
+
         lstm_out = torch.nn.functional.relu(lstm_out)
         lstm_out, hidden_dim = self.lstm_layer_2(lstm_out)
+        if self.batch_norma :
+            lstm_out_temp = lstm_out.view(B,2*self.hidden_dim,-1)
+            lstm_out_temp = torch.nn.functional.relu(self.batch_norm_layer_2(lstm_out_temp))
+            lstm_out= lstm_out_temp.view(B,  -1,2 * self.hidden_dim)
         lstm_out=torch.nn.functional.relu(lstm_out)
         y_pred = self.readout_layer(lstm_out)
-        if filtered:
+        if filtered: #tjrs oui pour nous
             y_pred = self.filter_layer(y_pred)
         return y_pred
 
     def init_filter_layer(self):
         def get_filter_weights():
-            cutoff = torch.tensor(self.cutoff, dtype=torch.float64).view(1, 1)
+
+            cutoff = torch.tensor(self.cutoff, dtype=torch.float64,requires_grad=True).view(1, 1)
             fc = torch.div(cutoff,
                   self.sampling_rate)  # Cutoff frequency as a fraction of the sampling rate (in (0, 0.5)).
-           # if fc > 0.5:
-            #    raise Exception("La frequence de coupure doit etre au moins deux fois la frequence dechantillonnage")
+            if fc > 0.5:
+                raise Exception("La frequence de coupure doit etre au moins deux fois la frequence dechantillonnage")
             b = 0.08  # Transition band, as a fraction of the sampling rate (in (0, 0.5)).
             N = int(np.ceil((4 / b)))  # le window
             if not N % 2:
@@ -102,11 +125,10 @@ class my_ac2art_modele(torch.nn.Module):
             alpha = torch.max(alpha,minim)#utile ?
             h = torch.div(torch.sin(alpha), alpha)
             beta = n * 2 * math.pi / (N - 1)
-
             w = 0.5 * (1 - torch.cos(beta))  # Compute hanning window.
             h = torch.mul(h, w)  # Multiply sinc filter with window.
             h = torch.div(h, torch.sum(h))
-
+           # print(h.requires_grad,cutoff.requires_grad,beta.requires_grad,alpha.requires_grad)
            # h.require_grads = True
           #  self.cutoff = Variable(cutoff, requires_grad=True)
          #   self.cutoff.require_grads = True
@@ -130,24 +152,20 @@ class my_ac2art_modele(torch.nn.Module):
             h = h/np.sum(h)
             return torch.tensor(h)
 
-        # print("1",self.cutoff)
-        # self.cutoff = torch.nn.parameter.Parameter(torch.Tensor(self.cutoff))
-        # self.cutoff.requires_grad = True
         window_size = 5
         C_in = 1
         stride=1
         padding = int(0.5*((C_in-1)*stride-C_in+window_size))+23
-        lowpass = torch.nn.Conv1d(C_in, self.output_dim, window_size, stride=1, padding=padding, bias=False)
         weight_init = get_filter_weights_en_dur()
-      #  weight_init = get_filter_weights()
+       # weight_init = get_filter_weights()
 
         weight_init = weight_init.view((1, 1, -1))
-        lowpass.weight = torch.nn.Parameter(weight_init)
+        lowpass = torch.nn.Conv1d(C_in,self.output_dim, window_size, stride=1, padding=padding, bias=False)
+
+        lowpass.weight = torch.nn.Parameter(weight_init)#requires_grad= True)
         lowpass = lowpass.double()
         self.lowpass = lowpass
-        #print("lowpasse ",self.lowpass.weight)
 
-        #self.lowpass.require_grads=True
     def filter_layer(self, y):
         B = len(y) # batch size
         L = len(y[0])
@@ -158,15 +176,15 @@ class my_ac2art_modele(torch.nn.Module):
             traj_arti = y[:, :, i].view(B, 1, L)
           #  print("traj arti shape",traj_arti.shape)
             traj_arti_smoothed = self.lowpass(traj_arti)  # prend que une seule dimension
-            difference = int((L-traj_arti_smoothed.shape[2])/ 2)
-            if difference != 0:
-                print("PAS MEME SHAPE AVANT ET APRES FILTRAGE !")
-                print("init L",L)
-                print("after smoothed ",traj_arti_smoothed.shape[2])
-            if difference>0: #si la traj smoothed est plus petite que L on rajoute le meme dernier élément
-                traj_arti_smoothed = torch.nn.ReplicationPad1d(difference)(traj_arti_smoothed)
-            elif difference < 0:  # si la traj smoothed est plus petite que L on rajoute le meme dernier élément
-                traj_arti_smoothed = traj_arti_smoothed[:,:,0:L]
+            #difference = int((L-traj_arti_smoothed.shape[2])/ 2)
+            #if difference != 0:
+              #  print("PAS MEME SHAPE AVANT ET APRES FILTRAGE !")
+             #   print("init L",L)
+            #    print("after smoothed ",traj_arti_smoothed.shape[2])
+           # if difference>0: #si la traj smoothed est plus petite que L on rajoute le meme dernier élément
+           #     traj_arti_smoothed = torch.nn.ReplicationPad1d(difference)(traj_arti_smoothed)
+         #   elif difference < 0:  # si la traj smoothed est plus petite que L on rajoute le meme dernier élément
+          #      traj_arti_smoothed = traj_arti_smoothed[:,:,0:L]
 
             traj_arti_smoothed = traj_arti_smoothed.view(B, L)
             y_smoothed[:, :, i] = traj_arti_smoothed
@@ -187,15 +205,7 @@ class my_ac2art_modele(torch.nn.Module):
             plt.savefig(save_pics_path)
             plt.close('all')
 
-    def evaluate(self, x_valid, y_valid,criterion):
-        x_temp, y_temp = self.prepare_batch(x_valid, y_valid) #add zero to have correct size
-        y_pred = self(x_temp).double()
-        if self.cuda_avail:
-            y_pred = y_pred.to(device=self.cuda2)
 
-        y_temp = y_temp.double()
-        loss = criterion( y_temp,y_pred).item()
-        return loss
 
     def evaluate_on_test(self,X_test,Y_test, std_speaker = 1,to_plot=False,filtered=False,suffix= ""):
         """

@@ -33,13 +33,12 @@ print(sys.argv)
 
 
 def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_train_on,only_one_sp):
-    data_filtered=True
     modele_filtered=True
     name_corpus_concat = ""
     train_on = []
     delta_test=  1
     lr = 0.001
-    to_plot = False
+    to_plot = True
     corpus_to_train_on = corpus_to_train_on[1:-1].split(",")
     for corpus in corpus_to_train_on :
         print("corpus" , corpus)
@@ -152,7 +151,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
         lbd = int(loss_train[5:])
         print("criterion both with lbd ",lbd)
         criterion = criterion_both(lbd)
-     
+
     with open('categ_of_speakers.json', 'r') as fp:
         categ_of_speakers = json.load(fp) #dictionnaire en clé la categorie en valeur un dictionnaire
                                             # #avec les speakers dans la catégorie et les arti concernées par cette categorie
@@ -197,16 +196,18 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
 
 
     categs_to_consider = files_per_categ.keys()
-    print("categs to consider",categs_to_consider)
+
+
     for epoch in range(n_epochs):
-        weight_avant = model.lowpass.weight.data[0, 0, :]
-     #   print(weight_avant[20:35])
-        #print("weight avant ,", weight_avant.shape)
-       # plt.plot(list(weight_avant))
-        #plt.show()
-        #TF_weight = np.fft.fft(np.array(list(weight_avant)))
-        #plt.plot(abs(TF_weight))
-        #plt.show()
+        weight_apres = model.lowpass.weight.data[0, 0, :]
+        freqs, h = signal.freqz(weight_apres)
+        freqs = freqs * 100 / (2 * np.pi)  # freq in hz
+   #     plt.plot(freqs, 20 * np.log10(abs(h)), 'r')
+    #    plt.title("EPOCH {}".format(epoch))
+     #   plt.ylabel('Amplitude [dB]')
+      #  plt.xlabel("real frequency")
+       # plt.show()
+
         n_this_epoch = 0
         random.shuffle(list(categs_to_consider))
         loss_train_this_epoch = 0
