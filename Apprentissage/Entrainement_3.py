@@ -50,6 +50,8 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
             train_on = ["msak0"]
         elif test_on == "msak0":
             train_on = ["fsew0"]
+        elif test_on == "F01":
+            train_on = ["F02"]
         else :
 
             print("vous voulez apprendre sur un speaker et tester sur autre que fsew0")
@@ -200,7 +202,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
 
     for epoch in range(n_epochs):
         weight_apres = model.lowpass.weight.data[0, 0, :]
-        freqs, h = signal.freqz(weight_apres)
+      #  freqs, h = signal.freqz(weight_apres)
         freqs = freqs * 100 / (2 * np.pi)  # freq in hz
    #     plt.plot(freqs, 20 * np.log10(abs(h)), 'r')
     #    plt.title("EPOCH {}".format(epoch))
