@@ -32,8 +32,8 @@ fileset_path = os.path.join(root_folder, "Donnees_pretraitees", "fileset")
 print(sys.argv)
 
 
-def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_train_on,only_one_sp):
-    modele_filtered=True
+def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_train_on,only_one_sp,filter_type):
+
     name_corpus_concat = ""
     train_on = []
     delta_test=  1
@@ -88,7 +88,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
    #                   batch_size=batch_size,data_filtered=data_filtered,cuda_avail = cuda_avail,modele_filtered=modele_filtered)
     model = my_ac2art_modele(hidden_dim=hidden_dim, input_dim=input_dim, name_file=name_file, output_dim=output_dim,
                       batch_size=batch_size, cuda_avail=cuda_avail,
-                      modele_filtered=modele_filtered)
+                      modele_filtered=filter_type)
     model = model.double()
     file_weights = os.path.join("saved_models", name_file +".txt")
     if not os.path.exists(file_weights):
@@ -365,6 +365,8 @@ if __name__=='__main__':
     parser.add_argument('only_one_sp', type=bool,
                         help='ssi dans la retropro on ne considere que les arti bons')
 
+    parser.add_argument('filter_type', type=int,
+                        help='0 pas de lissage, 1 lissage en dur, 2 lissage variable crée avec pytorch, 3 lissage variable cree avec en dur')
 
     args = parser.parse_args()
     test_on =  sys.argv[1]
@@ -378,7 +380,8 @@ if __name__=='__main__':
     corpus_to_train_on = str(sys.argv[6])
     only_one_sp = sys.argv[7].lower()=="true"
 
+    filter_type = int(sys.argv[8]) # 0 pas de lissage, 1 lissage en dur, 2 lissage variable crée avec pytorch, 3 lissage variable cree avec en dur
 
     train_model(test_on = test_on,n_epochs=n_epochs,loss_train = loss_train,patience=patience,
                select_arti=select_arti,corpus_to_train_on = corpus_to_train_on,
-                only_one_sp = only_one_sp)
+                only_one_sp = only_one_sp,filter_type=  filter_type)

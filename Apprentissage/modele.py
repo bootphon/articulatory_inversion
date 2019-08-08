@@ -85,7 +85,7 @@ class my_ac2art_modele(torch.nn.Module):
             x,y = x.to(device=self.cuda2),y.to(device=self.cuda2)
         return x, y
 
-    def forward(self, x,filtered = True) :
+    def forward(self, x) :
         dense_out =  torch.nn.functional.relu(self.first_layer(x))
         dense_out_2 = torch.nn.functional.relu(self.second_layer(dense_out))
         lstm_out, hidden_dim = self.lstm_layer(dense_out_2)
@@ -103,7 +103,7 @@ class my_ac2art_modele(torch.nn.Module):
             lstm_out= lstm_out_temp.view(B,  -1,2 * self.hidden_dim)
         lstm_out=torch.nn.functional.relu(lstm_out)
         y_pred = self.readout_layer(lstm_out)
-        if filtered: #tjrs oui pour nous
+        if self.modele_filtered != 0: #tjrs oui pour nous
             y_pred = self.filter_layer(y_pred)
         return y_pred
 
@@ -156,13 +156,18 @@ class my_ac2art_modele(torch.nn.Module):
         C_in = 1
         stride=1
         padding = int(0.5*((C_in-1)*stride-C_in+window_size))+23
-        weight_init = get_filter_weights_en_dur()
-       # weight_init = get_filter_weights()
+        if self.modele_filtered == 1:
+            weight_init = get_filter_weights_en_dur()
+        elif self.modele_filtered in [2,3]:
+            weight_init = get_filter_weights()
+
 
         weight_init = weight_init.view((1, 1, -1))
         lowpass = torch.nn.Conv1d(C_in,self.output_dim, window_size, stride=1, padding=padding, bias=False)
-
-        lowpass.weight = torch.nn.Parameter(weight_init)#requires_grad= True)
+        if self.modele_filtered == 3:
+            lowpass.weight = torch.nn.Parameter(weight_init,requires_grad= True)
+        else :
+            lowpass.weight = torch.nn.Parameter(weight_init)
         lowpass = lowpass.double()
         self.lowpass = lowpass
 
@@ -207,7 +212,7 @@ class my_ac2art_modele(torch.nn.Module):
 
 
 
-    def evaluate_on_test(self,X_test,Y_test, std_speaker = 1,to_plot=False,filtered=False,suffix= ""):
+    def evaluate_on_test(self,X_test,Y_test, std_speaker = 1,to_plot=False,suffix= ""):
         """
         :param X_test:  list of all the input of the test set
         :param Y_test:  list of all the target of the test set
@@ -229,7 +234,7 @@ class my_ac2art_modele(torch.nn.Module):
                 if self.cuda_avail:
                     x_torch = x_torch.to(device=self.cuda2)
                # with torch.no_grad():
-                y_pred_torch = self(x_torch,filtered).double() #sortie y_pred (1,L,13)
+                y_pred_torch = self(x_torch).double() #sortie y_pred (1,L,13)
                 if self.cuda_avail:
                     y_pred_torch = y_pred_torch.cpu()
                 y_pred = y_pred_torch.detach().numpy().reshape((L, self.output_dim))  # y_pred (L,13)
