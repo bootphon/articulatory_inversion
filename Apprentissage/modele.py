@@ -156,10 +156,11 @@ class my_ac2art_modele(torch.nn.Module):
         C_in = 1
         stride=1
         padding = int(0.5*((C_in-1)*stride-C_in+window_size))+23
-        if self.modele_filtered == 1:
+        if self.modele_filtered in [0,1] : #si 0 le filtre ne sera pas appliqué donc on sen fiche
             weight_init = get_filter_weights_en_dur()
         elif self.modele_filtered in [2,3]:
             weight_init = get_filter_weights()
+
 
 
         weight_init = weight_init.view((1, 1, -1))

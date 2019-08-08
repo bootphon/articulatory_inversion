@@ -322,7 +322,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     print("evaluation on speaker {}".format(test_on))
     #print("DATA AND MODELE FILTERED")
     std_speaker = np.load(os.path.join(root_folder,"Traitement","norm_values","std_ema_"+test_on+".npy"))
-    rmse_per_arti_mean, pearson_per_arti_mean = model.evaluate_on_test(x,y, std_speaker = std_speaker, to_plot=to_plot,filtered=True)
+    rmse_per_arti_mean, pearson_per_arti_mean = model.evaluate_on_test(x,y, std_speaker = std_speaker, to_plot=to_plot) #,filtered=True)
 
     with open('resultats_modeles.csv', 'a') as f:
         writer = csv.writer(f)
