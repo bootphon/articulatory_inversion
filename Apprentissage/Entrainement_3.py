@@ -69,9 +69,9 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     cuda_avail = torch.cuda.is_available()
     print(" cuda ?", cuda_avail)
     if not(only_one_sp):
-        name_file = "train_on_"+name_corpus_concat+"test_on_"+test_on+"_idx_"+str(select_arti)+"_loss_"+str(loss_train)
+        name_file = "train_on_"+name_corpus_concat+"test_on_"+test_on+"_idx_"+str(select_arti)+"_loss_"+str(loss_train)+"_typefilter_"+str(filter_type)
     else :
-        name_file = "train_on_" +train_on[0] + "_test_on_" + test_on + "_idx_" + str(select_arti)+"_loss_"+str(loss_train)
+        name_file = "train_on_" +train_on[0] + "_test_on_" + test_on + "_idx_" + str(select_arti)+"_loss_"+str(loss_train)+"_typefilter_"+str(filter_type)
     print("name file : ",name_file)
 #   logger = Logger('./log_' + name_file)
 
