@@ -199,9 +199,10 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
 
     categs_to_consider = files_per_categ.keys()
 
-    plot_filtre_chaque_epochs = False
+    plot_filtre_chaque_epochs = True
 
     for epoch in range(n_epochs):
+
         if plot_filtre_chaque_epochs :
             weight_apres = model.lowpass.weight.data[0, 0, :]
             freqs, h = signal.freqz(weight_apres)
@@ -285,6 +286,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
 
             model.all_validation_loss.append(loss_vali)
             model.all_training_loss.append(loss_train_this_epoch)
+            print("all training loss",model.all_training_loss)
 
             if epoch>0:
                 if loss_vali > model.all_validation_loss[-1]:
@@ -332,6 +334,8 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
         row_pearson  =[name_file]+pearson_per_arti_mean.tolist() + [model.epoch_ref]
         writer.writerow(row_rmse)
         writer.writerow(row_pearson)
+    plot_filtre_chaque_epochs = True
+
     if plot_filtre_chaque_epochs:
         weight_apres = model.lowpass.weight.data[0, 0, :]
         freqs, h = signal.freqz(weight_apres)
