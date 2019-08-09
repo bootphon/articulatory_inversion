@@ -199,16 +199,18 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
 
     categs_to_consider = files_per_categ.keys()
 
+    plot_filtre_chaque_epochs = False
 
     for epoch in range(n_epochs):
-        weight_apres = model.lowpass.weight.data[0, 0, :]
-      #  freqs, h = signal.freqz(weight_apres)
-       # freqs = freqs * 100 / (2 * np.pi)  # freq in hz
-   #     plt.plot(freqs, 20 * np.log10(abs(h)), 'r')
-    #    plt.title("EPOCH {}".format(epoch))
-     #   plt.ylabel('Amplitude [dB]')
-      #  plt.xlabel("real frequency")
-       # plt.show()
+        if plot_filtre_chaque_epochs :
+            weight_apres = model.lowpass.weight.data[0, 0, :]
+            freqs, h = signal.freqz(weight_apres)
+            freqs = freqs * 100 / (2 * np.pi)  # freq in hz
+            plt.plot(freqs, 20 * np.log10(abs(h)), 'r')
+            plt.title("EPOCH {}".format(epoch))
+            plt.ylabel('Amplitude [dB]')
+            plt.xlabel("real frequency")
+            plt.show()
 
         n_this_epoch = 0
         random.shuffle(list(categs_to_consider))
@@ -330,6 +332,15 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
         row_pearson  =[name_file]+pearson_per_arti_mean.tolist() + [model.epoch_ref]
         writer.writerow(row_rmse)
         writer.writerow(row_pearson)
+    if plot_filtre_chaque_epochs:
+        weight_apres = model.lowpass.weight.data[0, 0, :]
+        freqs, h = signal.freqz(weight_apres)
+        freqs = freqs * 100 / (2 * np.pi)  # freq in hz
+        plt.plot(freqs, 20 * np.log10(abs(h)), 'r')
+        plt.title("Allure filtre passe bas à la fin de l'apprentissage pour filtre en dur")
+        plt.ylabel('Amplitude [dB]')
+        plt.xlabel("real frequency")
+        plt.show()
 
 
     #x, y = load_data(files_for_test,filtered=False)

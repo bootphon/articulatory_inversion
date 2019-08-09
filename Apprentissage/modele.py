@@ -108,6 +108,7 @@ class my_ac2art_modele(torch.nn.Module):
         return y_pred
 
     def init_filter_layer(self):
+
         def get_filter_weights():
 
             cutoff = torch.tensor(self.cutoff, dtype=torch.float64,requires_grad=True).view(1, 1)
@@ -161,14 +162,14 @@ class my_ac2art_modele(torch.nn.Module):
         elif self.modele_filtered in [2,3]:
             weight_init = get_filter_weights()
 
-
-
         weight_init = weight_init.view((1, 1, -1))
         lowpass = torch.nn.Conv1d(C_in,self.output_dim, window_size, stride=1, padding=padding, bias=False)
-        if self.modele_filtered == 3:
+        if self.modele_filtered in [2,3]:
             lowpass.weight = torch.nn.Parameter(weight_init,requires_grad= True)
-        else :
-            lowpass.weight = torch.nn.Parameter(weight_init)
+        else : #0 balek ou 1 en dur
+            lowpass.weight = torch.nn.Parameter(weight_init,requires_grad = False)
+        for p in lowpass.parameters():
+            print("require grads ?", p.requires_grad)
         lowpass = lowpass.double()
         self.lowpass = lowpass
 
