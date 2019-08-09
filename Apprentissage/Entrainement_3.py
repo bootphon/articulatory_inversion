@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 from Traitement.fonctions_utiles import get_speakers_per_corpus
 import scipy
 from os import listdir
-#from logger import Logger
+from logger import Logger
 import json
 
 
@@ -73,7 +73,8 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     else :
         name_file = "train_on_" +train_on[0] + "_test_on_" + test_on + "_idx_" + str(select_arti)+"_loss_"+str(loss_train)+"_typefilter_"+str(filter_type)
     print("name file : ",name_file)
-#   logger = Logger('./log_' + name_file)
+  #  logger = Logger('./log_' + name_file)
+    logger = Logger('./logs')
 
     hidden_dim = 300
     input_dim = 429
@@ -159,7 +160,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
                                             # #avec les speakers dans la catégorie et les arti concernées par cette categorie
     optimizer = torch.optim.Adam(model.parameters(), lr=lr ) #, betas = beta_param)
 
-    
+
     print("number of epochs : ", n_epochs)
 
     path_files = os.path.join(os.path.dirname(os.getcwd()),"Donnees_pretraitees","fileset")
@@ -241,7 +242,6 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
                     #y[:,:,idx_to_ignore].requires_grad = False
 
                 loss = criterion(y, y_pred)
-
                 loss.backward()
                 #a partir de là y_pred.grad a des elements
          #       print("ypred grad shape", y_pred.grad.shape)
@@ -284,16 +284,40 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
                     loss_vali += loss_courant.item()
             loss_vali  = loss_vali/n_valid
 
-            model.all_validation_loss.append(loss_vali)
-            model.all_training_loss.append(loss_train_this_epoch)
-            print("all training loss",model.all_training_loss)
 
-            if epoch>0:
-                if loss_vali > model.all_validation_loss[-1]:
-                    for param_group in optimizer.param_groups:
-                        param_group['lr'] = param_group['lr'] / 2
-                        (param_group["lr"])
-                        patience_temp=0
+        model.all_validation_loss.append(loss_vali)
+        model.all_training_loss.append(loss_train_this_epoch)
+      #  print("all training loss",model.all_training_loss)
+
+        # ================================================================== #
+        #                        Tensorboard Logging                         #
+        # ================================================================== #
+
+        # 1. Log scalar values (scalar summary)
+        info = {'loss': loss_train_this_epoch}
+
+        for tag, value in info.items():
+            print("tag valu",tag,value)
+            logger.scalar_summary(tag, value, epoch + 1)
+
+        # 2. Log values and gradients of the parameters (histogram summary)
+    #    for tag, value in model.named_parameters():
+     #       tag = tag.replace('.', '/')
+      #      logger.histo_summary(tag, value.data.cpu().numpy(), epoch + 1)
+       #     logger.histo_summary(tag + '/grad', value.grad.data.cpu().numpy(), epoch + 1)
+
+        # 3. Log training images (image summary)
+       # info = {'images': images.view(-1, 28, 28)[:10].cpu().numpy()}
+
+        #for tag, images in info.items():
+         #   logger.image_summary(tag, images, epoch + 1)
+#
+        if epoch>0:
+            if loss_vali > model.all_validation_loss[-1]:
+                for param_group in optimizer.param_groups:
+                    param_group['lr'] = param_group['lr'] / 2
+                    (param_group["lr"])
+                    patience_temp=0
 
             #model.all_test_loss += [model.all_test_loss[-1]] * (epoch+previous_epoch - len(model.all_test_loss))
            # print("\n ---------- epoch" + str(epoch) + " ---------")
@@ -334,7 +358,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
         row_pearson  =[name_file]+pearson_per_arti_mean.tolist() + [model.epoch_ref]
         writer.writerow(row_rmse)
         writer.writerow(row_pearson)
-    plot_filtre_chaque_epochs = True
+    plot_filtre_chaque_epochs = False
 
     if plot_filtre_chaque_epochs:
         weight_apres = model.lowpass.weight.data[0, 0, :]
