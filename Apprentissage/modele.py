@@ -103,7 +103,7 @@ class my_ac2art_modele(torch.nn.Module):
             lstm_out= lstm_out_temp.view(B,  -1,2 * self.hidden_dim)
         lstm_out=torch.nn.functional.relu(lstm_out)
         y_pred = self.readout_layer(lstm_out)
-        if self.modele_filtered != 0: #tjrs oui pour nous
+        if self.modele_filtered != 0:
             y_pred = self.filter_layer(y_pred)
         return y_pred
 
@@ -159,9 +159,8 @@ class my_ac2art_modele(torch.nn.Module):
         padding = int(0.5*((C_in-1)*stride-C_in+window_size))+23
         if self.modele_filtered in [0,1] : #si 0 le filtre ne sera pas appliqué donc on sen fiche
             weight_init = get_filter_weights_en_dur()
-        elif self.modele_filtered in [2,3]:
+        else :
             weight_init = get_filter_weights()
-
         weight_init = weight_init.view((1, 1, -1))
         lowpass = torch.nn.Conv1d(C_in,self.output_dim, window_size, stride=1, padding=padding, bias=False)
         if self.modele_filtered in [2,3]:
