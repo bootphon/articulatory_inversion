@@ -159,7 +159,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
                                             # #avec les speakers dans la catégorie et les arti concernées par cette categorie
     optimizer = torch.optim.Adam(model.parameters(), lr=lr ) #, betas = beta_param)
 
-    plt.ioff()
+    
     print("number of epochs : ", n_epochs)
 
     path_files = os.path.join(os.path.dirname(os.getcwd()),"Donnees_pretraitees","fileset")
