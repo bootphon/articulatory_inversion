@@ -204,8 +204,9 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
 
     for epoch in range(n_epochs):
 
+        weight_apres = model.lowpass.weight.data[0, 0, :]
+        print("poids",weight_apres.cpu()[10:20])
         if plot_filtre_chaque_epochs :
-            weight_apres = model.lowpass.weight.data[0, 0, :]
             freqs, h = signal.freqz(weight_apres.cpu())
             freqs = freqs * 100 / (2 * np.pi)  # freq in hz
             plt.plot(freqs, 20 * np.log10(abs(h)), 'r')
@@ -245,10 +246,8 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
                 loss.backward()
                 #a partir de là y_pred.grad a des elements
          #       print("ypred grad shape", y_pred.grad.shape)
-
                 optimizer.step()
                 torch.cuda.empty_cache()
-
                 loss_train_this_epoch += loss.item()
         loss_train_this_epoch = loss_train_this_epoch/n_this_epoch
 
@@ -297,7 +296,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
         info = {'loss': loss_train_this_epoch}
 
         for tag, value in info.items():
-            print("tag valu",tag,value)
+           # print("tag valu",tag,value)
             logger.scalar_summary(tag, value, epoch + 1)
 
         # 2. Log values and gradients of the parameters (histogram summary)
@@ -358,8 +357,9 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
         row_pearson  =[name_file]+pearson_per_arti_mean.tolist() + [model.epoch_ref]
         writer.writerow(row_rmse)
         writer.writerow(row_pearson)
-    plot_filtre_chaque_epochs = False
-
+    plot_filtre_chaque_epochs = True
+    req_grad = model.lowpass.weight.data.requires_grad
+    print("req grad? ,",req_grad)
     if plot_filtre_chaque_epochs:
         weight_apres = model.lowpass.weight.data[0, 0, :]
         freqs, h = signal.freqz(weight_apres)
