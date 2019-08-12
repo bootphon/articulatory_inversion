@@ -159,10 +159,9 @@ class my_ac2art_modele(torch.nn.Module):
         C_in = 1
         stride=1
         padding = int(0.5*((C_in-1)*stride-C_in+window_size))+23
-        if self.modele_filtered in [0,1] : #si 0 le filtre ne sera pas appliqué donc on sen fiche
+        if self.modele_filtered in [0,1,3] : #si 0 le filtre ne sera pas appliqué donc on sen fiche
             weight_init = get_filter_weights_en_dur()
-        else:
-
+        elif self.modele_filtered == 2:
             weight_init = get_filter_weights()
         weight_init = weight_init.view((1, 1, -1))
         lowpass = torch.nn.Conv1d(C_in,self.output_dim, window_size, stride=1, padding=padding, bias=False)
@@ -261,6 +260,7 @@ class my_ac2art_modele(torch.nn.Module):
                 pearson = [0]*self.output_dim
                 for k in range(self.output_dim):
                     pearson[k]= np.corrcoef(y[:,k].T,y_pred[:,k].T)[0,1]
+
                 pearson = np.array(pearson).reshape((1,self.output_dim))
                 pearson[np.isnan(pearson)] = 0
                 all_pearson = np.concatenate((all_pearson,pearson))
