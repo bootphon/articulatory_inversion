@@ -258,9 +258,9 @@ class my_ac2art_modele(torch.nn.Module):
                # y = y [:,idx_to_consider]
                # y_pred_smooth = y_pred_smooth[:,idx_to_consider]
 
-
-                if self.modele_filtered != 0:
-                    y = y_pred_smooth
+                y = y_pred_smooth
+          #      if self.modele_filtered != 0:
+           #         y = y_pred_smooth
                 rmse = np.sqrt(np.mean(np.square(y - y_pred), axis=0))  # calcule du rmse à la main
                 rmse = np.reshape(rmse, (1, self.output_dim))  # dénormalisation et taille (1,13)
                 rmse = rmse*std_speaker #unormalize
