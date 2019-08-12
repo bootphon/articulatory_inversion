@@ -200,12 +200,12 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
 
     categs_to_consider = files_per_categ.keys()
 
-    plot_filtre_chaque_epochs = True
+    plot_filtre_chaque_epochs = False
 
     for epoch in range(n_epochs):
 
         weight_apres = model.lowpass.weight.data[0, 0, :]
-        print("poids",weight_apres.cpu()[10:20])
+      #  print("poids",weight_apres.cpu()[10:20])
         if plot_filtre_chaque_epochs :
             freqs, h = signal.freqz(weight_apres.cpu())
             freqs = freqs * 100 / (2 * np.pi)  # freq in hz
@@ -362,6 +362,8 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     print("req grad? ,",req_grad)
     if plot_filtre_chaque_epochs:
         weight_apres = model.lowpass.weight.data[0, 0, :]
+     #   gain_filtre = np.sum(weight_apres)
+
         freqs, h = signal.freqz(weight_apres.cpu())
         freqs = freqs * 100 / (2 * np.pi)  # freq in hz
         plt.plot(freqs, 20 * np.log10(abs(h)), 'r')

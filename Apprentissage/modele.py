@@ -85,7 +85,9 @@ class my_ac2art_modele(torch.nn.Module):
             x,y = x.to(device=self.cuda2),y.to(device=self.cuda2)
         return x, y
 
-    def forward(self, x) :
+    def forward(self, x, filter_output =None) :
+        if filter_output is None :
+            filter_output = (self.modele_filtered != 0)
         dense_out =  torch.nn.functional.relu(self.first_layer(x))
         dense_out_2 = torch.nn.functional.relu(self.second_layer(dense_out))
         lstm_out, hidden_dim = self.lstm_layer(dense_out_2)
@@ -103,7 +105,7 @@ class my_ac2art_modele(torch.nn.Module):
             lstm_out= lstm_out_temp.view(B,  -1,2 * self.hidden_dim)
         lstm_out=torch.nn.functional.relu(lstm_out)
         y_pred = self.readout_layer(lstm_out)
-        if self.modele_filtered != 0:
+        if filter_output:
             y_pred = self.filter_layer(y_pred)
         return y_pred
 
@@ -150,7 +152,7 @@ class my_ac2art_modele(torch.nn.Module):
             h = np.sinc(fc*2*(n - (N - 1) / 2))
             w = 0.5 * (1 - np.cos( n * 2 * math.pi / (N - 1)))  # Compute hanning window.
             h = h*w
-            h = h/np.sum(h)
+         #   h = h/np.sum(h)
             return torch.tensor(h)
 
         window_size = 5
@@ -159,7 +161,8 @@ class my_ac2art_modele(torch.nn.Module):
         padding = int(0.5*((C_in-1)*stride-C_in+window_size))+23
         if self.modele_filtered in [0,1] : #si 0 le filtre ne sera pas appliqué donc on sen fiche
             weight_init = get_filter_weights_en_dur()
-        else :
+        else:
+
             weight_init = get_filter_weights()
         weight_init = weight_init.view((1, 1, -1))
         lowpass = torch.nn.Conv1d(C_in,self.output_dim, window_size, stride=1, padding=padding, bias=False)
@@ -196,16 +199,18 @@ class my_ac2art_modele(torch.nn.Module):
             y_smoothed[:, :, i] = traj_arti_smoothed
         return y_smoothed
 
-    def plot_results(self, y, y_pred,suffix=""):
+    def plot_results(self, y, y_pred,y_pred_smooth = None,suffix=""):
         plt.figure()
         for j in range(self.output_dim):
             plt.figure()
             #print("10 first :",y_pred[0:10,j])
-            y_pred_adjusted = (y_pred-np.mean(y_pred,axis=0)+np.mean(y_pred,axis=0))/np.std(y_pred,axis=0)*np.std(y,axis=0)
-            plt.plot(y_pred_adjusted[:, j])
+          #  y_pred_adjusted = (y_pred-np.mean(y_pred,axis=0)+np.mean(y_pred,axis=0))/np.std(y_pred,axis=0)*np.std(y,axis=0)
+            plt.plot(y_pred[:, j])
             plt.plot(y[:, j])
+            if len(y_pred_smooth)>0:
+                plt.plot(y_pred_smooth[:,j])
             plt.title("prediction_test_{0}_{1}_arti{2}.png".format(self.name_file,suffix ,str(j)))
-            plt.legend(["prediction", "vraie"])
+            plt.legend(["prediction", "vraie","pred smoothed"])
             save_pics_path = os.path.join(
                 "images_predictions\\{0}_{1}_arti{2}.png".format(self.name_file,suffix,str(j)))
             plt.savefig(save_pics_path)
@@ -235,13 +240,19 @@ class my_ac2art_modele(torch.nn.Module):
                 if self.cuda_avail:
                     x_torch = x_torch.to(device=self.cuda2)
                # with torch.no_grad():
-                y_pred_torch = self(x_torch).double() #sortie y_pred (1,L,13)
+                y_pred_torch = self(x_torch,False).double() #sortie y_pred (1,L,13)
+                y_pred_smooth   = self(x_torch,True).double()
                 if self.cuda_avail:
                     y_pred_torch = y_pred_torch.cpu()
-                y_pred = y_pred_torch.detach().numpy().reshape((L, self.output_dim))  # y_pred (L,13)
-                if i in indices_to_plot:
-                    self.plot_results(y, y_pred, suffix=suffix + str(i))
+                    y_pred_smooth = y_pred_smooth.cpu()
 
+                y_pred = y_pred_torch.detach().numpy().reshape((L, self.output_dim))  # y_pred (L,13)
+                y_pred_smooth = y_pred_smooth.detach().numpy().reshape((L, self.output_dim))  # y_pred (L,13)
+
+                if i in indices_to_plot:
+                    self.plot_results(y, y_pred, y_pred_smooth,suffix=suffix + str(i))
+                if self.modele_filtered != 0:
+                    y = y_pred_smooth
                 rmse = np.sqrt(np.mean(np.square(y - y_pred), axis=0))  # calcule du rmse à la main
                 rmse = np.reshape(rmse, (1, self.output_dim))  # dénormalisation et taille (1,13)
                 rmse = rmse*std_speaker #unormalize
