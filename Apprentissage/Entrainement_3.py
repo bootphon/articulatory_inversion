@@ -349,7 +349,19 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     print("evaluation on speaker {}".format(test_on))
     #print("DATA AND MODELE FILTERED")
     std_speaker = np.load(os.path.join(root_folder,"Traitement","norm_values","std_ema_"+test_on+".npy"))
-    rmse_per_arti_mean, pearson_per_arti_mean = model.evaluate_on_test(x,y, std_speaker = std_speaker, to_plot=to_plot) #,filtered=True)
+    arti_per_speaker = os.path.join(root_folder, "Traitement", "articulators_per_speaker.csv")
+    csv.register_dialect('myDialect', delimiter=';')
+
+    with open(arti_per_speaker, 'r') as csvFile:
+        reader = csv.reader(csvFile, dialect="myDialect")
+        next(reader)
+        for row in reader:
+            if row[0] == test_on:
+                arti_to_consider = row[1:19]
+                arti_to_consider = [int(x) for x in arti_to_consider]
+    print("arti to cons",arti_to_consider)
+    rmse_per_arti_mean, pearson_per_arti_mean = model.evaluate_on_test(x,y, std_speaker = std_speaker, to_plot=to_plot
+                                                                       ,to_consider = arti_to_consider) #,filtered=True)
 
     with open('resultats_modeles.csv', 'a') as f:
         writer = csv.writer(f)

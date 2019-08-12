@@ -198,9 +198,11 @@ class my_ac2art_modele(torch.nn.Module):
             y_smoothed[:, :, i] = traj_arti_smoothed
         return y_smoothed
 
-    def plot_results(self, y, y_pred,y_pred_smooth = None,suffix=""):
+    def plot_results(self, y, y_pred,y_pred_smooth = None,to_cons=[]):
         plt.figure()
-        for j in range(self.output_dim):
+
+        idx_to_cons = [k for k in range(len(to_cons)) if to_cons[k]]
+        for j in idx_to_cons:
             plt.figure()
             #print("10 first :",y_pred[0:10,j])
           #  y_pred_adjusted = (y_pred-np.mean(y_pred,axis=0)+np.mean(y_pred,axis=0))/np.std(y_pred,axis=0)*np.std(y,axis=0)
@@ -208,16 +210,16 @@ class my_ac2art_modele(torch.nn.Module):
             plt.plot(y[:, j])
             if len(y_pred_smooth)>0:
                 plt.plot(y_pred_smooth[:,j])
-            plt.title("prediction_test_{0}_{1}_arti{2}.png".format(self.name_file,suffix ,str(j)))
+            plt.title("prediction_test_{0}_arti_{1}.png".format(self.name_file,str(j)))
             plt.legend(["prediction", "vraie","pred smoothed"])
             save_pics_path = os.path.join(
-                "images_predictions\\{0}_{1}_arti{2}.png".format(self.name_file,suffix,str(j)))
+                "images_predictions\\{0}_arti_{1}.png".format(self.name_file,str(j)))
             plt.savefig(save_pics_path)
             plt.close('all')
 
 
 
-    def evaluate_on_test(self,X_test,Y_test, std_speaker = 1,to_plot=False,suffix= ""):
+    def evaluate_on_test(self,X_test,Y_test, std_speaker = 1,to_plot=False,to_consider=None):
         """
         :param X_test:  list of all the input of the test set
         :param Y_test:  list of all the target of the test set
@@ -226,9 +228,11 @@ class my_ac2art_modele(torch.nn.Module):
         :return: print the mean pearson correlation between real and predicted trajectories per articulators.
         Also print the overall mean among the correct articulators
         """
+        idx_to_ignore = [i for i in range(len(to_consider)) if not(to_consider[i])]
+        indices_to_plot=[]
+        output_dim= sum(to_consider)
         all_diff = np.zeros((1, self.output_dim))
         all_pearson = np.zeros((1, self.output_dim))
-        indices_to_plot=[]
         if to_plot :
             print("you chose to plot")
             indices_to_plot = np.random.choice(len(X_test), 2, replace=False)
@@ -249,7 +253,12 @@ class my_ac2art_modele(torch.nn.Module):
                 y_pred_smooth = y_pred_smooth.detach().numpy().reshape((L, self.output_dim))  # y_pred (L,13)
 
                 if i in indices_to_plot:
-                    self.plot_results(y, y_pred, y_pred_smooth,suffix=suffix + str(i))
+                    self.plot_results(y, y_pred, y_pred_smooth,to_consider)
+               #  y_pred = y_pred[:,idx_to_consider]
+               # y = y [:,idx_to_consider]
+               # y_pred_smooth = y_pred_smooth[:,idx_to_consider]
+
+
                 if self.modele_filtered != 0:
                     y = y_pred_smooth
                 rmse = np.sqrt(np.mean(np.square(y - y_pred), axis=0))  # calcule du rmse à la main
@@ -262,19 +271,18 @@ class my_ac2art_modele(torch.nn.Module):
                     pearson[k]= np.corrcoef(y[:,k].T,y_pred[:,k].T)[0,1]
 
                 pearson = np.array(pearson).reshape((1,self.output_dim))
-                pearson[np.isnan(pearson)] = 0
                 all_pearson = np.concatenate((all_pearson,pearson))
         all_pearson=all_pearson[1:]
+        all_pearson[:,idx_to_ignore]=0
         all_diff = all_diff[1:]
+        all_diff[:,idx_to_ignore] = 0
         pearson_per_arti_mean = np.mean(all_pearson, axis=0)
         rmse_per_arti_mean = np.mean(all_diff, axis=0)
-        rmse_per_arti_mean[pearson_per_arti_mean == 0]  = 0
-
 
         #pearson_per_arti_std = np.std(all_pearson, axis=0)
-        print("rmse final : ", np.mean(rmse_per_arti_mean[rmse_per_arti_mean != 0]))
+        print("rmse final : ", np.mean(rmse_per_arti_mean[rmse_per_arti_mean!=0]))
         print("rmse mean per arti : \n", rmse_per_arti_mean)
-        print("pearson final : ", np.mean(pearson_per_arti_mean[pearson_per_arti_mean!=0]))
+        print("pearson final : ", np.mean(pearson_per_arti_mean[rmse_per_arti_mean!=0]))
         print("pearson mean per arti : \n", pearson_per_arti_mean)
         return rmse_per_arti_mean,pearson_per_arti_mean
       #  print("pearson std per arti : \n", pearson_per_arti_std)
