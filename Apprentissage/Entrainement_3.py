@@ -362,7 +362,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     print("req grad? ,",req_grad)
     if plot_filtre_chaque_epochs:
         weight_apres = model.lowpass.weight.data[0, 0, :]
-        freqs, h = signal.freqz(weight_apres)
+        freqs, h = signal.freqz(weight_apres.cpu())
         freqs = freqs * 100 / (2 * np.pi)  # freq in hz
         plt.plot(freqs, 20 * np.log10(abs(h)), 'r')
         plt.title("Allure filtre passe bas à la fin de l'apprentissage pour filtre en dur")
