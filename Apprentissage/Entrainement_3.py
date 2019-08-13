@@ -91,12 +91,16 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
                       modele_filtered=filter_type)
     model = model.double()
     file_weights = os.path.join("saved_models", name_file +".txt")
+
+    if cuda_avail:
+        cuda2 = torch.device('cuda:1')
+        model = model.cuda(device=cuda2)
+        
     if os.path.exists(file_weights):
         if not cuda_avail:
             loaded_state = torch.load(file_weights, map_location=torch.device('cpu'))
 
         else:
-            cuda2 = torch.device('cuda:1')
             loaded_state = torch.load(file_weights, map_location=cuda2)
         model_dict = model.state_dict()
         loaded_state = {k: v for k, v in loaded_state.items() if
@@ -108,6 +112,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
         model_dict.update(loaded_state)
         model.load_state_dict(model_dict)
 
+
     else :
         print("premiere fois que ce modèle est crée")
       #  file_weights = os.path.join("saved_models","modele_preentrainement.txt")
@@ -116,8 +121,6 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
 
   #  model.init_filter_layer()
 
-    if cuda_avail:
-        model = model.cuda(device=cuda2)
 
     def criterion_pearson(my_y,my_y_pred): # (L,K,13)
         y_1 = my_y - torch.mean(my_y,dim=1,keepdim=True)
