@@ -96,7 +96,6 @@ class my_ac2art_modele(torch.nn.Module):
             lstm_out_temp = lstm_out.view(B,2*self.hidden_dim,-1)
             lstm_out_temp = torch.nn.functional.relu(self.batch_norm_layer(lstm_out_temp))
             lstm_out= lstm_out_temp.view(B,  -1,2 * self.hidden_dim)
-
         lstm_out = torch.nn.functional.relu(lstm_out)
         lstm_out, hidden_dim = self.lstm_layer_2(lstm_out)
         if self.batch_norma :
