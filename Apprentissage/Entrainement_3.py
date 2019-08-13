@@ -95,7 +95,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     if cuda_avail:
         cuda2 = torch.device('cuda:1')
         model = model.cuda(device=cuda2)
-        
+
     if os.path.exists(file_weights):
         if not cuda_avail:
             loaded_state = torch.load(file_weights, map_location=torch.device('cpu'))
@@ -212,7 +212,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     for epoch in range(n_epochs):
 
         weight_apres = model.lowpass.weight.data[0, 0, :]
-        print("GAIN 0",sum(weight_apres.cpu()))
+        #print("GAIN 0",sum(weight_apres.cpu()))
 
         if plot_filtre_chaque_epochs :
 
