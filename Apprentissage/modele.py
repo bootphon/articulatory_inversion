@@ -19,7 +19,7 @@ from Apprentissage import utils
 
 class my_ac2art_modele(torch.nn.Module):
     def __init__(self, hidden_dim, input_dim, output_dim, batch_size,name_file="", sampling_rate=100,
-                 window=5, cutoff=40,cuda_avail =False,modele_filtered=False):
+                 window=5, cutoff=10,cuda_avail =False,modele_filtered=False):
         root_folder = os.path.dirname(os.getcwd())
         super(my_ac2art_modele, self).__init__()
         self.input_dim = input_dim
@@ -112,7 +112,6 @@ class my_ac2art_modele(torch.nn.Module):
     def init_filter_layer(self):
 
         def get_filter_weights():
-
             cutoff = torch.tensor(self.cutoff, dtype=torch.float64,requires_grad=True).view(1, 1)
             fc = torch.div(cutoff,
                   self.sampling_rate)  # Cutoff frequency as a fraction of the sampling rate (in (0, 0.5)).
@@ -152,7 +151,7 @@ class my_ac2art_modele(torch.nn.Module):
             h = np.sinc(fc*2*(n - (N - 1) / 2))
             w = 0.5 * (1 - np.cos( n * 2 * math.pi / (N - 1)))  # Compute hanning window.
             h = h*w
-         #   h = h/np.sum(h)
+            h = h/np.sum(h)
             return torch.tensor(h)
 
         window_size = 5
@@ -258,7 +257,7 @@ class my_ac2art_modele(torch.nn.Module):
                # y = y [:,idx_to_consider]
                # y_pred_smooth = y_pred_smooth[:,idx_to_consider]
 
-                y = y_pred_smooth
+                y_pred = y_pred_smooth
           #      if self.modele_filtered != 0:
            #         y = y_pred_smooth
                 rmse = np.sqrt(np.mean(np.square(y - y_pred), axis=0))  # calcule du rmse à la main

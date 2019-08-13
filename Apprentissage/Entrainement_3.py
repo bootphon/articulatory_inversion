@@ -38,7 +38,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     train_on = []
     delta_test=  1
     lr = 0.001
-    to_plot = True
+    to_plot = False
     corpus_to_train_on = corpus_to_train_on[1:-1].split(",")
     for corpus in corpus_to_train_on :
         print("corpus" , corpus)
@@ -72,7 +72,6 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
         name_file = "train_on_"+name_corpus_concat+"test_on_"+test_on+"_idx_"+str(select_arti)+"_loss_"+str(loss_train)+"_typefilter_"+str(filter_type)
     else :
         name_file = "train_on_" +train_on[0] + "_test_on_" + test_on + "_idx_" + str(select_arti)+"_loss_"+str(loss_train)+"_typefilter_"+str(filter_type)
-    print("name file : ",name_file)
   #  logger = Logger('./log_' + name_file)
     logger = Logger('./logs')
 
@@ -111,6 +110,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     #print("after", len(loaded_state), loaded_state.keys())
     model_dict.update(loaded_state)
     model.load_state_dict(model_dict)
+
 
     if cuda_avail:
         model = model.cuda(device=cuda2)
@@ -359,9 +359,10 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
             if row[0] == test_on:
                 arti_to_consider = row[1:19]
                 arti_to_consider = [int(x) for x in arti_to_consider]
-    print("arti to cons",arti_to_consider)
+  #  print("arti to cons",arti_to_consider)
     rmse_per_arti_mean, pearson_per_arti_mean = model.evaluate_on_test(x,y, std_speaker = std_speaker, to_plot=to_plot
                                                                        ,to_consider = arti_to_consider) #,filtered=True)
+    print("name file : ",name_file)
 
     with open('resultats_modeles.csv', 'a') as f:
         writer = csv.writer(f)
@@ -371,7 +372,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
         writer.writerow(row_pearson)
     plot_filtre_chaque_epochs = True
     req_grad = model.lowpass.weight.data.requires_grad
-    print("req grad? ,",req_grad)
+#    print("req grad? ,",req_grad)
     if plot_filtre_chaque_epochs:
         weight_apres = model.lowpass.weight.data[0, 0, :]
      #   gain_filtre = np.sum(weight_apres)
