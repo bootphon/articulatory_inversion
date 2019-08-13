@@ -206,8 +206,10 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     for epoch in range(n_epochs):
 
         weight_apres = model.lowpass.weight.data[0, 0, :]
-      #  print("poids",weight_apres.cpu()[10:20])
+#     print("GAIN 0",sum(weight_apres.cpu()))
+
         if plot_filtre_chaque_epochs :
+
             freqs, h = signal.freqz(weight_apres.cpu())
             freqs = freqs * 100 / (2 * np.pi)  # freq in hz
             plt.plot(freqs, 20 * np.log10(abs(h)), 'r')
@@ -250,6 +252,9 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
                 optimizer.step()
                 torch.cuda.empty_cache()
                 loss_train_this_epoch += loss.item()
+                weight_apres = model.lowpass.weight.data[0, 0, :]
+             #    print("GAIN 1", sum(weight_apres.cpu()))
+
         loss_train_this_epoch = loss_train_this_epoch/n_this_epoch
 
         if epoch%delta_test ==0:  #toutes les delta_test epochs on évalue le modèle sur validation et on sauvegarde le modele si le score est meilleur
@@ -288,6 +293,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
         model.all_validation_loss.append(loss_vali)
         model.all_training_loss.append(loss_train_this_epoch)
       #  print("all training loss",model.all_training_loss)
+        early_stopping(loss_vali, model)
 
         # ================================================================== #
         #                        Tensorboard Logging                         #
@@ -322,7 +328,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
             #model.all_test_loss += [model.all_test_loss[-1]] * (epoch+previous_epoch - len(model.all_test_loss))
            # print("\n ---------- epoch" + str(epoch) + " ---------")
             #early_stopping.epoch = previous_epoch+epoch
-            early_stopping(loss_vali, model)
+
           #  print("train loss ", loss.item())
           #  print("valid loss ", loss_vali)
 
@@ -352,7 +358,8 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     std_speaker = np.load(os.path.join(root_folder,"Traitement","norm_values","std_ema_"+test_on+".npy"))
     arti_per_speaker = os.path.join(root_folder, "Traitement", "articulators_per_speaker.csv")
     csv.register_dialect('myDialect', delimiter=';')
-
+    weight_apres = model.lowpass.weight.data[0, 0, :]
+  #  print("GAINAAA",sum(weight_apres.cpu()))
     with open(arti_per_speaker, 'r') as csvFile:
         reader = csv.reader(csvFile, dialect="myDialect")
         next(reader)
@@ -376,8 +383,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
 #    print("req grad? ,",req_grad)
     if plot_filtre_chaque_epochs:
         weight_apres = model.lowpass.weight.data[0, 0, :]
-        #gain_filtre = np.sum(weight_apres)
-        print("GAIN",sum(weight_apres))
+        print("GAIN",sum(weight_apres.cpu()))
 
         freqs, h = signal.freqz(weight_apres.cpu())
         freqs = freqs * 100 / (2 * np.pi)  # freq in hz
