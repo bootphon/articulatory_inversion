@@ -91,25 +91,28 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
                       modele_filtered=filter_type)
     model = model.double()
     file_weights = os.path.join("saved_models", name_file +".txt")
-    if not os.path.exists(file_weights):
-        print("premiere fois que ce modèle est crée")
-        file_weights = os.path.join("saved_models","modele_preentrainement.txt")
+    if os.path.exists(file_weights):
+        if not cuda_avail:
+            loaded_state = torch.load(file_weights, map_location=torch.device('cpu'))
 
-    if not cuda_avail:
-        loaded_state = torch.load(file_weights, map_location=torch.device('cpu'))
+        else:
+            cuda2 = torch.device('cuda:1')
+            loaded_state = torch.load(file_weights, map_location=cuda2)
+        model_dict = model.state_dict()
+        loaded_state = {k: v for k, v in loaded_state.items() if
+                        k in model_dict}  # only layers param that are in our current model
+        # print("before ", len(loaded_state), loaded_state.keys())
+        loaded_state = {k: v for k, v in loaded_state.items() if
+                        loaded_state[k].shape == model_dict[k].shape}  # only if layers have correct shapes
+        # print("after", len(loaded_state), loaded_state.keys())
+        model_dict.update(loaded_state)
+        model.load_state_dict(model_dict)
 
     else :
-        cuda2 = torch.device('cuda:1')
-        loaded_state = torch.load( file_weights , map_location= cuda2 )
-    model_dict = model.state_dict()
-    loaded_state = {k: v for k, v in loaded_state.items() if
-                    k in model_dict}  # only layers param that are in our current model
-    #print("before ", len(loaded_state), loaded_state.keys())
-    loaded_state = {k: v for k, v in loaded_state.items() if
-                    loaded_state[k].shape == model_dict[k].shape}  # only if layers have correct shapes
-    #print("after", len(loaded_state), loaded_state.keys())
-    model_dict.update(loaded_state)
-    model.load_state_dict(model_dict)
+        print("premiere fois que ce modèle est crée")
+      #  file_weights = os.path.join("saved_models","modele_preentrainement.txt")
+
+
 
   #  model.init_filter_layer()
 
