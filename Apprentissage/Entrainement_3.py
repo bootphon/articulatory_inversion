@@ -206,7 +206,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     for epoch in range(n_epochs):
 
         weight_apres = model.lowpass.weight.data[0, 0, :]
-#     print("GAIN 0",sum(weight_apres.cpu()))
+        print("GAIN 0",sum(weight_apres.cpu()))
 
         if plot_filtre_chaque_epochs :
 
