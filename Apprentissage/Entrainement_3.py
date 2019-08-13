@@ -111,6 +111,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     model_dict.update(loaded_state)
     model.load_state_dict(model_dict)
 
+  #  model.init_filter_layer()
 
     if cuda_avail:
         model = model.cuda(device=cuda2)
@@ -375,7 +376,8 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
 #    print("req grad? ,",req_grad)
     if plot_filtre_chaque_epochs:
         weight_apres = model.lowpass.weight.data[0, 0, :]
-     #   gain_filtre = np.sum(weight_apres)
+        #gain_filtre = np.sum(weight_apres)
+        print("GAIN",sum(weight_apres))
 
         freqs, h = signal.freqz(weight_apres.cpu())
         freqs = freqs * 100 / (2 * np.pi)  # freq in hz
