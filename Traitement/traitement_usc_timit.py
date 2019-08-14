@@ -283,5 +283,5 @@ def traitement_general_usc(N_max):
         traitement_usc(sp,N_max = N_max)
         print("Done for speaker ",sp)
 
-traitement_general_usc(N_max = 50)
+#traitement_general_usc(N_max = 50)
 

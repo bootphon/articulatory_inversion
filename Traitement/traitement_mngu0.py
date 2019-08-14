@@ -211,5 +211,5 @@ def traitement_general_mngu0(N_max="All"):
 
 
 
-traitement_general_mngu0(50)
+#traitement_general_mngu0(50)
 #print("duree : ",str(t2-t1))
