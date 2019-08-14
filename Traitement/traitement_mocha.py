@@ -198,4 +198,4 @@ def traitement_general_mocha(N_max,on_speaker = None):
         print("Done mocha ",sp)
 
 
-#traitement_general_mocha(N_max=50)
+traitement_general_mocha(N_max=0)
