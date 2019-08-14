@@ -15,17 +15,15 @@ import scipy.interpolate
 import sys
 
 
-from add_dynamic_features import get_delta_features
+from Traitement.fonctions_utiles import get_delta_features
 import librosa
 root_path = dirname(dirname(os.path.realpath(__file__)))
 
 window=5
 
-print(sys.argv)
-start = int(sys.argv[1])
-Nmax = sys.argv[2]
-
-
+#print(sys.argv)
+#Nmax = sys.argv[2]
+Nmax = 20
 for time in ["1s"]:
     print("---time :",time)
     path_files_treated = os.path.join(root_path, "Donnees_pretraitees", "donnees_challenge_2017",time)
@@ -35,18 +33,18 @@ for time in ["1s"]:
     print(path_wav_files,"path wav files")
     wav_files = sorted([name[:-4] for name in os.listdir(path_wav_files) if name.endswith('.wav')])
     print("numbr of wav files",len(wav_files))
-    sampling_rate_mfcc = 16000
-    frame_time = 25
-    hop_time = 10  # en ms
-    hop_length = int((hop_time * sampling_rate_mfcc) / 1000)
-    frame_length = int((frame_time * sampling_rate_mfcc) / 1000)
+    sampling_rate_wav = 16000
+    frame_time = 25/1000
+    hop_time = 10/1000 # en s
+    hop_length = int(hop_time * sampling_rate_wav)
+    frame_length = int(frame_time * sampling_rate_wav)
     n_coeff = 13
     n_col_mfcc = n_coeff*(2*window+1)*3
 
     def wav_treatment(i): #reste à enlever les blancs et normaliser et ajouter trames passées et futures
         path_wav = os.path.join(path_wav_files, wav_files[i] + '.wav')
-        data, sr = librosa.load(path_wav, sr=sampling_rate_mfcc)  # chargement de données
-        mfcc = librosa.feature.mfcc(y=data, sr=sampling_rate_mfcc, n_mfcc=n_coeff,
+        data, sr = librosa.load(path_wav, sr=sampling_rate_wav)  # chargement de données
+        mfcc = librosa.feature.mfcc(y=data, sr=sampling_rate_wav, n_mfcc=n_coeff,
                                     n_fft=frame_length, hop_length=hop_length
                                     ).T
         dyna_features = get_delta_features(mfcc)
@@ -64,7 +62,7 @@ for time in ["1s"]:
     ALL_MFCC = np.zeros((1,n_col_mfcc))
     if Nmax.lower()=="all":
         Nmax = len(wav_files)
-    for i in range(start,Nmax):
+    for i in range(Nmax):
         if i%100==0:
             print(i," out of ",Nmax)
         if not os.path.exists(os.path.join(path_files_treated,wav_files[i])):
@@ -76,26 +74,13 @@ for time in ["1s"]:
     mean_mfcc = np.mean(ALL_MFCC,axis=0)
     std_mfcc = np.std(ALL_MFCC,axis=0)
 
-    for i in range(start,Nmax):
+    for i in range(Nmax):
         if i%100 ==0:
             print(i," out of ",Nmax)
         mfcc = np.load(os.path.join(path_files_treated,wav_files[i]+".npy"))
         mfcc = (mfcc - mean_mfcc)/std_mfcc
         np.save(os.path.join(path_files_treated, wav_files[i]),mfcc)
 
-    def concat_all_numpy_from(path):
-        list = []
-        for r, d, f in os.walk(path):
-            for file in f:
-                if file != "X_ZS.npy":
-                    data_file = np.load(os.path.join(path,file))
-                    list.append(data_file)
-        return list
-
-    #X_ZS = concat_all_numpy_from(path_files_treated)
-    #print([X_ZS[i].shape for i in range(len(X_ZS))])
-    #print("yyy")
-    #np.save(os.path.join(path_files_treated,"X_ZS.npy"),X_ZS)
 
 
 
