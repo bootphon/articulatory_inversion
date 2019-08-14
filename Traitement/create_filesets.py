@@ -20,13 +20,9 @@ donnees_path = os.path.join(root_folder, "Donnees_pretraitees")
 
 def get_fileset_names(speaker):
     """
-    :param speaker: pour le moment fsew0,msak0 ou MNGU0
+    :param speaker: un des speaker
     :return: rien
-    lit tous les numpy mfcc et ema correspondant au speaker et les concatène pour avoir une liste de toutes les données.
-    On normalise les mfcc et les ema (soustrait moyenne et divise par écart type)
-    On divise en deux les phrases plus longues que 800 frames mfcc.
-
-    On a donc une liste X et une liste Y, qu'on va diviser en train et test.
+    Ecrit pour le speaker 3 fichiers txt sp_train, sp_test, sp_valid avec les noms des fichiers du train/test/validation set
     """
 
     files_path =  os.path.join(donnees_path,speaker)
@@ -54,7 +50,12 @@ def get_fileset_names(speaker):
     outF.close()
 
 
+
 def get_fileset_names_per_corpus(corpus):
+    """
+    :param corpus: un des corpus "mocha","usc","MNGU0","Haskins"
+    :return:  rien, crée les fileset pour tous les speaker du corpus
+    """
     speakers = get_speakers_per_corpus(corpus)
     for sp in speakers :
         try:
@@ -63,8 +64,7 @@ def get_fileset_names_per_corpus(corpus):
             print("Pbm pour creer le fileset de sp ,",sp)
 
 
-
-
+#get_fileset_names_per_corpus("MNGU0")
 def read_csv_arti_ok_per_speaker():
     """
     :return:
@@ -100,3 +100,6 @@ def read_csv_arti_ok_per_speaker():
         json.dump(categ_of_speakers, dico)
 
 #read_csv_arti_ok_per_speaker()
+
+
+
