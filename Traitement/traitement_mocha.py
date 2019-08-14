@@ -145,8 +145,8 @@ def traitement_general_mocha(N_max,on_speaker = None):
           #      print("{} out of {}".format(i,N))
             ema = read_ema_file(i)
             ema_VT = my_speaker_class.add_vocal_tract(ema)
-          #  ema_VT_smooth = my_speaker_class.smooth_data(ema_VT) # filtrage pour meilleur calcul des norm_values
-            ema_VT_smooth = ema_VT
+            ema_VT_smooth = my_speaker_class.smooth_data(ema_VT) # filtrage pour meilleur calcul des norm_values
+          #  ema_VT_smooth = ema_VT
             path_wav = os.path.join(path_files_brutes, wav_files[i] + '.wav')
             wav, sr = librosa.load(path_wav, sr=None)  # chargement de données
             wav = 0.5*wav/np.max(wav)
