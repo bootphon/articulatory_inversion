@@ -5,10 +5,10 @@ parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 from os.path import dirname
 
-from Traitement.traitement_haskins_new import traitement_general_haskins
-from Traitement.traitement_mngu0_new import traitement_general_mngu0
-from Traitement.traitement_usc_timit_new import traitement_general_usc
-from Traitement.traitement_mocha_new import traitement_general_mocha
+from Traitement.traitement_haskins import traitement_general_haskins
+from Traitement.traitement_mngu0 import traitement_general_mngu0
+from Traitement.traitement_usc_timit import traitement_general_usc
+from Traitement.traitement_mocha import traitement_general_mocha
 from Traitement.create_filesets import get_fileset_names_per_corpus
 import argparse
 from multiprocessing import Process
@@ -22,20 +22,17 @@ def main_traitement(corpus_to_treat=["mocha", "usc", "MNGU0", "Haskins"], max="A
         os.makedirs(os.path.join(os.path.join(root_path, "Traitement", "norm_values")))
 
     if "mocha" in corpus_to_treat:
-        traitement_general_mocha_new(max)
+        traitement_general_mocha(max)
 
     if "MNGU0" in corpus_to_treat:
-        traitement_general_mngu0_new(max)
+        traitement_general_mngu0(max)
         # split = True
 
     if "usc" in corpus_to_treat:
-        traitement_general_usc_new(max)
+        traitement_general_usc(max)
 
     if "Haskins" in corpus_to_treat:
-        traitement_general_haskins_new(max)
-
-    for corpus in corpus_to_treat:
-        get_fileset_names_per_corpus(corpus)
+        traitement_general_haskins(max)
 
 
 def traitement_general_per_corpus(corp,max):
@@ -62,7 +59,6 @@ def traitement_general_per_corpus(corp,max):
 if __name__ == '__main__':
     corpus = ["MNGU0","mocha","usc","Haskins"]
     procs = []
-
 
     parser = argparse.ArgumentParser(description='Train and save a model.')
     parser.add_argument('N_max', metavar='N_max', type=int,
