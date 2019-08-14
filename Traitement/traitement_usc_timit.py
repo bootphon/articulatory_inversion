@@ -59,7 +59,6 @@ from Traitement.add_dynamic_features import get_delta_features
 import librosa
 from Apprentissage.utils import low_pass_filter_weight
 import shutil
-from Traitement.normalization import normalize_data
 from Traitement.add_vocal_tract import add_vocal_tract
 from Traitement.class_corpus import Speaker,Corpus
 import glob
@@ -279,9 +278,9 @@ def traitement_general_usc(N_max):
   #  speakers = ["F1","F5","M1","M3"]
 
     for sp in my_corpus_class.speakers :
-        print("speaker ",sp)
+        print("En cours usc ",sp)
         traitement_usc(sp,N_max = N_max)
-        print("Done for speaker ",sp)
+        print("Done usc ",sp)
 
 #traitement_general_usc(N_max = 50)
 

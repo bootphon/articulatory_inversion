@@ -193,9 +193,9 @@ def traitement_general_mocha(N_max,on_speaker = None):
         speakers = my_corpus_class.speakers
 
     for sp in speakers:
-        print("sp ",sp)
+        print("En cours mocha ",sp)
         traitement_mocha(sp,N_max = N_max)
-        print("Done for speaker ",sp)
+        print("Done mocha ",sp)
 
 
 #traitement_general_mocha(N_max=50)

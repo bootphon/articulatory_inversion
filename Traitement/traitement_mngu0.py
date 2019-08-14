@@ -34,6 +34,7 @@ order_arti_MNGU0 = [
 
 def traitement_general_mngu0(N_max="All"):
     speaker = "MNGU0"
+    print("en cours MNGU0")
 
     my_speaker_class = Speaker("MNGU0")
     sampling_rate_ema = my_speaker_class.sampling_rate_ema
@@ -207,7 +208,7 @@ def traitement_general_mngu0(N_max="All"):
 
     split_sentences(speaker)
     get_fileset_names(speaker)
-    print("Done for speaker ",speaker)
+    print("Done ",speaker)
 
 
 
