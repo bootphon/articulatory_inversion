@@ -13,7 +13,8 @@ import matplotlib.pyplot as plt
 import scipy.interpolate
 from Traitement.add_dynamic_features import get_delta_features
 import librosa
-from Apprentissage.utils import low_pass_filter_weight
+from scipy.fftpack import fft, ifft
+from Traitement.fonctions_utiles import low_pass_filter_weight
 import shutil
 #from Traitement.normalization import normalize_data
 #from Traitement.add_vocal_tract import add_vocal_tract
@@ -129,7 +130,9 @@ class Speaker():
         pad = 30
         if sr == 0:
             sr = self.sampling_rate_ema
-        weights = low_pass_filter_weight(cut_off=self.cutoff,sampling_rate= sr)
+        cutoff = self.cutoff
+        weights = low_pass_filter_weight(cut_off=cutoff,sampling_rate= sr)
+
         my_ema_filtered = np.concatenate([np.expand_dims(np.pad(ema[:, k], (pad, pad), "symmetric"), 1)
                                           for k in range(ema.shape[1])], axis=1)
 
@@ -153,9 +156,6 @@ class Speaker():
             moving_average = np.array(
                 [np.mean(all_mean_ema[k - pad:k + pad], axis=0) for k in range(pad, len(all_mean_ema) - pad)])
 
-            np.save(os.path.join("norm_values", "moving_average_ema_" + self.name), moving_average)
-
-
             all_EMA_concat = np.concatenate([traj for traj in list_EMA_traj], axis=0)
             std_ema = np.std(all_EMA_concat, axis=0)
             std_ema[std_ema < 1e-3]=1
@@ -170,6 +170,7 @@ class Speaker():
             np.save(os.path.join("norm_values", "mean_ema_" + self.name), mean_ema)
             np.save(os.path.join("norm_values", "std_mfcc_" + self.name), std_mfcc)
             np.save(os.path.join("norm_values", "mean_mfcc_" + self.name), mean_mfcc)
+
             self.std_ema = std_ema
             self.moving_average_ema = moving_average
             self.mean_ema = mean_ema
@@ -241,6 +242,6 @@ class Speaker():
         return my_ema, my_mfcc
 
 
-
 #aa = Speaker("fsew0")
+#aa.smooth_data("yo")
 #print(aa.speakers_with_velum)

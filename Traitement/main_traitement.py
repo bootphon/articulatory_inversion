@@ -36,7 +36,6 @@ def main_traitement(corpus_to_treat=["mocha", "usc", "MNGU0", "Haskins"], max="A
 
 
 def traitement_general_per_corpus(corp,max):
-    print("----------------------------",corp,"-------------")
     if corp == "MNGU0":
         traitement_general_mngu0(max)
     elif corp == "usc":
