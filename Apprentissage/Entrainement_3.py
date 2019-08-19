@@ -96,7 +96,9 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
         cuda2 = torch.device('cuda:1')
         model = model.cuda(device=cuda2)
 
-    if os.path.exists(file_weights):
+    load_old_model = False
+    if load_old_model:
+     if os.path.exists(file_weights):
         if not cuda_avail:
             loaded_state = torch.load(file_weights, map_location=torch.device('cpu'))
 
@@ -111,12 +113,9 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
         # print("after", len(loaded_state), loaded_state.keys())
         model_dict.update(loaded_state)
         model.load_state_dict(model_dict)
-
-
-    else :
+     else :
         print("premiere fois que ce modèle est crée")
       #  file_weights = os.path.join("saved_models","modele_preentrainement.txt")
-
 
 
   #  model.init_filter_layer()
