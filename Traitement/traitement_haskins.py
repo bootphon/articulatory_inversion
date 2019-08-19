@@ -212,4 +212,4 @@ def traitement_general_haskins(N_max):
         traitement_haskins(sp,N_max = N_max)
         print("Done Haskins ",sp)
 
-#traitement_general_haskins(N_max = 0)
+traitement_general_haskins(N_max = 0)
