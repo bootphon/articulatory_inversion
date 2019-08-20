@@ -42,7 +42,6 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     only_one_sp=False
     corpus_to_train_on = corpus_to_train_on[1:-1].split(",")
     for corpus in corpus_to_train_on :
-        print("corpus" , corpus)
         sp = get_speakers_per_corpus(corpus)
         train_on = train_on + sp
         name_corpus_concat = name_corpus_concat+corpus+"_"
@@ -64,8 +63,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
 
     if test_on in train_on :
         train_on.remove(test_on)
-    print("train_on :",train_on)
-    print("test on:",test_on)
+    print("train on :",train_on," test on ",test_on)
     #train_on = ["msak0"]
     cuda_avail = torch.cuda.is_available()
     print(" cuda ?", cuda_avail)
@@ -83,7 +81,6 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     batch_size = 10
     output_dim = 18
 
-    print("batch size",batch_size)
 
     early_stopping = EarlyStopping(name_file,patience=patience, verbose=True)
 
@@ -97,9 +94,9 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
         cuda2 = torch.device('cuda:1')
         model = model.cuda(device=cuda2)
 
-    load_old_model = True
+    load_old_model = False
     if load_old_model:
-     if os.path.exists(file_weights):
+        if os.path.exists(file_weights):
         if not cuda_avail:
             loaded_state = torch.load(file_weights, map_location=torch.device('cpu'))
 
@@ -114,8 +111,8 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
         # print("after", len(loaded_state), loaded_state.keys())
         model_dict.update(loaded_state)
         model.load_state_dict(model_dict)
-     else :
-        print("premiere fois que ce modèle est crée")
+        else :
+            print("premiere fois que ce modèle est crée")
       #  file_weights = os.path.join("saved_models","modele_preentrainement.txt")
 
 
@@ -159,7 +156,6 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
         criterion = criterion_pearson
     elif loss_train[:4] == "both":
         lbd = int(loss_train[5:])
-        print("criterion both with lbd ",lbd)
         criterion = criterion_both(lbd)
 
     with open('categ_of_speakers.json', 'r') as fp:
@@ -168,17 +164,11 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     optimizer = torch.optim.Adam(model.parameters(), lr=lr ) #, betas = beta_param)
 
 
-    print("number of epochs : ", n_epochs)
-
     path_files = os.path.join(os.path.dirname(os.getcwd()),"Donnees_pretraitees","fileset")
-
     files_for_train = load_filenames_deter(train_on, part=["train", "test"])
-    print("len files for train",len(files_for_train))
-    files_for_valid = load_filenames_deter(train_on, part=["valid"])
-    print("lenfiles for valid",len(files_for_valid))
 
+    files_for_valid = load_filenames_deter(train_on, part=["valid"])
     files_for_test = load_filenames_deter([test_on], part=["train", "valid", "test"])
-    print("len files for test",len(files_for_test))
 
     files_per_categ = dict()
     for categ in categ_of_speakers.keys():

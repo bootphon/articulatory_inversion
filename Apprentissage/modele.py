@@ -179,8 +179,7 @@ class my_ac2art_modele(torch.nn.Module):
 
         else : #0 balek ou 1 en dur
             lowpass.weight = torch.nn.Parameter(weight_init,requires_grad = False)
-        for p in lowpass.parameters():
-            print("require grads ?", p.requires_grad)
+
         lowpass = lowpass.double()
         self.lowpass = lowpass
 
