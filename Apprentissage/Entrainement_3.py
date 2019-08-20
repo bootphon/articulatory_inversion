@@ -91,8 +91,8 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     file_weights = os.path.join("saved_models", name_file +".txt")
 
     if cuda_avail:
-        cuda2 = torch.device('cuda:1')
-        model = model.cuda(device=cuda2)
+        cuda = torch.device('cuda')
+        model = model.cuda(device=cuda)
 
     load_old_model = False
     if load_old_model:
@@ -101,7 +101,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
             loaded_state = torch.load(file_weights, map_location=torch.device('cpu'))
 
         else:
-            loaded_state = torch.load(file_weights, map_location=cuda2)
+            loaded_state = torch.load(file_weights, map_location=cuda)
         model_dict = model.state_dict()
         loaded_state = {k: v for k, v in loaded_state.items() if
                         k in model_dict}  # only layers param that are in our current model
@@ -128,9 +128,9 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
         # deno zero veut dire ema constant à 0 on remplace par des 1
         minim = torch.tensor(0.01,dtype=torch.float64)
         if cuda_avail:
-            minim = minim.to(device=cuda2)
-            deno = deno.to(device=cuda2)
-            nume = nume.to(device=cuda2)
+            minim = minim.to(device=cuda)
+            deno = deno.to(device=cuda)
+            nume = nume.to(device=cuda)
         deno = torch.max(deno,minim)
         my_loss = torch.div(nume,deno)
         my_loss = torch.sum(my_loss) #pearson doit etre le plus grand possible
@@ -230,7 +230,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
                 y_pred = model(x).double()
                 if cuda_avail:
                     # y_pred = y_pred.cuda()
-                    y_pred = y_pred.to(device=cuda2)
+                    y_pred = y_pred.to(device=cuda)
                 y = y.double()
                 optimizer.zero_grad()
 
@@ -271,7 +271,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
                     y_pred = model(x).double()
                     torch.cuda.empty_cache()
                     if cuda_avail:
-                        y_pred = y_pred.to(device=cuda2)
+                        y_pred = y_pred.to(device=cuda)
                     y = y.double()  # (Batchsize, maxL, 18)
 
                     if select_arti:

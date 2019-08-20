@@ -65,7 +65,7 @@ class my_ac2art_modele(torch.nn.Module):
         self.init_filter_layer()
         self.cuda_avail = cuda_avail
         if self.cuda_avail:
-            self.cuda2 = torch.device('cuda:1')
+            self.cuda = torch.device('cuda')
         self.epoch_ref = 0
         self.batch_norma = batch_norma# False #tester par la suite si améliore la perf
 
@@ -91,7 +91,7 @@ class my_ac2art_modele(torch.nn.Module):
         y = new_y.view((B, max_length, self.output_dim))
         if self.cuda_avail :
           #  x,y=x.cuda(),y.cuda()
-            x,y = x.to(device=self.cuda2),y.to(device=self.cuda2)
+            x,y = x.to(device=self.cuda),y.to(device=self.cuda)
         return x, y
 
     def forward(self, x, filter_output =None) :
@@ -245,7 +245,7 @@ class my_ac2art_modele(torch.nn.Module):
                 x_torch = torch.from_numpy(X_test[i]).view(1,L,self.input_dim)  #x (1,L,429)
                 y = Y_test[i].reshape((L, self.output_dim))                     #y (L,13)
                 if self.cuda_avail:
-                    x_torch = x_torch.to(device=self.cuda2)
+                    x_torch = x_torch.to(device=self.cuda)
                # with torch.no_grad():
                 y_pred_passmooth = self(x_torch,False).double() #sortie y_pred (1,L,13)
                 y_pred   = self(x_torch,True).double()
