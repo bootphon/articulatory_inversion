@@ -32,13 +32,14 @@ fileset_path = os.path.join(root_folder, "Donnees_pretraitees", "fileset")
 print(sys.argv)
 
 
-def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_train_on,only_one_sp,filter_type):
+def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_train_on,batch_norma,filter_type):
 
     name_corpus_concat = ""
     train_on = []
     delta_test=  1
     lr = 0.001
     to_plot = True
+    only_one_sp=False
     corpus_to_train_on = corpus_to_train_on[1:-1].split(",")
     for corpus in corpus_to_train_on :
         print("corpus" , corpus)
@@ -69,9 +70,11 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     cuda_avail = torch.cuda.is_available()
     print(" cuda ?", cuda_avail)
     if not(only_one_sp):
-        name_file = "train_on_"+name_corpus_concat+"test_on_"+test_on+"_idx_"+str(select_arti)+"_loss_"+str(loss_train)+"_typefilter_"+str(filter_type)
+        name_file = "train_on_"+name_corpus_concat+"test_on_"+test_on+"_idx_"+str(select_arti)\
+                    +"_loss_"+str(loss_train)+"_typefilter_"+str(filter_type)+"_bn_"+str(batch_norma)
     else :
-        name_file = "train_on_" +train_on[0] + "_test_on_" + test_on + "_idx_" + str(select_arti)+"_loss_"+str(loss_train)+"_typefilter_"+str(filter_type)
+        name_file = "train_on_" +train_on[0] + "_test_on_" + test_on + "_idx_" + str(select_arti)+\
+                    "_loss_"+str(loss_train)+"_typefilter_"+str(filter_type)+"_bn_"+str(batch_norma)
   #  logger = Logger('./log_' + name_file)
     logger = Logger('./logs')
 
@@ -84,11 +87,9 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
 
     early_stopping = EarlyStopping(name_file,patience=patience, verbose=True)
 
-    # model = my_bilstm(hidden_dim=hidden_dim,input_dim=input_dim,name_file =name_file, output_dim=output_dim,
-   #                   batch_size=batch_size,data_filtered=data_filtered,cuda_avail = cuda_avail,modele_filtered=modele_filtered)
     model = my_ac2art_modele(hidden_dim=hidden_dim, input_dim=input_dim, name_file=name_file, output_dim=output_dim,
                       batch_size=batch_size, cuda_avail=cuda_avail,
-                      modele_filtered=filter_type)
+                      modele_filtered=filter_type,batch_norma=batch_norma)
     model = model.double()
     file_weights = os.path.join("saved_models", name_file +".txt")
 
@@ -96,7 +97,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
         cuda2 = torch.device('cuda:1')
         model = model.cuda(device=cuda2)
 
-    load_old_model = False
+    load_old_model = True
     if load_old_model:
      if os.path.exists(file_weights):
         if not cuda_avail:
@@ -383,9 +384,8 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
         row_pearson  =[name_file]+pearson_per_arti_mean.tolist() + [model.epoch_ref]
         writer.writerow(row_rmse)
         writer.writerow(row_pearson)
-    plot_filtre_chaque_epochs = True
-    req_grad = model.lowpass.weight.data.requires_grad
-#    print("req grad? ,",req_grad)
+    plot_filtre_chaque_epochs = False
+
     if plot_filtre_chaque_epochs:
         weight_apres = model.lowpass.weight.data[0, 0, :]
         print("GAIN",sum(weight_apres.cpu()))
@@ -429,8 +429,10 @@ if __name__=='__main__':
 
     parser.add_argument('corpus_to_train_on',  type=str,
                         help='ssi dans la retropro on ne considere que les arti bons')
-    parser.add_argument('only_one_sp', type=bool,
-                        help='ssi dans la retropro on ne considere que les arti bons')
+   # parser.add_argument('only_one_sp', type=bool,
+   #                     help='ssi dans la retropro on ne considere que les arti bons')
+    parser.add_argument('batchnorma', type=bool,
+                         help='do batch norma')
 
     parser.add_argument('filter_type', type=int,
                         help='0 pas de lissage, 1 lissage en dur, 2 lissage variable crée avec pytorch, 3 lissage variable cree avec en dur')
@@ -445,10 +447,12 @@ if __name__=='__main__':
  #   to_plot = sys.argv[6].lower()=="true"
     select_arti = sys.argv[5].lower()=="true"
     corpus_to_train_on = str(sys.argv[6])
-    only_one_sp = sys.argv[7].lower()=="true"
+   # only_one_sp = sys.argv[7].lower()=="true"
+
+    batch_norma = sys.argv[7].lower()=="true"
 
     filter_type = int(sys.argv[8]) # 0 pas de lissage, 1 lissage en dur, 2 lissage variable crée avec pytorch, 3 lissage variable cree avec en dur
 
     train_model(test_on = test_on,n_epochs=n_epochs,loss_train = loss_train,patience=patience,
-               select_arti=select_arti,corpus_to_train_on = corpus_to_train_on,
-                only_one_sp = only_one_sp,filter_type=  filter_type)
+               select_arti=select_arti,corpus_to_train_on = corpus_to_train_on,batch_norma = batch_norma
+             ,filter_type=  filter_type)

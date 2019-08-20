@@ -19,7 +19,7 @@ from Apprentissage import utils
 
 class my_ac2art_modele(torch.nn.Module):
     def __init__(self, hidden_dim, input_dim, output_dim, batch_size,name_file="", sampling_rate=100,
-                 window=5, cutoff=10,cuda_avail =False,modele_filtered=False):
+                 window=5, cutoff=10,cuda_avail =False,modele_filtered=False,batch_norma=False):
         root_folder = os.path.dirname(os.getcwd())
         super(my_ac2art_modele, self).__init__()
         self.input_dim = input_dim
@@ -41,6 +41,13 @@ class my_ac2art_modele(torch.nn.Module):
         self.readout_layer = torch.nn.Linear(hidden_dim *2 , output_dim)
         self.batch_size = batch_size
         self.sigmoid = torch.nn.Sigmoid()
+    #    if modele_filtered==3:
+     #       self.first_layer.weight.data.requires_grad=False
+      #      self.second_layer.weight.data.requires_grad=False
+       #     for param in self.lstm_layer.parameters():
+        #        param.requires_grad = False
+         #   for param in self.lstm_layer_2.parameters():
+          #      param.requires_grad = False
 
         self.modele_filtered=modele_filtered
         self.softmax = torch.nn.Softmax(dim=output_dim)
@@ -60,7 +67,9 @@ class my_ac2art_modele(torch.nn.Module):
         if self.cuda_avail:
             self.cuda2 = torch.device('cuda:1')
         self.epoch_ref = 0
-        self.batch_norma = False #tester par la suite si améliore la perf
+        self.batch_norma = batch_norma# False #tester par la suite si améliore la perf
+
+
 
 
     def prepare_batch(self, x, y):
@@ -163,8 +172,11 @@ class my_ac2art_modele(torch.nn.Module):
             weight_init = get_filter_weights()
         weight_init = weight_init.view((1, 1, -1))
         lowpass = torch.nn.Conv1d(C_in,self.output_dim, window_size, stride=1, padding=padding, bias=False)
-        if self.modele_filtered in [2,3]:
+        if self.modele_filtered == 2:
             lowpass.weight = torch.nn.Parameter(weight_init,requires_grad= True)
+        elif self.modele_filtered == 3:
+            lowpass.weight = torch.nn.Parameter(weight_init)
+
         else : #0 balek ou 1 en dur
             lowpass.weight = torch.nn.Parameter(weight_init,requires_grad = False)
         for p in lowpass.parameters():
@@ -202,9 +214,7 @@ class my_ac2art_modele(torch.nn.Module):
         idx_to_cons = [k for k in range(len(to_cons)) if to_cons[k]]
         for j in idx_to_cons:
             plt.figure()
-            #print("10 first :",y_pred[0:10,j])
-          #  y_pred_adjusted = (y_pred-np.mean(y_pred,axis=0)+np.mean(y_pred,axis=0))/np.std(y_pred,axis=0)*np.std(y,axis=0)
-            plt.plot(y_pred[:, j])
+            plt.plot(y_pred[:, j],alpha=0.6)
             plt.plot(y[:, j])
             if len(y_pred_smooth)>0:
                 plt.plot(y_pred_smooth[:,j])
@@ -216,19 +226,16 @@ class my_ac2art_modele(torch.nn.Module):
             plt.close('all')
 
 
-
-    def evaluate_on_test(self,X_test,Y_test, std_speaker = 1,to_plot=False,to_consider=None):
+    def evaluate_on_test(self,X_test,Y_test, std_speaker ,to_plot=False,to_consider=None):
         """
         :param X_test:  list of all the input of the test set
         :param Y_test:  list of all the target of the test set
-        :param to_plot:
-        :param suffix:
-        :return: print the mean pearson correlation between real and predicted trajectories per articulators.
-        Also print the overall mean among the correct articulators
+        :param std_speaker : list of the std of each articulator, useful to calculate the RMSE of the predicction
+        :param to_plot: weather or not we want to save some predicted smoothed and not and true trajectory
+        :param to_consider: list of 0/1 for the test speaker , 1 if the articulator is ok for the test speaker
+        :return: print and return the pearson correlation and RMSE between real and predicted trajectories per articulators.
         """
         idx_to_ignore = [i for i in range(len(to_consider)) if not(to_consider[i])]
-        indices_to_plot=[]
-        output_dim= sum(to_consider)
         all_diff = np.zeros((1, self.output_dim))
         all_pearson = np.zeros((1, self.output_dim))
         if to_plot :
@@ -241,29 +248,22 @@ class my_ac2art_modele(torch.nn.Module):
                 if self.cuda_avail:
                     x_torch = x_torch.to(device=self.cuda2)
                # with torch.no_grad():
-                y_pred_torch = self(x_torch,False).double() #sortie y_pred (1,L,13)
-                y_pred_smooth   = self(x_torch,True).double()
+                y_pred_passmooth = self(x_torch,False).double() #sortie y_pred (1,L,13)
+                y_pred   = self(x_torch,True).double()
                 if self.cuda_avail:
-                    y_pred_torch = y_pred_torch.cpu()
-                    y_pred_smooth = y_pred_smooth.cpu()
+                    y_pred_passmooth = y_pred_passmooth.cpu()
+                    y_pred = y_pred.cpu()
 
-                y_pred = y_pred_torch.detach().numpy().reshape((L, self.output_dim))  # y_pred (L,13)
-                y_pred_smooth = y_pred_smooth.detach().numpy().reshape((L, self.output_dim))  # y_pred (L,13)
+                y_pred_passmooth = y_pred_passmooth.detach().numpy().reshape((L, self.output_dim))  # y_pred (L,13)
+                y_pred= y_pred.detach().numpy().reshape((L, self.output_dim))  # y_pred (L,13)
 
                 if i in indices_to_plot:
-                    self.plot_results(y, y_pred, y_pred_smooth,to_consider)
-               #  y_pred = y_pred[:,idx_to_consider]
-               # y = y [:,idx_to_consider]
-               # y_pred_smooth = y_pred_smooth[:,idx_to_consider]
+                    self.plot_results(y, y_pred_passmooth, y_pred,to_consider)
 
-                y_pred = y_pred_smooth
-          #      if self.modele_filtered != 0:
-           #         y = y_pred_smooth
                 rmse = np.sqrt(np.mean(np.square(y - y_pred), axis=0))  # calcule du rmse à la main
                 rmse = np.reshape(rmse, (1, self.output_dim))  # dénormalisation et taille (1,13)
                 rmse = rmse*std_speaker #unormalize
                 all_diff = np.concatenate((all_diff, rmse))
-
                 pearson = [0]*self.output_dim
                 for k in range(self.output_dim):
                     pearson[k]= np.corrcoef(y[:,k].T,y_pred[:,k].T)[0,1]
@@ -283,7 +283,6 @@ class my_ac2art_modele(torch.nn.Module):
         print("pearson final : ", np.mean(pearson_per_arti_mean[rmse_per_arti_mean!=0]))
         print("pearson mean per arti : \n", pearson_per_arti_mean)
         return rmse_per_arti_mean,pearson_per_arti_mean
-      #  print("pearson std per arti : \n", pearson_per_arti_std)
 
 
 
