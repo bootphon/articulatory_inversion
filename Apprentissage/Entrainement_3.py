@@ -128,9 +128,12 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
         # deno zero veut dire ema constant à 0 on remplace par des 1
         minim = torch.tensor(0.01,dtype=torch.float64)
         if cuda_avail:
-            minim = minim.to(device=cuda)
-            deno = deno.to(device=cuda)
-            nume = nume.to(device=cuda)
+            minim = minim.cuda()
+            deno = deno.cuda()
+            nume = nume.cuda()
+           # minim = minim.to(device=cuda)
+           # deno = deno.to(device=cuda)
+          #  nume = nume.to(device=cuda)
         deno = torch.max(deno,minim)
         my_loss = torch.div(nume,deno)
         my_loss = torch.sum(my_loss) #pearson doit etre le plus grand possible
