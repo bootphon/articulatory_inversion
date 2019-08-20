@@ -35,7 +35,7 @@ def cross_val_for_alpha():
     batch_norma = False
     for sp in speakers_cross_val:
         for alpha in [0,20,40,60,80,100] :
-            loss_train = "both_"+alpha
+            loss_train = "both_"+str(alpha)
             train_model(test_on=sp, n_epochs=n_epochs, loss_train=loss_train, patience=patience,
                         select_arti=select_arti, corpus_to_train_on=corpus_to_train_on,
                         batch_norma=batch_norma, filter_type=filter_type)
