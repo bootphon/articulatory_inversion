@@ -93,7 +93,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     if cuda_avail:
         model = model.cuda()
        # cuda = torch.device('cuda')
-      
+
     load_old_model = False
     if load_old_model:
      if os.path.exists(file_weights):
