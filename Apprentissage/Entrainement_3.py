@@ -91,8 +91,8 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     file_weights = os.path.join("saved_models", name_file +".txt")
 
     if cuda_avail:
-        cuda = torch.device('cuda')
-        model = model.cuda(device=cuda)
+       # cuda = torch.device('cuda')
+        model = model.cuda()
 
     load_old_model = False
     if load_old_model:
@@ -101,7 +101,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
             loaded_state = torch.load(file_weights, map_location=torch.device('cpu'))
 
         else:
-            loaded_state = torch.load(file_weights, map_location=cuda)
+            loaded_state = torch.load(file_weights, map_location="cuda")
         model_dict = model.state_dict()
         loaded_state = {k: v for k, v in loaded_state.items() if
                         k in model_dict}  # only layers param that are in our current model
@@ -229,8 +229,8 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
                 x, y = model.prepare_batch(x, y)
                 y_pred = model(x).double()
                 if cuda_avail:
-                    # y_pred = y_pred.cuda()
-                    y_pred = y_pred.to(device=cuda)
+                    y_pred = y_pred.cuda()
+                  #  y_pred = y_pred.to(device=cuda)
                 y = y.double()
                 optimizer.zero_grad()
 
@@ -271,7 +271,8 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
                     y_pred = model(x).double()
                     torch.cuda.empty_cache()
                     if cuda_avail:
-                        y_pred = y_pred.to(device=cuda)
+                        y_pred = y_pred.cuda()
+                      #  y_pred = y_pred.to(device=cuda)
                     y = y.double()  # (Batchsize, maxL, 18)
 
                     if select_arti:
