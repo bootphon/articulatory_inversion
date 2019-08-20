@@ -90,9 +90,9 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     model = model.double()
     file_weights = os.path.join("saved_models", name_file +".txt")
 
-    if cuda_avail:
+   # if cuda_avail:
        # cuda = torch.device('cuda')
-        model = model.cuda()
+       # model = model.cuda()
 
     load_old_model = False
     if load_old_model:
