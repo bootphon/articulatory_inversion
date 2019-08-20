@@ -64,8 +64,8 @@ class my_ac2art_modele(torch.nn.Module):
         self.lowpass = None
         self.init_filter_layer()
         self.cuda_avail = cuda_avail
-        if self.cuda_avail:
-            self.cuda = torch.device('cuda')
+      #  if self.cuda_avail:
+       #     self.cuda = torch.device('cuda')
         self.epoch_ref = 0
         self.batch_norma = batch_norma# False #tester par la suite si améliore la perf
 
