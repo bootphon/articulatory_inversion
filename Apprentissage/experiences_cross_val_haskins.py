@@ -67,8 +67,8 @@ if __name__=='__main__':
                 procs.append(proc)
                 proc.start()
 
-        for proc in procs:
-            proc.join()
+            for proc in procs:
+                proc.join()
 
     elif experience == "alpha":
         cross_val_for_alpha_has()
