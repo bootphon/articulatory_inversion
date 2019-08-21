@@ -74,6 +74,16 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
         name_file = "train_on_" +train_on[0] + "_test_on_" + test_on + "_idx_" + str(select_arti)+\
                     "_loss_"+str(loss_train)+"_typefilter_"+str(filter_type)+"_bn_"+str(batch_norma)
   #  logger = Logger('./log_' + name_file)
+
+    previous_models = os.listdir("saved_models")
+    previous_models_2 = [x[:len(name_file)] for x in previous_models if x.endswith(".txt")]
+    n_previous_same = previous_models_2.count(name_file)
+    if n_previous_same > 0
+        print("this models has alread be trained {} times".format(n_previous_same))
+    else :
+        print("first time for this model")
+    name_file = name_file + "_" + str(n_previous_same)
+    print("name file",name_file)
     logger = Logger('./logs')
 
     hidden_dim = 300
@@ -100,27 +110,16 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
      if os.path.exists(file_weights):
         if not cuda_avail:
             loaded_state = torch.load(file_weights)#, map_location=torch.device('cpu'))
-
         else:
             loaded_state = torch.load(file_weights)#, map_location="cuda")
-
         model.load_state_dict(loaded_state)
-        #torch.save(model.state_dict(), os.path.join("saved_models", name_file + ".txt"))
         model_dict = model.state_dict()
         loaded_state = {k: v for k, v in loaded_state.items() if
                         k in model_dict}  # only layers param that are in our current model
-        # print("before ", len(loaded_state), loaded_state.keys())
         loaded_state = {k: v for k, v in loaded_state.items() if
                         loaded_state[k].shape == model_dict[k].shape}  # only if layers have correct shapes
-        # print("after", len(loaded_state), loaded_state.keys())
         model_dict.update(loaded_state)
         model.load_state_dict(model_dict)
-     else :
-        print("premiere fois que ce modèle est crée")
-      #  file_weights = os.path.join("saved_models","modele_preentrainement.txt")
-
-
-  #  model.init_filter_layer()
 
 
     def criterion_pearson(my_y,my_y_pred): # (L,K,13)
@@ -354,6 +353,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
         total_epoch =model.epoch_ref
         model.load_state_dict(torch.load(os.path.join("saved_models",name_file+'.pt')))
         torch.save(model.state_dict(), os.path.join( "saved_models",name_file+".txt"))
+
 
     random.shuffle(files_for_test)
     x, y = load_data(files_for_test)
