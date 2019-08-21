@@ -11,7 +11,7 @@ from multiprocessing import Process
 import argparse
 corpus = "[Haskins]"
 speakers = get_speakers_per_corpus("Haskins")
-def cross_val_for_type_filter_has(filter_type): #0 1 ou 2
+def cross_val_for_type_filter_has(filt_type): #0 1 ou 2
     patience = 3
     n_epochs = 50
     select_arti = True
@@ -22,7 +22,7 @@ def cross_val_for_type_filter_has(filter_type): #0 1 ou 2
         #change filter
         train_model(test_on=sp, n_epochs=n_epochs, loss_train=loss_train, patience=patience,
                     select_arti=select_arti, corpus_to_train_on=corpus_to_train_on,
-                    batch_norma=batch_norma, filter_type=filter_type)
+                    batch_norma=batch_norma, filter_type=filt_type)
 
 
 def cross_val_for_alpha_has():
