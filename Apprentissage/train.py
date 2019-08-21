@@ -88,7 +88,8 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
                       batch_size=batch_size, cuda_avail=cuda_avail,
                       modele_filtered=filter_type,batch_norma=batch_norma)
     model = model.double()
-    file_weights = os.path.join("saved_models", name_file +".txt")
+   # file_weights = os.path.join("saved_models", name_file +".txt")
+    file_weights = os.path.join("saved_models", name_file +".pt")
 
     if cuda_avail:
         model = model.cuda()
@@ -101,10 +102,9 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
             loaded_state = torch.load(file_weights, map_location=torch.device('cpu'))
 
         else:
-         #   loaded_state = torch.load(file_weights, map_location="cuda")
-         loaded_state = torch.load(os.path.join("saved_models", name_file + '.pt'), map_location="cuda")
-         model.load_state_dict(torch.load(loaded_state))
-         #torch.save(model.state_dict(), os.path.join("saved_models", name_file + ".txt"))
+            loaded_state = torch.load(file_weights, map_location="cuda")
+        model.load_state_dict(torch.load(loaded_state))
+        #torch.save(model.state_dict(), os.path.join("saved_models", name_file + ".txt"))
         model_dict = model.state_dict()
         loaded_state = {k: v for k, v in loaded_state.items() if
                         k in model_dict}  # only layers param that are in our current model
