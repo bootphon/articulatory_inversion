@@ -4,7 +4,7 @@ parentdir = os.path.dirname(currentdir)
 sys.path.insert(0,parentdir)
 
 
-from Apprentissage.Entrainement_3 import train_model
+from Apprentissage.train import train_model
 from Traitement.fonctions_utiles import get_speakers_per_corpus
 import sys
 import argparse

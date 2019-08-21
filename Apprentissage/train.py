@@ -38,7 +38,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     train_on = []
     delta_test=  1
     lr = 0.001
-    to_plot = True
+    to_plot = False
     only_one_sp=False
     corpus_to_train_on = corpus_to_train_on[1:-1].split(",")
     for corpus in corpus_to_train_on :
