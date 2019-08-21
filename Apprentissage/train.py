@@ -102,9 +102,9 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
             loaded_state = torch.load(file_weights)#, map_location=torch.device('cpu'))
 
         else:
-
             loaded_state = torch.load(file_weights)#, map_location="cuda")
-        model.load_state_dict(torch.load(loaded_state))
+
+        model.load_state_dict(loaded_state)
         #torch.save(model.state_dict(), os.path.join("saved_models", name_file + ".txt"))
         model_dict = model.state_dict()
         loaded_state = {k: v for k, v in loaded_state.items() if
