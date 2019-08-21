@@ -78,7 +78,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     previous_models = os.listdir("saved_models")
     previous_models_2 = [x[:len(name_file)] for x in previous_models if x.endswith(".txt")]
     n_previous_same = previous_models_2.count(name_file)
-    if n_previous_same > 0
+    if n_previous_same > 0:
         print("this models has alread be trained {} times".format(n_previous_same))
     else :
         print("first time for this model")
@@ -108,6 +108,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     load_old_model = True
     if load_old_model:
      if os.path.exists(file_weights):
+        print("modèle précédent pas fini")
         if not cuda_avail:
             loaded_state = torch.load(file_weights)#, map_location=torch.device('cpu'))
         else:
