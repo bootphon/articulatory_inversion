@@ -17,9 +17,10 @@ def cross_val_for_type_filter():
     corpus_to_train_on = str(corpus)
     batch_norma = False
     loss_train = "both_90"
+    speakers_cross_val = ["msak0", "M1", "F01", "M01", "MNGU0"]
     for sp in speakers_cross_val:
         #change filter
-        for filter_type in [0,1,2]:
+        for filter_type in [0,2]:
             train_model(test_on=sp, n_epochs=n_epochs, loss_train=loss_train, patience=patience,
                         select_arti=select_arti, corpus_to_train_on=corpus_to_train_on,
                         batch_norma=batch_norma, filter_type=filter_type)
