@@ -3,6 +3,16 @@ currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfram
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0,parentdir)
 
+ncpu="10"
+import os
+os.environ["OMP_NUM_THREADS"] = ncpu # export OMP_NUM_THREADS=4
+os.environ["OPENBLAS_NUM_THREADS"] = ncpu # export OPENBLAS_NUM_THREADS=4
+os.environ["MKL_NUM_THREADS"] = ncpu # export MKL_NUM_THREADS=4
+os.environ["VECLIB_MAXIMUM_THREADS"] = ncpu # export VECLIB_MAXIMUM_THREADS=4
+os.environ["NUMEXPR_NUM_THREADS"] = ncpu # export NUMEXPR_NUM_THREADS=4
+import numpy as np
+
+
 from Apprentissage.class_network import my_bilstm
 from Apprentissage.modele import my_ac2art_modele
 import sys
@@ -16,7 +26,6 @@ from Apprentissage.pytorchtools import EarlyStopping
 import time
 import random
 from os.path import dirname
-import numpy as np
 from scipy import signal
 import matplotlib.pyplot as plt
 from Traitement.fonctions_utiles import get_speakers_per_corpus
