@@ -63,13 +63,13 @@ if __name__=='__main__':
         procs = []
         for j in range(3):
             for filter_type in [0,1,2]:
-                proc = Process(target=cross_val_for_type_filter_has,args = (filter_type))
+                proc = Process(target=cross_val_for_type_filter_has,args = (filter_type,))
                 procs.append(proc)
                 proc.start()
 
         for proc in procs:
             proc.join()
-            
+
     elif experience == "alpha":
         cross_val_for_alpha_has()
     elif experience == "bn":
