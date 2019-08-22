@@ -57,59 +57,42 @@ def cross_val_for_bn_has(speaker):
 if __name__=='__main__':
     experience = sys.argv[1]
     if experience == "filter":
-        procs = []
-        for sp in speakers[:4]:
-            proc = Process(target=cross_val_for_type_filter_has,args = (sp,))
-            procs.append(proc)
-            proc.start()
+        for sp in speakers:
+            for k in range(3):
+                cross_val_for_type_filter_has(sp)
+     #   for sp in speakers[4:]:
+       #     proc = Process(target=cross_val_for_type_filter_has, args=(sp,))
+        #    procs.append(proc)
+         #   proc.start()
 
-        for proc in procs:
-            proc.join()
-        procs = []
-
-        for sp in speakers[4:]:
-            proc = Process(target=cross_val_for_type_filter_has, args=(sp,))
-            procs.append(proc)
-            proc.start()
-
-        for proc in procs:
-            proc.join()
+    #    for proc in procs:
+     #       proc.join()
 
     elif experience == "alpha":
         procs = []
-        for sp in speakers[:4]:
-            proc = Process(target=cross_val_for_alpha_has, args=(sp,))
-            procs.append(proc)
-            proc.start()
+        for k in range(3):
+            for sp in speakers:
+                cross_val_for_bn_has(sp)
+            #  proc = Process(target=cross_val_for_alpha_has, args=(sp,))
+            # procs.append(proc)
+            # proc.start()
 
-        for proc in procs:
-            proc.join()
-        procs = []
-
-        for sp in speakers[4:]:
-            proc = Process(target=cross_val_for_alpha_has, args=(sp,))
-            procs.append(proc)
-            proc.start()
-
-        for proc in procs:
-            proc.join()
+  #      for proc in procs:
+   #         proc.join()
 
 
     elif experience == "bn":
-        procs = []
-        for sp in speakers[4:]:
-            print("sp",sp)
-            proc = Process(target=cross_val_for_bn_has, args=(sp,))
-            procs.append(proc)
-            proc.start()
+      for k in range(3):
+          for sp in speakers:
+              cross_val_for_bn_has(sp)
 
-        for proc in procs:
-            proc.join()
-        procs = []
-        for sp in speakers[:4]:
-            proc = Process(target=cross_val_for_bn_has, args=(sp,))
-            procs.append(proc)
-            proc.start()
+      #  for proc in procs:
+     #       proc.join()
+    #    procs = []
+    #    for sp in speakers[:4]:
+     #       proc = Process(target=cross_val_for_bn_has, args=(sp,))
+      #      procs.append(proc)
+       #     proc.start()
 
-        for proc in procs:
-            proc.join()
+      #  for proc in procs:
+       #     proc.join()
