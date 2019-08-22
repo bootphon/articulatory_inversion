@@ -82,7 +82,7 @@ if __name__=='__main__':
         procs = []
         for j in range(3):
             for sp in speakers:
-                proc = Process(target=cross_val_for_bn_has(), args=(sp,))
+                proc = Process(target=cross_val_for_bn_has, args=(sp,))
                 procs.append(proc)
                 proc.start()
 
