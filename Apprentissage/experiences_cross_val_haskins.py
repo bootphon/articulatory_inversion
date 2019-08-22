@@ -11,21 +11,20 @@ from multiprocessing import Process
 import argparse
 corpus = "[Haskins]"
 speakers = get_speakers_per_corpus("Haskins")
-def cross_val_for_type_filter_has(filt_type): #0 1 ou 2
+def cross_val_for_type_filter_has(speaker): #0 1 ou 2
     patience = 3
     n_epochs = 50
     select_arti = True
     corpus_to_train_on = str(corpus)
     batch_norma = False
     loss_train = "both_90"
-    for sp in speakers:
-        #change filter
-        train_model(test_on=sp, n_epochs=n_epochs, loss_train=loss_train, patience=patience,
+    for filter_type in [1,2]:
+        train_model(test_on=speaker, n_epochs=n_epochs, loss_train=loss_train, patience=patience,
                     select_arti=select_arti, corpus_to_train_on=corpus_to_train_on,
-                    batch_norma=batch_norma, filter_type=filt_type)
+                    batch_norma=batch_norma, filter_type=filter_type)
 
 
-def cross_val_for_alpha_has():
+def cross_val_for_alpha_has(speaker):
     patience = 3
     n_epochs = 50
     select_arti = True
@@ -33,37 +32,35 @@ def cross_val_for_alpha_has():
     only_one_sp = False
     filter_type = 1
     batch_norma = False
-    for sp in speakers:
-        for alpha in [0,20,40,60,80,100] :
-            loss_train = "both_"+str(alpha)
-            train_model(test_on=sp, n_epochs=n_epochs, loss_train=loss_train, patience=patience,
-                        select_arti=select_arti, corpus_to_train_on=corpus_to_train_on,
-                        batch_norma=batch_norma, filter_type=filter_type)
+    for alpha in [0,20,40,60,80,100] :
+        loss_train = "both_" + str(alpha)
+        train_model(test_on=speaker, n_epochs=n_epochs, loss_train=loss_train, patience=patience,
+                    select_arti=select_arti, corpus_to_train_on=corpus_to_train_on,
+                    batch_norma=batch_norma, filter_type=filter_type)
 
 
-def cross_val_for_bn_has():
+def cross_val_for_bn_has(speaker):
     patience = 3
     n_epochs = 50
     select_arti = True
     corpus_to_train_on = corpus
     filter_type = 1
     loss_train ="both_90"
-    for sp in speakers:
-        train_model(test_on=sp, n_epochs=n_epochs, loss_train=loss_train, patience=patience,
-                        select_arti=select_arti, corpus_to_train_on=corpus_to_train_on,
-                        batch_norma=False, filter_type=filter_type)
+    train_model(test_on=speaker, n_epochs=n_epochs, loss_train=loss_train, patience=patience,
+                    select_arti=select_arti, corpus_to_train_on=corpus_to_train_on,
+                    batch_norma=False, filter_type=filter_type)
 
-        train_model(test_on=sp, n_epochs=n_epochs, loss_train=loss_train, patience=patience,
-                        select_arti=select_arti, corpus_to_train_on=corpus_to_train_on,
-                        batch_norma=True, filter_type=filter_type)
+    train_model(test_on=speaker, n_epochs=n_epochs, loss_train=loss_train, patience=patience,
+                    select_arti=select_arti, corpus_to_train_on=corpus_to_train_on,
+                    batch_norma=True, filter_type=filter_type)
 
 if __name__=='__main__':
     experience = sys.argv[1]
     if experience == "filter":
         procs = []
         for j in range(3):
-            for filter_type in [0,1,2]:
-                proc = Process(target=cross_val_for_type_filter_has,args = (filter_type,))
+            for sp in speakers:
+                proc = Process(target=cross_val_for_type_filter_has,args = (sp,))
                 procs.append(proc)
                 proc.start()
 
@@ -71,6 +68,23 @@ if __name__=='__main__':
                 proc.join()
 
     elif experience == "alpha":
-        cross_val_for_alpha_has()
+        procs = []
+        for j in range(3):
+            for sp in speakers:
+                proc = Process(target=cross_val_for_alpha_has, args=(sp,))
+                procs.append(proc)
+                proc.start()
+
+            for proc in procs:
+                proc.join()
+
     elif experience == "bn":
-        cross_val_for_bn_has()
+        procs = []
+        for j in range(3):
+            for sp in speakers:
+                proc = Process(target=cross_val_for_bn_has(), args=(sp,))
+                procs.append(proc)
+                proc.start()
+
+            for proc in procs:
+                proc.join()
