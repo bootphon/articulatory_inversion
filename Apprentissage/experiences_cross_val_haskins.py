@@ -105,11 +105,11 @@ if __name__=='__main__':
 
         for proc in procs:
             proc.join()
-        procs = []
-        for sp in speakers[:4]:
-            proc = Process(target=cross_val_for_bn_has, args=(sp,))
-            procs.append(proc)
-            proc.start()
+     #   procs = []
+      #  for sp in speakers[:4]:
+       #     proc = Process(target=cross_val_for_bn_has, args=(sp,))
+        #    procs.append(proc)
+         #   proc.start()
 
-        for proc in procs:
-            proc.join()
+    #    for proc in procs:
+     #       proc.join()
