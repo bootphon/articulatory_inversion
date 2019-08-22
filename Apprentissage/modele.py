@@ -69,9 +69,6 @@ class my_ac2art_modele(torch.nn.Module):
         self.epoch_ref = 0
         self.batch_norma = batch_norma# False #tester par la suite si améliore la perf
 
-
-
-
     def prepare_batch(self, x, y):
         """
         :param x: liste de B données accoustiques de longueurs variables  (B souvent 10 batchsize sauf pour l'éval)
@@ -138,19 +135,12 @@ class my_ac2art_modele(torch.nn.Module):
             w = 0.5 * (1 - torch.cos(beta))  # Compute hanning window.
             h = torch.mul(h, w)  # Multiply sinc filter with window.
             h = torch.div(h, torch.sum(h))
-           # print(h.requires_grad,cutoff.requires_grad,beta.requires_grad,alpha.requires_grad)
-           # h.require_grads = True
-          #  self.cutoff = Variable(cutoff, requires_grad=True)
-         #   self.cutoff.require_grads = True
-         #   self.cutoff.retain_grad()
-            #  h = torch.cat([h]*self.output_dim,0)
             return h
 
         def get_filter_weights_en_dur():
             fc = self.cutoff/self.sampling_rate
             if fc > 0.5:
                 raise Exception("La frequence de coupure doit etre au moins deux fois la frequence dechantillonnage")
-
             b = 0.08  # Transition band, as a fraction of the sampling rate (in (0, 0.5)).
             N = int(np.ceil((4 / b)))  # le window
             if not N % 2:
@@ -237,9 +227,8 @@ class my_ac2art_modele(torch.nn.Module):
         idx_to_ignore = [i for i in range(len(to_consider)) if not(to_consider[i])]
         all_diff = np.zeros((1, self.output_dim))
         all_pearson = np.zeros((1, self.output_dim))
-        if to_plot :
-            print("you chose to plot")
-            indices_to_plot = np.random.choice(len(X_test), 2, replace=False)
+
+        indices_to_plot = np.random.choice(len(X_test), 2, replace=False)
         for i in range(len(X_test)):
                 L = len(X_test[i])
                 x_torch = torch.from_numpy(X_test[i]).view(1,L,self.input_dim)  #x (1,L,429)
@@ -256,9 +245,9 @@ class my_ac2art_modele(torch.nn.Module):
 
                 y_pred_passmooth = y_pred_passmooth.detach().numpy().reshape((L, self.output_dim))  # y_pred (L,13)
                 y_pred= y_pred.detach().numpy().reshape((L, self.output_dim))  # y_pred (L,13)
-
-                if i in indices_to_plot:
-                    self.plot_results(y, y_pred_passmooth, y_pred,to_consider)
+                if to_plot:
+                   if i in indices_to_plot:
+                        self.plot_results(y, y_pred_passmooth, y_pred,to_consider)
 
                 rmse = np.sqrt(np.mean(np.square(y - y_pred), axis=0))  # calcule du rmse à la main
                 rmse = np.reshape(rmse, (1, self.output_dim))  # dénormalisation et taille (1,13)
