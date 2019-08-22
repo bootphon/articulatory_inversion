@@ -97,7 +97,7 @@ if __name__=='__main__':
 
     elif experience == "bn":
         procs = []
-        for sp in speakers[4:]:
+        for sp in speakers:
             print("sp",sp)
             proc = Process(target=cross_val_for_bn_has, args=(sp,))
             procs.append(proc)
