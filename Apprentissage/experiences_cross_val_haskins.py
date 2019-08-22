@@ -58,8 +58,17 @@ if __name__=='__main__':
     experience = sys.argv[1]
     if experience == "filter":
         procs = []
-        for sp in speakers:
+        for sp in speakers[:4]:
             proc = Process(target=cross_val_for_type_filter_has,args = (sp,))
+            procs.append(proc)
+            proc.start()
+
+        for proc in procs:
+            proc.join()
+        procs = []
+
+        for sp in speakers[4:]:
+            proc = Process(target=cross_val_for_type_filter_has, args=(sp,))
             procs.append(proc)
             proc.start()
 
@@ -68,7 +77,16 @@ if __name__=='__main__':
 
     elif experience == "alpha":
         procs = []
-        for sp in speakers:
+        for sp in speakers[:4]:
+            proc = Process(target=cross_val_for_alpha_has, args=(sp,))
+            procs.append(proc)
+            proc.start()
+
+        for proc in procs:
+            proc.join()
+        procs = []
+
+        for sp in speakers[4:]:
             proc = Process(target=cross_val_for_alpha_has, args=(sp,))
             procs.append(proc)
             proc.start()
@@ -76,9 +94,18 @@ if __name__=='__main__':
         for proc in procs:
             proc.join()
 
+
     elif experience == "bn":
         procs = []
-        for sp in speakers:
+        for sp in speakers[4:]:
+            proc = Process(target=cross_val_for_bn_has, args=(sp,))
+            procs.append(proc)
+            proc.start()
+
+        for proc in procs:
+            proc.join()
+        procs = []
+        for sp in speakers[:4]:
             proc = Process(target=cross_val_for_bn_has, args=(sp,))
             procs.append(proc)
             proc.start()
