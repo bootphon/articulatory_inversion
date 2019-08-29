@@ -67,31 +67,17 @@ if __name__=='__main__':
         procs = []
         for j in range(3):
             for speaker in speakers_cross_val:
-                proc = Process(target=cross_val_for_type_filter,args = (speaker,))
-                procs.append(proc)
-                proc.start()
-
-            for proc in procs:
-                proc.join()
-
+                cross_val_for_type_filter(speaker)
+                
     elif experience == "alpha":
         procs = []
         for j in range(3):
             for speaker in speakers_cross_val:
-                proc = Process(target=cross_val_for_alpha, args=(speaker,))
-                procs.append(proc)
-                proc.start()
+                cross_val_for_alpha(speaker)
 
-            for proc in procs:
-                proc.join()
+
 
     elif experience == "bn":
-        procs = []
-        for j in range(3):
-            for speaker in speakers_cross_val:
-                proc = Process(target=cross_val_for_alpha, args=(speaker,))
-                procs.append(proc)
-                proc.start()
-
-            for proc in procs:
-                proc.join()
+      for k in range(3):
+          for sp in speakers_cross_val:
+              cross_val_for_alpha(sp)
