@@ -80,21 +80,18 @@ def train_model(test_on ,batch_norma,pretrain_model):
        # cuda = torch.device('cuda')
 
     load_old_model = True
-    if load_old_model:
-     if os.path.exists(file_weights):
-        print("modèle précédent pas fini")
-        if not cuda_avail:
-            loaded_state = torch.load(file_weights,map_location="cpu")#, map_location=torch.device('cpu'))
-        else:
-            loaded_state = torch.load(file_weights)#, map_location="cuda")
-        model.load_state_dict(loaded_state)
-        model_dict = model.state_dict()
-        loaded_state = {k: v for k, v in loaded_state.items() if
-                        k in model_dict}  # only layers param that are in our current model
-        loaded_state = {k: v for k, v in loaded_state.items() if
-                        loaded_state[k].shape == model_dict[k].shape}  # only if layers have correct shapes
-        model_dict.update(loaded_state)
-        model.load_state_dict(model_dict)
+    if not cuda_avail:
+        loaded_state = torch.load(file_weights,map_location="cpu")#, map_location=torch.device('cpu'))
+    else:
+        loaded_state = torch.load(file_weights)#, map_location="cuda")
+    model.load_state_dict(loaded_state)
+    model_dict = model.state_dict()
+    loaded_state = {k: v for k, v in loaded_state.items() if
+                    k in model_dict}  # only layers param that are in our current model
+    loaded_state = {k: v for k, v in loaded_state.items() if
+                    loaded_state[k].shape == model_dict[k].shape}  # only if layers have correct shapes
+    model_dict.update(loaded_state)
+    model.load_state_dict(model_dict)
 
 
     def criterion_pearson(my_y,my_y_pred): # (L,K,13)
