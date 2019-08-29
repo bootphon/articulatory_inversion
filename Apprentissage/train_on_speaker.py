@@ -275,6 +275,7 @@ def train_model(test_on ,batch_norma,pretrain_model):
         plt.xlabel("real frequency")
         plt.show()
 
+    return rmse_per_arti_mean, pearson_per_arti_mean
 
     #x, y = load_data(files_for_test,filtered=False)
    # print("DATA AND MODELE NOT FILTERED")
@@ -286,6 +287,16 @@ if __name__=='__main__':
     test_on =  sys.argv[1]
     batch_norma = sys.argv[2].lower() =="true"
     pretrain_model = str(sys.argv[3])
+    rmse_all,pearson_all = np.zeros((3,18)), np.zeros((3,18))
+    for k in range(3):
+        rmse_all[k, :], pearson_all[k, :] = train_model(test_on = test_on, batch_norma = batch_norma, pretrain_model = pretrain_model)
 
-    train_model(test_on = test_on, batch_norma = batch_norma, pretrain_model = pretrain_model)
+    rmse_moy = np.mean(rmse_all,axis=0)
+    rmse_std = np.std(rmse_all,axis=0)
 
+    pearson_moy = np.mean(pearson_all,axis=0)
+    pearson_std = np.std(pearson_all,axis=0)
+
+    print("final model result for model pretrained on  ",pretrain_model)
+    print("rmse : \n",rmse_moy,"\n",rmse_std)
+    print("pearson :\n ",pearson_moy,"\n",pearson_std)
