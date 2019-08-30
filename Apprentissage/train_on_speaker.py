@@ -49,7 +49,7 @@ def train_model(test_on ,loss_train,pretrain_model):
     name_corpus_concat = ""
     delta_test=  1
     lr = 0.001
-    to_plot = False
+    to_plot = True
 
     cuda_avail = torch.cuda.is_available()
     print(" cuda ?", cuda_avail)
@@ -57,7 +57,7 @@ def train_model(test_on ,loss_train,pretrain_model):
     name_file = "train_on_and_test_on" +test_on +"_loss_"+str(loss_train)+"_pertrained_on_"+pretrain_model
 
     previous_models = os.listdir("saved_models")
-    patience = 3
+    patience = 20
     hidden_dim = 300
     input_dim = 429
     batch_size = 10
