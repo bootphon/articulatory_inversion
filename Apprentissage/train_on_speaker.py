@@ -83,7 +83,7 @@ def train_model(test_on ,loss_train,pretrain_model):
         if not cuda_avail:
             loaded_state = torch.load(file_weights,map_location="cpu")#, map_location=torch.device('cpu'))
         else:
-            loaded_state = torch.load(file_weights)#, map_location="cuda")
+            loaded_state = torch.load(file_weights,map_location="cuda")#, map_location="cuda")
         model.load_state_dict(loaded_state)
         model_dict = model.state_dict()
         loaded_state = {k: v for k, v in loaded_state.items() if
