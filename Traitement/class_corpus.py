@@ -11,14 +11,11 @@ import scipy.signal
 from scipy import stats
 import matplotlib.pyplot as plt
 import scipy.interpolate
-from Traitement.add_dynamic_features import get_delta_features
 import librosa
 from scipy.fftpack import fft, ifft
 from Traitement.fonctions_utiles import low_pass_filter_weight
 import shutil
-#from Traitement.normalization import normalize_data
-#from Traitement.add_vocal_tract import add_vocal_tract
-#from Traitement.split_sentences import split_sentences
+
 from Traitement.create_filesets import get_fileset_names
 import glob
 import csv
@@ -178,6 +175,11 @@ class Speaker():
             self.std_mfcc = std_mfcc
 
     def add_vocal_tract(self,my_ema):
+        """
+        :param my_ema: trajectoires EMA (K points) disponibles
+        :return: tableau (18,K) en rajoutant les 4 vocal tract , mettant à 0 les trajectoires non disponibles,
+        et reorganise dans l'ordre les trajectoires.
+        """
         #   print("adding vocal tracts for speaker {}".format(speaker))
         def add_lip_aperture(ema):
             ind_1, ind_2 = [self.articulators.index("ul_y"), self.articulators.index("ll_y")]

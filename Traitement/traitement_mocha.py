@@ -29,7 +29,6 @@ import scipy.interpolate
 import librosa
 import shutil
 
-from Traitement.split_sentences import split_sentences
 from Traitement.fonctions_utiles import get_fileset_names, get_delta_features
 import glob
 import multiprocessing as mp
@@ -97,6 +96,8 @@ def traitement_general_mocha(N_max,on_speaker = None):
                 return ema_data
 
         def remove_silences(my_ema,my_mfcc,k):
+            # we remove silences on the mfcc and not on the wav
+            # to keep info that there was a silence before (thx to the context trames)
             marge=0
             if speaker in sp_with_trans:
                 path_annotation = os.path.join(path_files_brutes, wav_files[k] + '.lab')
@@ -128,7 +129,7 @@ def traitement_general_mocha(N_max,on_speaker = None):
             padding = np.zeros((window, my_mfcc.shape[1]))
             frames = np.concatenate([padding, my_mfcc, padding])
             full_window = 1 + 2 * window
-            my_mfcc = np.concatenate([frames[j:j + len(my_mfcc)] for j in range(full_window)], axis=1)
+            my_mfcc = np.concatenate([frames[j:j + len(my_mfcc)] for j in range(full_window)], axis=1) #add context
             return my_mfcc
 
         create_missing_dir()
@@ -140,11 +141,11 @@ def traitement_general_mocha(N_max,on_speaker = None):
         if N_max != 0:
             N = N_max
 
-        for i in range(N):
+        for i in range(N): # parcourt les phrases une à une
          #   if i+1%50 == 0:
           #      print("{} out of {}".format(i,N))
             ema = read_ema_file(i)
-            ema_VT = my_speaker_class.add_vocal_tract(ema)
+            ema_VT = my_speaker_class.add_vocal_tract(ema) #
             ema_VT_smooth = my_speaker_class.smooth_data(ema_VT) # filtrage pour meilleur calcul des norm_values
           #  ema_VT_smooth = ema_VT
             path_wav = os.path.join(path_files_brutes, wav_files[i] + '.wav')
@@ -164,6 +165,7 @@ def traitement_general_mocha(N_max,on_speaker = None):
             my_speaker_class.list_MFCC_frames.append(mfcc)
 
         my_speaker_class.calculate_norm_values()
+
         for i in range(N):
             ema_pas_smooth = np.load(os.path.join(root_path, "Donnees_pretraitees",  speaker, "ema", EMA_files[i]+".npy"))
             ema_VT_smooth = np.load(os.path.join(root_path, "Donnees_pretraitees",  speaker, "ema_final", EMA_files[i]+".npy"))

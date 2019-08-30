@@ -17,10 +17,7 @@ import matplotlib.pyplot as plt
 import scipy.interpolate
 from Traitement.add_dynamic_features import get_delta_features
 import librosa
-from Apprentissage.utils import low_pass_filter_weight
 import scipy.io as sio
-from Traitement.split_sentences import split_sentences
-import shutil
 import glob
 from Traitement.create_filesets import get_fileset_names
 from Traitement.fonctions_utiles import get_fileset_names, get_delta_features
