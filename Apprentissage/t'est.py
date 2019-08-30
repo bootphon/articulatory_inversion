@@ -57,7 +57,7 @@ def train_model(test_on ,loss_train,pretrain_model):
     name_file = "train_on_and_test_on" +test_on +"_loss_"+str(loss_train)+"_pertrained_on_"+pretrain_model
 
     previous_models = os.listdir("saved_models")
-    patience = 8
+    patience = 20
     hidden_dim = 300
     input_dim = 429
     batch_size = 10
