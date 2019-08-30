@@ -41,10 +41,9 @@ fileset_path = os.path.join(root_folder, "Donnees_pretraitees", "fileset")
 print(sys.argv)
 
 
-def train_model(test_on ,batch_norma,pretrain_model):
+def train_model(test_on ,loss_train,pretrain_model):
     n_epochs = 50
-    loss_train = "both_90"
-    patience= 3
+    batch_norma = False
     select_arti = True
     filter_type = 1
     name_corpus_concat = ""
@@ -55,10 +54,10 @@ def train_model(test_on ,batch_norma,pretrain_model):
     cuda_avail = torch.cuda.is_available()
     print(" cuda ?", cuda_avail)
 
-    name_file = "train_on_and_test_on" +test_on +"_bn_"+str(batch_norma)+"_pertrained_on_"+pretrain_model
+    name_file = "train_on_and_test_on" +test_on +"_loss_"+str(loss_train)+"_pertrained_on_"+pretrain_model
 
     previous_models = os.listdir("saved_models")
-
+    patience = 3
     hidden_dim = 300
     input_dim = 429
     batch_size = 10
@@ -282,11 +281,12 @@ def train_model(test_on ,batch_norma,pretrain_model):
 if __name__=='__main__':
 
     test_on =  sys.argv[1]
-    batch_norma = sys.argv[2].lower() =="true"
+    loss_train = sys.argv[2]
     pretrain_model = str(sys.argv[3])
     rmse_all,pearson_all = np.zeros((3,18)), np.zeros((3,18))
     for k in range(3):
-        rmse_all[k, :], pearson_all[k, :] = train_model(test_on = test_on, batch_norma = batch_norma, pretrain_model = pretrain_model)
+        rmse_all[k, :], pearson_all[k, :] = train_model(test_on = test_on, loss_train = loss_train
+                                                        , pretrain_model = pretrain_model)
 
     rmse_moy = np.mean(rmse_all,axis=0)
     rmse_std = np.std(rmse_all,axis=0)
