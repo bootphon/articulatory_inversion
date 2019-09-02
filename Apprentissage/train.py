@@ -12,7 +12,8 @@ os.environ["VECLIB_MAXIMUM_THREADS"] = ncpu # export VECLIB_MAXIMUM_THREADS=4
 os.environ["NUMEXPR_NUM_THREADS"] = ncpu # export NUMEXPR_NUM_THREADS=4
 import numpy as np
 
-
+import gc
+import psutil
 from Apprentissage.class_network import my_bilstm
 from Apprentissage.modele import my_ac2art_modele
 import sys
@@ -39,6 +40,26 @@ root_folder = os.path.dirname(os.getcwd())
 fileset_path = os.path.join(root_folder, "Donnees_pretraitees", "fileset")
 
 print(sys.argv)
+
+
+def memReport(all = False):
+    nb_object = 0
+    for obj in gc.get_objects():
+        if torch.is_tensor(obj):
+            if all:
+                print(type(obj), obj.size())
+            nb_object += 1
+    print('nb objects tensor', nb_object)
+
+
+def cpuStats():
+    print(sys.version)
+    print(psutil.cpu_percent())
+    print(psutil.virtual_memory())  # physical memory usage
+    pid = os.getpid()
+    py = psutil.Process(pid)
+    memoryUse = py.memory_info()[0] / 2. ** 30  # memory use in GB...I think
+    print('memory GB:', memoryUse)
 
 
 
@@ -100,7 +121,6 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     hidden_dim = 300
     input_dim = 429
     batch_size = 10
-    batch_size= 1
     output_dim = 18
 
 
@@ -249,11 +269,8 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
                 x, y = model.prepare_batch(x, y)
                 if cuda_avail:
                     print("x shape", x.shape)
-
-                    print("memory allocated : {}".format(torch.cuda.memory_allocated()))
-                    print("memory cached : {}".format(torch.cuda.memory_cached()))
-                    torch.cuda.empty_cache()
-                    print("memory cached after emptying : {}".format(torch.cuda.memory_cached()))
+                    memReport()
+                    cpuStats()
 
                 y_pred = model(x).double()
                 if cuda_avail:
