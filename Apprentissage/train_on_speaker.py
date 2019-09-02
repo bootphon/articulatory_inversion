@@ -61,7 +61,6 @@ def train_model(test_on ,loss_train,pretrain_model):
     hidden_dim = 300
     input_dim = 429
     batch_size = 10
-    batch_size=1
     output_dim = 18
 
 
