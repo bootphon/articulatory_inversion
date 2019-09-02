@@ -41,6 +41,8 @@ fileset_path = os.path.join(root_folder, "Donnees_pretraitees", "fileset")
 print(sys.argv)
 
 
+
+
 def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_train_on,batch_norma,filter_type):
 
     name_corpus_concat = ""
@@ -98,7 +100,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     hidden_dim = 300
     input_dim = 429
     batch_size = 10
-    batch_size= 1
+    batch_size= 5
     output_dim = 18
 
 
@@ -275,6 +277,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
                 loss_train_this_epoch += loss.item()
                 weight_apres = model.lowpass.weight.data[0, 0, :]
              #    print("GAIN 1", sum(weight_apres.cpu()))
+        torch.cuda.empty_cache()
 
         loss_train_this_epoch = loss_train_this_epoch/n_this_epoch
 
