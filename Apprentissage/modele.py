@@ -38,7 +38,7 @@ class my_ac2art_modele(torch.nn.Module):
                                       bidirectional=True)
         self.batch_norm_layer_2 =  torch.nn.BatchNorm1d(hidden_dim*2)
 
-        self.readout_layer = torch.nn.Linear(hidden_dim *2 , output_dim)
+        self.readout_layer = torch.nn.Linear(hidden_dim*2  , output_dim)
         self.batch_size = batch_size
         self.sigmoid = torch.nn.Sigmoid()
     #    if modele_filtered==3:
@@ -96,6 +96,7 @@ class my_ac2art_modele(torch.nn.Module):
             filter_output = (self.modele_filtered != 0)
         dense_out =  torch.nn.functional.relu(self.first_layer(x))
         dense_out_2 = torch.nn.functional.relu(self.second_layer(dense_out))
+        lstm_out = dense_out_2
         lstm_out, hidden_dim = self.lstm_layer(dense_out_2)
         B = lstm_out.shape[0] #presque tjrs batch size
         if self.batch_norma :
@@ -200,6 +201,7 @@ class my_ac2art_modele(torch.nn.Module):
         return y_smoothed
 
     def plot_results(self, y, y_pred,y_pred_smooth = None,to_cons=[]):
+        print("you chose to plot")
         plt.figure()
 
         idx_to_cons = [k for k in range(len(to_cons)) if to_cons[k]]
@@ -217,7 +219,7 @@ class my_ac2art_modele(torch.nn.Module):
             plt.close('all')
 
 
-    def evaluate_on_test(self,X_test,Y_test, std_speaker ,to_plot=False,to_consider=None):
+    def evaluate_on_test(self,X_test,Y_test, std_speaker ,to_plot=False,to_consider=None,verbose=True):
         """
         :param X_test:  list of all the input of the test set
         :param Y_test:  list of all the target of the test set
@@ -267,12 +269,12 @@ class my_ac2art_modele(torch.nn.Module):
         all_diff[:,idx_to_ignore] = 0
         pearson_per_arti_mean = np.mean(all_pearson, axis=0)
         rmse_per_arti_mean = np.mean(all_diff, axis=0)
-
-        #pearson_per_arti_std = np.std(all_pearson, axis=0)
-        print("rmse final : ", np.mean(rmse_per_arti_mean[rmse_per_arti_mean!=0]))
-        print("rmse mean per arti : \n", rmse_per_arti_mean)
-        print("pearson final : ", np.mean(pearson_per_arti_mean[rmse_per_arti_mean!=0]))
-        print("pearson mean per arti : \n", pearson_per_arti_mean)
+        if verbose:
+            #pearson_per_arti_std = np.std(all_pearson, axis=0)
+            print("rmse final : ", np.mean(rmse_per_arti_mean[rmse_per_arti_mean!=0]))
+            print("rmse mean per arti : \n", rmse_per_arti_mean)
+            print("pearson final : ", np.mean(pearson_per_arti_mean[rmse_per_arti_mean!=0]))
+            print("pearson mean per arti : \n", pearson_per_arti_mean)
         return rmse_per_arti_mean,pearson_per_arti_mean
 
 

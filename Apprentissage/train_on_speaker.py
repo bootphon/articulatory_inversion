@@ -57,7 +57,7 @@ def train_model(test_on ,loss_train,pretrain_model):
     name_file = "train_on_and_test_on" +test_on +"_loss_"+str(loss_train)+"_pertrained_on_"+pretrain_model
 
     previous_models = os.listdir("saved_models")
-    patience = 8
+    patience = 5
     hidden_dim = 300
     input_dim = 429
     batch_size = 10
@@ -248,7 +248,8 @@ def train_model(test_on ,loss_train,pretrain_model):
                 arti_to_consider = [int(x) for x in arti_to_consider]
   #  print("arti to cons",arti_to_consider)
     rmse_per_arti_mean, pearson_per_arti_mean = model.evaluate_on_test(x,y, std_speaker = std_speaker, to_plot=to_plot
-                                                                       ,to_consider = arti_to_consider) #,filtered=True)
+                                                                       ,to_consider = arti_to_consider,
+                                                                       ) #,filtered=True)
     print("name file : ",name_file)
 
     with open('resultats_modeles.csv', 'a') as f:
@@ -279,12 +280,12 @@ def train_model(test_on ,loss_train,pretrain_model):
 
 
 if __name__=='__main__':
-
+    n_per_model = 1
     test_on =  sys.argv[1]
     loss_train = sys.argv[2]
     pretrain_model = str(sys.argv[3])
-    rmse_all,pearson_all = np.zeros((3,18)), np.zeros((3,18))
-    for k in range(3):
+    rmse_all,pearson_all = np.zeros((n_per_model,18)), np.zeros((n_per_model,18))
+    for k in range(n_per_model):
         rmse_all[k, :], pearson_all[k, :] = train_model(test_on = test_on, loss_train = loss_train
                                                         , pretrain_model = pretrain_model)
 
