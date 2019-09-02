@@ -98,7 +98,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     hidden_dim = 300
     input_dim = 429
     batch_size = 10
-    batch_size= 2
+    batch_size= 1
     output_dim = 18
 
 
@@ -217,11 +217,6 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     plot_filtre_chaque_epochs = False
 
     for epoch in range(n_epochs):
-        if cuda_avail:
-            print("memory allocated : {}".format(torch.cuda.memory_allocated()))
-            print("memory cached : {}".format(torch.cuda.memory_cached()))
-            torch.cuda.empty_cache()
-            print("memory cached after emptying : {}".format(torch.cuda.memory_cached()))
 
         weight_apres = model.lowpass.weight.data[0, 0, :]
         #print("GAIN 0",sum(weight_apres.cpu()))
@@ -251,12 +246,13 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
                 files_this_categ_courant = files_this_categ_courant[batch_size:] #we a re going to train on this 10 files
                 x, y = model.prepare_batch(x, y)
                 if cuda_avail:
+                    print("x shape", x.shape)
+
                     print("memory allocated : {}".format(torch.cuda.memory_allocated()))
                     print("memory cached : {}".format(torch.cuda.memory_cached()))
                     torch.cuda.empty_cache()
                     print("memory cached after emptying : {}".format(torch.cuda.memory_cached()))
 
-                print("x shape",x.shape)
                 y_pred = model(x).double()
                 if cuda_avail:
                     y_pred = y_pred.cuda()
