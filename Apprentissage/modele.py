@@ -16,6 +16,16 @@ import scipy
 from torch.autograd import Variable
 from Apprentissage import utils
 
+def memReport(all = False):
+    nb_object = 0
+    for obj in gc.get_objects():
+        if torch.is_tensor(obj):
+            if all:
+                print(type(obj), obj.size())
+            nb_object += 1
+    print('nb objects tensor', nb_object)
+
+
 
 class my_ac2art_modele(torch.nn.Module):
     def __init__(self, hidden_dim, input_dim, output_dim, batch_size,name_file="", sampling_rate=100,
@@ -92,17 +102,29 @@ class my_ac2art_modele(torch.nn.Module):
         return x, y
 
     def forward(self, x, filter_output =None) :
+        print("1")
+        memReport()
         if filter_output is None :
             filter_output = (self.modele_filtered != 0)
+        print("2")
+        memReport()
         dense_out =  torch.nn.functional.relu(self.first_layer(x))
+        print("3")
+        memReport()
         dense_out_2 = torch.nn.functional.relu(self.second_layer(dense_out))
+        print("4")
+        memReport()
         lstm_out, hidden_dim = self.lstm_layer(dense_out_2)
+        print("5")
+        memReport()
         B = lstm_out.shape[0] #presque tjrs batch size
         if self.batch_norma :
             lstm_out_temp = lstm_out.view(B,2*self.hidden_dim,-1)
             lstm_out_temp = torch.nn.functional.relu(self.batch_norm_layer(lstm_out_temp))
             lstm_out= lstm_out_temp.view(B,  -1,2 * self.hidden_dim)
         lstm_out = torch.nn.functional.relu(lstm_out)
+        print("6")
+        memReport()
         lstm_out, hidden_dim = self.lstm_layer_2(lstm_out)
         if self.batch_norma :
             lstm_out_temp = lstm_out.view(B,2*self.hidden_dim,-1)
