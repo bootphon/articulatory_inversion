@@ -250,6 +250,12 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
 
                 files_this_categ_courant = files_this_categ_courant[batch_size:] #we a re going to train on this 10 files
                 x, y = model.prepare_batch(x, y)
+                if cuda_avail:
+                    print("memory allocated : {}".format(torch.cuda.memory_allocated()))
+                    print("memory cached : {}".format(torch.cuda.memory_cached()))
+                    torch.cuda.empty_cache()
+                    print("memory cached after emptying : {}".format(torch.cuda.memory_cached()))
+
                 print("x shape",x.shape)
                 y_pred = model(x).double()
                 if cuda_avail:
