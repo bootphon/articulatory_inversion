@@ -269,7 +269,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
                 x, y = model.prepare_batch(x, y)
                 if cuda_avail:
                     print("x shape", x.shape)
-                    memReport()
+                    memReport(all=True)
                     cpuStats()
 
                 y_pred = model(x).double()
