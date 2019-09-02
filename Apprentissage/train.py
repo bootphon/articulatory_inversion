@@ -217,6 +217,11 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     plot_filtre_chaque_epochs = False
 
     for epoch in range(n_epochs):
+        if cuda_avail:
+            print("memory allocated : {}".format(torch.cuda.memory_allocated()))
+            print("memory cached : {}".format(torch.cuda.memory_cached()))
+            torch.cuda.empty_cache()
+            print("memory cached after emptying : {}".format(torch.cuda.memory_cached()))
 
         weight_apres = model.lowpass.weight.data[0, 0, :]
         #print("GAIN 0",sum(weight_apres.cpu()))
