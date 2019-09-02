@@ -267,10 +267,9 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
 
                 files_this_categ_courant = files_this_categ_courant[batch_size:] #we a re going to train on this 10 files
                 x, y = model.prepare_batch(x, y)
-                if cuda_avail:
-                    print("x shape", x.shape)
-                    memReport(all=True)
-                    cpuStats()
+                #if cuda_avail:
+                   # print("x shape", x.shape)
+                    #cpuStats()
 
                 y_pred = model(x).double()
                 if cuda_avail:
