@@ -15,7 +15,7 @@ from scipy import signal
 import scipy
 from torch.autograd import Variable
 from Apprentissage import utils
-
+import gc
 def memReport(all = False):
     nb_object = 0
     for obj in gc.get_objects():
