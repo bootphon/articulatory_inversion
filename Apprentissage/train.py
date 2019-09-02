@@ -98,7 +98,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     hidden_dim = 300
     input_dim = 429
     batch_size = 10
-    batch_size=5
+    batch_size= 2
     output_dim = 18
 
 
