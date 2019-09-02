@@ -74,8 +74,8 @@ def train_model(test_on ,loss_train,pretrain_model):
 
     file_weights = os.path.join("saved_models", pretrain_model +".txt")
 
-    if cuda_avail:
-        model = model.cuda()
+    #if cuda_avail:
+     #   model = model.cuda()
        # cuda = torch.device('cuda')
 
     load_old_model = True
@@ -93,6 +93,8 @@ def train_model(test_on ,loss_train,pretrain_model):
         model_dict.update(loaded_state)
         model.load_state_dict(model_dict)
 
+    if cuda_avail:
+        model = model.cuda()
     def criterion_pearson(my_y,my_y_pred): # (L,K,13)
         y_1 = my_y - torch.mean(my_y,dim=1,keepdim=True)
         y_pred_1 = my_y_pred - torch.mean(my_y_pred,dim=1,keepdim=True)
