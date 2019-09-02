@@ -96,7 +96,6 @@ class my_ac2art_modele(torch.nn.Module):
             filter_output = (self.modele_filtered != 0)
         dense_out =  torch.nn.functional.relu(self.first_layer(x))
         dense_out_2 = torch.nn.functional.relu(self.second_layer(dense_out))
-        lstm_out = dense_out_2
         lstm_out, hidden_dim = self.lstm_layer(dense_out_2)
         B = lstm_out.shape[0] #presque tjrs batch size
         if self.batch_norma :

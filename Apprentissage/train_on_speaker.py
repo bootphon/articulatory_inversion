@@ -166,6 +166,7 @@ def train_model(test_on ,loss_train,pretrain_model):
             x, y = load_data(files_for_train_courant[:batch_size])
             files_for_train_courant = files_for_train_courant[batch_size:] #we a re going to train on this 10 files
             x, y = model.prepare_batch(x, y)
+
             y_pred = model(x).double()
             if cuda_avail:
                 y_pred = y_pred.cuda()
@@ -199,7 +200,6 @@ def train_model(test_on ,loss_train,pretrain_model):
                 files_for_valid_courant = files_for_valid_courant[batch_size:]  # on a appris sur ces 10 phrases
                 x, y = model.prepare_batch(x, y)
                 y_pred = model(x).double()
-                torch.cuda.empty_cache()
                 if cuda_avail:
                     y_pred = y_pred.cuda()
                   #  y_pred = y_pred.to(device=cuda)
