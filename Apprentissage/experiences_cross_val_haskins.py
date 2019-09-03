@@ -102,7 +102,7 @@ if __name__=='__main__':
               cross_val_for_bn_has(sp)
 
     elif experience == "rmse":
-      for k in range(1):
+      for k in range(3):
           for sp in speakers:
               cross_val_for_rmse_has(sp)
 
