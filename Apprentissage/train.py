@@ -64,8 +64,8 @@ def cpuStats():
 
 
 
-def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_train_on,batch_norma,filter_type):
-    train_a_bit_test_sp = True #temporaire !!!
+def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_train_on,batch_norma,filter_type,
+                train_a_bit_on_test):
     name_corpus_concat = ""
     train_on = []
     delta_test=  1
@@ -105,7 +105,10 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
         device = torch.device("cpu")
 
     if not(only_one_sp):
-        name_file = "train_on_"+name_corpus_concat+"test_on_"+test_on+"_idx_"+str(select_arti)\
+        suff = ""
+        if train_a_bit_on_test :
+            suff = "_and_"+test_on
+        name_file = "train_on_"+name_corpus_concat+suff+"test_on_"+test_on+"_idx_"+str(select_arti)\
                     +"_loss_"+str(loss_train)+"_typefilter_"+str(filter_type)+"_bn_"+str(batch_norma)
     else :
         name_file = "train_on_" +train_on[0] + "_test_on_" + test_on + "_idx_" + str(select_arti)+\
@@ -209,7 +212,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     files_for_valid = load_filenames_deter(train_on, part=["valid"])
     files_for_test = load_filenames_deter([test_on], part=["train", "valid", "test"])
 
-    if train_a_bit_test_sp :
+    if train_a_bit_on_test :
         files_for_train_this_sp = load_filenames_deter([test_on], part=["train"])
         files_for_train = files_for_train + files_for_train_this_sp
         files_for_valid_this_sp = load_filenames_deter([test_on], part=["valid"])
@@ -491,7 +494,7 @@ if __name__=='__main__':
     batch_norma = sys.argv[7].lower()=="true"
 
     filter_type = int(sys.argv[8]) # 0 pas de lissage, 1 lissage en dur, 2 lissage variable crée avec pytorch, 3 lissage variable cree avec en dur
-
+    train_a_bit_on_test = str(sys.argv[9])
     train_model(test_on = test_on,n_epochs=n_epochs,loss_train = loss_train,patience=patience,
                select_arti=select_arti,corpus_to_train_on = corpus_to_train_on,batch_norma = batch_norma
-             ,filter_type=  filter_type)
+             ,filter_type=  filter_type, train_a_bit_on_test=train_a_bit_on_test)

@@ -39,6 +39,16 @@ def cross_val_for_alpha_has(speaker):
                     batch_norma=batch_norma, filter_type=filter_type)
 
 
+def cross_val_for_rmse_has_and_test_speaker(speaker):
+    patience = 3
+    n_epochs = 50
+    select_arti = True
+    corpus_to_train_on = corpus
+    filter_type = 1
+    loss_train ="rmse"
+    train_model(test_on=speaker, n_epochs=n_epochs, loss_train=loss_train, patience=patience,
+                    select_arti=select_arti, corpus_to_train_on=corpus_to_train_on,
+                    batch_norma=False, filter_type=filter_type,train_a_bit_on_test=True)
 
 
 def cross_val_for_rmse_has(speaker):
@@ -105,6 +115,12 @@ if __name__=='__main__':
       for k in range(3):
           for sp in speakers:
               cross_val_for_rmse_has(sp)
+
+    elif experience == "also_test":
+      for k in range(3):
+          for sp in speakers:
+              cross_val_for_rmse_has_and_test_speaker(sp)
+
 
       #  for proc in procs:
      #       proc.join()
