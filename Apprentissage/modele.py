@@ -77,6 +77,9 @@ class my_ac2art_modele(torch.nn.Module):
         self.epoch_ref = 0
         self.batch_norma = batch_norma# False #tester par la suite si améliore la perf
 
+        if cuda_avail :
+            self.device = torch.device("cuda")
+
     def prepare_batch(self, x, y):
         """
         :param x: liste de B données accoustiques de longueurs variables  (B souvent 10 batchsize sauf pour l'éval)
@@ -95,8 +98,8 @@ class my_ac2art_modele(torch.nn.Module):
         x = new_x.view((B, max_length, self.input_dim))
         y = new_y.view((B, max_length, self.output_dim))
         if self.cuda_avail :
-            x,y=x.cuda(),y.cuda()
-           # x,y = x.to(device=self.cuda),y.to(device=self.cuda)
+            x,y = x.to(device = self.device),y.to(device = self.device)
+
         return x, y
 
     def forward(self, x, filter_output =None) :
@@ -245,7 +248,8 @@ class my_ac2art_modele(torch.nn.Module):
                 x_torch = torch.from_numpy(X_test[i]).view(1,L,self.input_dim)  #x (1,L,429)
                 y = Y_test[i].reshape((L, self.output_dim))                     #y (L,13)
                 if self.cuda_avail:
-                    x_torch = x_torch.cuda()
+                    x_torch = x_torch.to(device = self.device)
+
                   #  x_torch = x_torch.to(device=self.cuda)
                # with torch.no_grad():
                 y_pred_passmooth = self(x_torch,False).double() #sortie y_pred (1,L,13)
