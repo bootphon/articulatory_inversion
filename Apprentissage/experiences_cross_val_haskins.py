@@ -59,7 +59,7 @@ if __name__=='__main__':
     if experience == "filter":
         speakers.remove("F01")
         for sp in speakers:
-            for k in range(3):
+            for k in range(2):
                 cross_val_for_type_filter_has(sp)
      #   for sp in speakers[4:]:
        #     proc = Process(target=cross_val_for_type_filter_has, args=(sp,))
