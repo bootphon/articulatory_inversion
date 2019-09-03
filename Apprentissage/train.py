@@ -273,7 +273,6 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
 
                 y_pred = model(x).double()
                 if cuda_avail:
-
                     y_pred = y_pred.to(device=device)
                 y = y.double()
                 optimizer.zero_grad()

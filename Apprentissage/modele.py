@@ -249,7 +249,6 @@ class my_ac2art_modele(torch.nn.Module):
                 y = Y_test[i].reshape((L, self.output_dim))                     #y (L,13)
                 if self.cuda_avail:
                     x_torch = x_torch.to(device = self.device)
-
                   #  x_torch = x_torch.to(device=self.cuda)
                # with torch.no_grad():
                 y_pred_passmooth = self(x_torch,False).double() #sortie y_pred (1,L,13)

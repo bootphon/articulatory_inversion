@@ -83,7 +83,7 @@ if __name__=='__main__':
 
 
     elif experience == "bn":
-      for k in range(3):
+      for k in range(1):
           for sp in speakers:
               cross_val_for_bn_has(sp)
 
