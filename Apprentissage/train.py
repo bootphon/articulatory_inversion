@@ -273,7 +273,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
 
                 files_this_categ_courant = files_this_categ_courant[batch_size:] #we a re going to train on this 10 files
                 x, y = model.prepare_batch(x, y)
-                cpuStats()
+                #cpuStats()
                 #if cuda_avail:
                    # print("x shape", x.shape)
                     #cpuStats()
@@ -439,11 +439,9 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
         plt.xlabel("real frequency")
         plt.show()
 
-
     #x, y = load_data(files_for_test,filtered=False)
    # print("DATA AND MODELE NOT FILTERED")
     #model.evaluate_on_test(x,y, to_plot=to_plot,filtered=False)
-
 
 if __name__=='__main__':
     import argparse
