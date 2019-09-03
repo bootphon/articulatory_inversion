@@ -21,7 +21,7 @@ def cross_val_for_type_filter_has(speaker): #0 1 ou 2
     for filter_type in [0] :# [0,1,2]:
         train_model(test_on=speaker, n_epochs=n_epochs, loss_train=loss_train, patience=patience,
                     select_arti=select_arti, corpus_to_train_on=corpus_to_train_on,
-                    batch_norma=batch_norma, filter_type=filter_type,train_a_bit_on_test=False))
+                    batch_norma=batch_norma, filter_type=filter_type,train_a_bit_on_test=False)
 
 
 def cross_val_for_alpha_has(speaker):
@@ -36,7 +36,7 @@ def cross_val_for_alpha_has(speaker):
         loss_train = "both_" + str(alpha)
         train_model(test_on=speaker, n_epochs=n_epochs, loss_train=loss_train, patience=patience,
                     select_arti=select_arti, corpus_to_train_on=corpus_to_train_on,
-                    batch_norma=batch_norma, filter_type=filter_type,train_a_bit_on_test=False))
+                    batch_norma=batch_norma, filter_type=filter_type,train_a_bit_on_test=False)
 
 
 def cross_val_for_rmse_has_and_test_speaker(speaker):
