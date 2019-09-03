@@ -94,7 +94,7 @@ if __name__=='__main__':
     #    for proc in procs:
      #       proc.join()
 
-     elif experience == "alpha":
+    elif experience == "alpha":
         procs = []
         for k in range(3):
             for sp in speakers:
