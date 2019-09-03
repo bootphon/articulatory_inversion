@@ -21,7 +21,7 @@ def cross_val_for_type_filter_has(speaker): #0 1 ou 2
     for filter_type in [0] :# [0,1,2]:
         train_model(test_on=speaker, n_epochs=n_epochs, loss_train=loss_train, patience=patience,
                     select_arti=select_arti, corpus_to_train_on=corpus_to_train_on,
-                    batch_norma=batch_norma, filter_type=filter_type)
+                    batch_norma=batch_norma, filter_type=filter_type,train_a_bit_on_test=False))
 
 
 def cross_val_for_alpha_has(speaker):
@@ -36,7 +36,7 @@ def cross_val_for_alpha_has(speaker):
         loss_train = "both_" + str(alpha)
         train_model(test_on=speaker, n_epochs=n_epochs, loss_train=loss_train, patience=patience,
                     select_arti=select_arti, corpus_to_train_on=corpus_to_train_on,
-                    batch_norma=batch_norma, filter_type=filter_type)
+                    batch_norma=batch_norma, filter_type=filter_type,train_a_bit_on_test=False))
 
 
 def cross_val_for_rmse_has_and_test_speaker(speaker):
@@ -60,7 +60,7 @@ def cross_val_for_rmse_has(speaker):
     loss_train ="rmse"
     train_model(test_on=speaker, n_epochs=n_epochs, loss_train=loss_train, patience=patience,
                     select_arti=select_arti, corpus_to_train_on=corpus_to_train_on,
-                    batch_norma=False, filter_type=filter_type)
+                    batch_norma=False, filter_type=filter_type,train_a_bit_on_test=False)
 
 
 def cross_val_for_bn_has(speaker):
@@ -72,14 +72,15 @@ def cross_val_for_bn_has(speaker):
     loss_train ="both_90"
     train_model(test_on=speaker, n_epochs=n_epochs, loss_train=loss_train, patience=patience,
                     select_arti=select_arti, corpus_to_train_on=corpus_to_train_on,
-                    batch_norma=False, filter_type=filter_type)
+                    batch_norma=False, filter_type=filter_type,train_a_bit_on_test=False)
 
     train_model(test_on=speaker, n_epochs=n_epochs, loss_train=loss_train, patience=patience,
                     select_arti=select_arti, corpus_to_train_on=corpus_to_train_on,
-                    batch_norma=True, filter_type=filter_type)
+                    batch_norma=True, filter_type=filter_type,train_a_bit_on_test=False)
 
 if __name__=='__main__':
     experience = sys.argv[1]
+
     if experience == "filter":
         speakers.remove("F01")
         for sp in speakers:
@@ -93,7 +94,7 @@ if __name__=='__main__':
     #    for proc in procs:
      #       proc.join()
 
-    elif experience == "alpha":
+     elif experience == "alpha":
         procs = []
         for k in range(3):
             for sp in speakers:
