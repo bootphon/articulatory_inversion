@@ -19,9 +19,8 @@ def cross_val_for_type_filter(sp):
     batch_norma = False
     loss_train = "both_90"
    # speakers_cross_val = ["msak0", "M1", "F01", "M01", "MNGU0"]
-
         #change filter
-    for filter_type in [0,2]:
+    for filter_type in [0]:
         train_model(test_on=sp, n_epochs=n_epochs, loss_train=loss_train, patience=patience,
                     select_arti=select_arti, corpus_to_train_on=corpus_to_train_on,
                     batch_norma=batch_norma, filter_type=filter_type)
@@ -68,7 +67,7 @@ if __name__=='__main__':
         for j in range(3):
             for speaker in speakers_cross_val:
                 cross_val_for_type_filter(speaker)
-                
+
     elif experience == "alpha":
         procs = []
         for j in range(3):
