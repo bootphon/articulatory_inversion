@@ -73,16 +73,14 @@ def train_model(test_on ,loss_train,pretrain_model):
 
     file_weights = os.path.join("saved_models", pretrain_model +".txt")
 
-    #if cuda_avail:
-     #   model = model.cuda()
-       # cuda = torch.device('cuda')
+    if cuda_avail:
+        device = torch.device("cuda")
+    else:
+        device = torch.device("cpu")
 
     load_old_model = True
     if os.path.exists(file_weights):
-        if not cuda_avail:
-            loaded_state = torch.load(file_weights,map_location="cpu")#, map_location=torch.device('cpu'))
-        else:
-            loaded_state = torch.load(file_weights,map_location="cuda")#, map_location="cuda")
+        loaded_state = torch.load(file_weights, map_location=device)
         model.load_state_dict(loaded_state)
         model_dict = model.state_dict()
         loaded_state = {k: v for k, v in loaded_state.items() if
@@ -93,7 +91,8 @@ def train_model(test_on ,loss_train,pretrain_model):
         model.load_state_dict(model_dict)
 
     if cuda_avail:
-        model = model.cuda()
+        model = model.to(device =  device)
+
     def criterion_pearson(my_y,my_y_pred): # (L,K,13)
         y_1 = my_y - torch.mean(my_y,dim=1,keepdim=True)
         y_pred_1 = my_y_pred - torch.mean(my_y_pred,dim=1,keepdim=True)
@@ -103,12 +102,9 @@ def train_model(test_on ,loss_train,pretrain_model):
         # deno zero veut dire ema constant à 0 on remplace par des 1
         minim = torch.tensor(0.01,dtype=torch.float64)
         if cuda_avail:
-            minim = minim.cuda()
-            deno = deno.cuda()
-            nume = nume.cuda()
-           # minim = minim.to(device=cuda)
-           # deno = deno.to(device=cuda)
-          #  nume = nume.to(device=cuda)
+            minim = minim.to(device=device)
+            deno = deno.to(device=device)
+            nume = nume.to(device=device)
         deno = torch.max(deno,minim)
         my_loss = torch.div(nume,deno)
         my_loss = torch.sum(my_loss) #pearson doit etre le plus grand possible
@@ -170,8 +166,7 @@ def train_model(test_on ,loss_train,pretrain_model):
 
             y_pred = model(x).double()
             if cuda_avail:
-                y_pred = y_pred.cuda()
-              #  y_pred = y_pred.to(device=cuda)
+                y_pred = y_pred.to(device=device)
             y = y.double()
             optimizer.zero_grad()
 
@@ -202,8 +197,7 @@ def train_model(test_on ,loss_train,pretrain_model):
                 x, y = model.prepare_batch(x, y)
                 y_pred = model(x).double()
                 if cuda_avail:
-                    y_pred = y_pred.cuda()
-                  #  y_pred = y_pred.to(device=cuda)
+                    y_pred = y_pred.to(device=device)
                 y = y.double()  # (Batchsize, maxL, 18)
 
                 loss_courant = criterion(y, y_pred)
