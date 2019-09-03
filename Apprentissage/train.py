@@ -126,7 +126,6 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     hidden_dim = 300
     input_dim = 429
     batch_size = 10
-    batch_size=3
     output_dim = 18
 
 
@@ -274,6 +273,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
 
                 files_this_categ_courant = files_this_categ_courant[batch_size:] #we a re going to train on this 10 files
                 x, y = model.prepare_batch(x, y)
+                cpuStats()
                 #if cuda_avail:
                    # print("x shape", x.shape)
                     #cpuStats()
