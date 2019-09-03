@@ -99,6 +99,11 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     #train_on = ["msak0"]
     cuda_avail = torch.cuda.is_available()
     print(" cuda ?", cuda_avail)
+    if cuda_avail :
+        device = torch.device("cuda")
+    else :
+        device = torch.device("cpu")
+
     if not(only_one_sp):
         name_file = "train_on_"+name_corpus_concat+"test_on_"+test_on+"_idx_"+str(select_arti)\
                     +"_loss_"+str(loss_train)+"_typefilter_"+str(filter_type)+"_bn_"+str(batch_norma)
@@ -134,18 +139,16 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     file_weights = os.path.join("saved_models", name_file +".pt")
 
     if cuda_avail:
-        model = model.cuda()
+        model = model.to(device = device)
        # cuda = torch.device('cuda')
 
     load_old_model = True
     if load_old_model:
      if os.path.exists(file_weights):
         print("modèle précédent pas fini")
-        if not cuda_avail:
-            loaded_state = torch.load(file_weights)#, map_location=torch.device('cpu'))
-        else:
-            loaded_state = torch.load(file_weights)#, map_location="cuda")
+        loaded_state = torch.load(file_weights,map_location = device)
         model.load_state_dict(loaded_state)
+
         model_dict = model.state_dict()
         loaded_state = {k: v for k, v in loaded_state.items() if
                         k in model_dict}  # only layers param that are in our current model
@@ -315,8 +318,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
                     y_pred = model(x).double()
                     torch.cuda.empty_cache()
                     if cuda_avail:
-                        y_pred = y_pred.cuda()
-                      #  y_pred = y_pred.to(device=cuda)
+                        y_pred = y_pred.to(device=device)
                     y = y.double()  # (Batchsize, maxL, 18)
 
                     if select_arti:
