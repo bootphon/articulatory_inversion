@@ -65,7 +65,7 @@ def cpuStats():
 
 
 def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_train_on,batch_norma,filter_type):
-
+    train_a_bit_test_sp = True #temporaire !!!
     name_corpus_concat = ""
     train_on = []
     delta_test=  1
@@ -208,6 +208,12 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
 
     files_for_valid = load_filenames_deter(train_on, part=["valid"])
     files_for_test = load_filenames_deter([test_on], part=["train", "valid", "test"])
+
+    if train_a_bit_test_sp :
+        files_for_train_this_sp = load_filenames_deter([test_on], part=["train"])
+        files_for_train = files_for_train + files_for_train_this_sp
+        files_for_valid_this_sp = load_filenames_deter([test_on], part=["valid"])
+        files_for_valid = files_for_valid + files_for_valid_this_sp
 
     files_per_categ = dict()
     for categ in categ_of_speakers.keys():
