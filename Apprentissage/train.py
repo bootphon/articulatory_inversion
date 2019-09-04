@@ -494,7 +494,7 @@ if __name__=='__main__':
     batch_norma = sys.argv[7].lower()=="true"
 
     filter_type = int(sys.argv[8]) # 0 pas de lissage, 1 lissage en dur, 2 lissage variable crée avec pytorch, 3 lissage variable cree avec en dur
-    train_a_bit_on_test = str(sys.argv[9])
+    train_a_bit_on_test = sys.argv[9].lower()=="true"
     train_model(test_on = test_on,n_epochs=n_epochs,loss_train = loss_train,patience=patience,
                select_arti=select_arti,corpus_to_train_on = corpus_to_train_on,batch_norma = batch_norma
              ,filter_type=  filter_type, train_a_bit_on_test=train_a_bit_on_test)

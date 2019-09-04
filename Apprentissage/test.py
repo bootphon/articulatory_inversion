@@ -146,4 +146,3 @@ if __name__=='__main__':
     print("results for model ",model_name)
     print("rmse",rmse)
     print("pearson",pearson)
-
