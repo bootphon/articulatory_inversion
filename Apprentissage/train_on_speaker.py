@@ -80,6 +80,7 @@ def train_model_on_speaker(test_on ,loss_train,pretrain_model):
 
     load_old_model = True
     if os.path.exists(file_weights):
+        print("AVEC PREENTRAINEMENT")
         loaded_state = torch.load(file_weights, map_location=device)
         model.load_state_dict(loaded_state)
         model_dict = model.state_dict()
@@ -89,6 +90,9 @@ def train_model_on_speaker(test_on ,loss_train,pretrain_model):
                         loaded_state[k].shape == model_dict[k].shape}  # only if layers have correct shapes
         model_dict.update(loaded_state)
         model.load_state_dict(model_dict)
+    else :
+        print("SANS PREENTRAINEMENT")
+        name_file = "train_on_and_test_on" + test_on + "_loss_" + str(loss_train)
 
     if cuda_avail:
         model = model.to(device =  device)
