@@ -107,7 +107,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     if not(only_one_sp):
         suff = ""
         if train_a_bit_on_test :
-            suff = "_and_"+test_on
+            suff = "and_"+test_on+"_"
         name_file = "train_on_"+name_corpus_concat+suff+"test_on_"+test_on+"_idx_"+str(select_arti)\
                     +"_loss_"+str(loss_train)+"_typefilter_"+str(filter_type)+"_bn_"+str(batch_norma)
     else :
@@ -216,6 +216,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
         files_for_train_this_sp = load_filenames_deter([test_on], part=["train"])
         files_for_train = files_for_train + files_for_train_this_sp
         files_for_valid_this_sp = load_filenames_deter([test_on], part=["valid"])
+        print("some testspeaker files in train : ",len(files_for_train_this_sp))
         files_for_valid = files_for_valid + files_for_valid_this_sp
 
     files_per_categ = dict()
