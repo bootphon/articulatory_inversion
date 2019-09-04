@@ -55,6 +55,11 @@ def train_model_on_speaker(test_on ,loss_train,pretrain_model):
     print(" cuda ?", cuda_avail)
 
     name_file = "train_on_and_test_on" +test_on +"_loss_"+str(loss_train)+"_pretrained_on_"+pretrain_model
+    file_weights = os.path.join("saved_models", pretrain_model +".txt")
+
+    if not(os.path.exists(file_weights)):
+        print("SANS PREENTRAINEMENT")
+        name_file = "train_on_and_test_on" + test_on + "_loss_" + str(loss_train)
 
     previous_models = os.listdir("saved_models")
     patience = 5
@@ -71,7 +76,6 @@ def train_model_on_speaker(test_on ,loss_train,pretrain_model):
                       modele_filtered=filter_type,batch_norma=batch_norma)
     model = model.double()
 
-    file_weights = os.path.join("saved_models", pretrain_model +".txt")
 
     if cuda_avail:
         device = torch.device("cuda")
@@ -90,9 +94,7 @@ def train_model_on_speaker(test_on ,loss_train,pretrain_model):
                         loaded_state[k].shape == model_dict[k].shape}  # only if layers have correct shapes
         model_dict.update(loaded_state)
         model.load_state_dict(model_dict)
-    else :
-        print("SANS PREENTRAINEMENT")
-        name_file = "train_on_and_test_on" + test_on + "_loss_" + str(loss_train)
+
 
     if cuda_avail:
         model = model.to(device =  device)
