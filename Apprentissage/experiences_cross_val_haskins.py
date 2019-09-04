@@ -119,7 +119,7 @@ if __name__=='__main__':
 
     elif experience == "also_test":
       for k in range(3):
-          for sp in speakers:
+          for sp in get_speakers_per_corpus("Haskins"):
               cross_val_for_rmse_has_and_test_speaker(sp)
 
 
