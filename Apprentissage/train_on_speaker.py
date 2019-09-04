@@ -54,7 +54,7 @@ def train_model(test_on ,loss_train,pretrain_model):
     cuda_avail = torch.cuda.is_available()
     print(" cuda ?", cuda_avail)
 
-    name_file = "train_on_and_test_on" +test_on +"_loss_"+str(loss_train)+"_pertrained_on_"+pretrain_model
+    name_file = "train_on_and_test_on" +test_on +"_loss_"+str(loss_train)+"_pretrained_on_"+pretrain_model
 
     previous_models = os.listdir("saved_models")
     patience = 5
