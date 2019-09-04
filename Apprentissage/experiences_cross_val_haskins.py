@@ -145,7 +145,7 @@ if __name__=='__main__':
               cross_val_for_both_90_has_and_test_speaker(sp)
 
     elif experience == "speaker_dep":
-        speakers = ["M01", "M02", "M03", "M04"]
+        speakers = ["M04"]
         for sp in speakers:
             speaker_dependant(sp)
 
