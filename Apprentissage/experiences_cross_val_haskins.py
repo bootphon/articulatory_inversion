@@ -39,6 +39,18 @@ def cross_val_for_alpha_has(speaker):
                     batch_norma=batch_norma, filter_type=filter_type,train_a_bit_on_test=False)
 
 
+def cross_val_for_rmse_has(speaker):
+    patience = 3
+    n_epochs = 50
+    select_arti = True
+    corpus_to_train_on = corpus
+    filter_type = 1
+    loss_train ="rmse"
+    train_model(test_on=speaker, n_epochs=n_epochs, loss_train=loss_train, patience=patience,
+                    select_arti=select_arti, corpus_to_train_on=corpus_to_train_on,
+                    batch_norma=False, filter_type=filter_type,train_a_bit_on_test=False)
+
+
 def cross_val_for_rmse_has_and_test_speaker(speaker):
     patience = 3
     n_epochs = 50
@@ -51,19 +63,7 @@ def cross_val_for_rmse_has_and_test_speaker(speaker):
                     batch_norma=False, filter_type=filter_type,train_a_bit_on_test=True)
 
 
-def cross_val_for_rmse_has_and_test_speaker(speaker):
-    patience = 3
-    n_epochs = 50
-    select_arti = True
-    corpus_to_train_on = corpus
-    filter_type = 1
-    loss_train ="rmse"
-    train_model(test_on=speaker, n_epochs=n_epochs, loss_train=loss_train, patience=patience,
-                    select_arti=select_arti, corpus_to_train_on=corpus_to_train_on,
-                    batch_norma=False, filter_type=filter_type,train_a_bit_on_test=True)
-
-
-def cross_val_for_both_90_has(speaker):
+def cross_val_for_both_90_has_and_test_speaker(speaker):
     patience = 3
     n_epochs = 50
     select_arti = True
@@ -72,7 +72,7 @@ def cross_val_for_both_90_has(speaker):
     loss_train ="both_90"
     train_model(test_on=speaker, n_epochs=n_epochs, loss_train=loss_train, patience=patience,
                     select_arti=select_arti, corpus_to_train_on=corpus_to_train_on,
-                    batch_norma=False, filter_type=filter_type,train_a_bit_on_test=False)
+                    batch_norma=False, filter_type=filter_type,train_a_bit_on_test=True)
 
 def cross_val_for_bn_has(speaker):
     patience = 3
@@ -129,7 +129,7 @@ if __name__=='__main__':
     elif experience == "also_test_both_90":
       for k in range(3):
           for sp in get_speakers_per_corpus("Haskins"):
-              cross_val_for_both_90_has(sp)
+              cross_val_for_both_90_has_and_test_speaker(sp)
 
       #  for proc in procs:
      #       proc.join()
