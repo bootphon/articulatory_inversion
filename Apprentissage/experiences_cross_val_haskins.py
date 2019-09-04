@@ -80,9 +80,9 @@ def cross_val_for_bn_has(speaker):
 
 if __name__=='__main__':
     experience = sys.argv[1]
+    speakers = ["M01", "M02", "M03", "M04"]
 
     if experience == "filter":
-        speakers.remove("F01")
         for sp in speakers:
             for k in range(2):
                 cross_val_for_type_filter_has(sp)
