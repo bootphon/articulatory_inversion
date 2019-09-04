@@ -7,6 +7,7 @@ sys.path.insert(0,parentdir)
 from Apprentissage.train import train_model
 from Traitement.fonctions_utiles import get_speakers_per_corpus
 import sys
+from Apprentissage.train_on_speaker import train_model_on_speaker
 from multiprocessing import Process
 import argparse
 corpus = "[Haskins]"
@@ -92,6 +93,10 @@ def cross_val_for_both_90_has_and_test_speaker(speaker): #resultats de non g√©n√
                     select_arti=select_arti, corpus_to_train_on=corpus_to_train_on,
                     batch_norma=False, filter_type=filter_type,train_a_bit_on_test=True)
 
+def speaker_dependant(speaker):
+    train_model_on_speaker(speaker,"rmse","non")
+    train_model_on_speaker(speaker,"both_90","non")
+
 
 
 
@@ -138,6 +143,12 @@ if __name__=='__main__':
           speakers = ["M01","M02","M03","MO4"]
           for sp in speakers:
               cross_val_for_both_90_has_and_test_speaker(sp)
+
+    elif experience == "speaker_dep":
+        speakers = ["M01", "M02", "M03", "MO4"]
+        for sp in speakers:
+            speaker_dependant(sp)
+
 
       #  for proc in procs:
      #       proc.join()
