@@ -465,6 +465,9 @@ if __name__=='__main__':
     parser.add_argument('filter_type', type=int,
                         help='0 pas de lissage, 1 lissage en dur, 2 lissage variable crée avec pytorch, 3 lissage variable cree avec en dur')
 
+    parser.add_argument('train a bit on speaker test', type=bool,
+                        help='do you want to add a part of the speaker test in the training set')
+
     args = parser.parse_args()
     test_on =  sys.argv[1]
     n_epochs = int(sys.argv[2])
