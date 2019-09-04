@@ -63,15 +63,13 @@ def cpuStats():
 
 
 
-
 def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_train_on,batch_norma,filter_type,
-                train_a_bit_on_test):
+                train_a_bit_on_test,to_plot ):
     name_corpus_concat = ""
     train_on = []
     delta_test=  1
     lr = 0.001
     to_plot = False
-    only_one_sp=False
     corpus_to_train_on = corpus_to_train_on[1:-1].split(",")
     for corpus in corpus_to_train_on :
         sp = get_speakers_per_corpus(corpus)

@@ -41,7 +41,7 @@ fileset_path = os.path.join(root_folder, "Donnees_pretraitees", "fileset")
 print(sys.argv)
 
 
-def train_model(test_on ,loss_train,pretrain_model):
+def train_model_on_speaker(test_on ,loss_train,pretrain_model):
     n_epochs = 50
     batch_norma = False
     select_arti = True
@@ -281,7 +281,7 @@ if __name__=='__main__':
     pretrain_model = str(sys.argv[3])
     rmse_all,pearson_all = np.zeros((n_per_model,18)), np.zeros((n_per_model,18))
     for k in range(n_per_model):
-        rmse_all[k, :], pearson_all[k, :] = train_model(test_on = test_on, loss_train = loss_train
+        rmse_all[k, :], pearson_all[k, :] = train_model_on_speaker(test_on = test_on, loss_train = loss_train
                                                         , pretrain_model = pretrain_model)
 
     rmse_moy = np.mean(rmse_all,axis=0)
