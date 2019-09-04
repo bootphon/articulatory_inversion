@@ -140,12 +140,12 @@ if __name__=='__main__':
     elif experience == "also_test_both_90":
       for k in range(3):
           speakers = get_speakers_per_corpus("Haskins")
-          speakers = ["M01","M02","M03","MO4"]
+          speakers = ["M01","M02","M03","M04"]
           for sp in speakers:
               cross_val_for_both_90_has_and_test_speaker(sp)
 
     elif experience == "speaker_dep":
-        speakers = ["M01", "M02", "M03", "MO4"]
+        speakers = ["M01", "M02", "M03", "M04"]
         for sp in speakers:
             speaker_dependant(sp)
 
