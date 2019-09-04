@@ -75,17 +75,8 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
         sp = get_speakers_per_corpus(corpus)
         train_on = train_on + sp
         name_corpus_concat = name_corpus_concat+corpus+"_"
-    if only_one_sp:
-        if test_on == "fsew0":
-            train_on = ["msak0"]
-        elif test_on == "msak0":
-            train_on = ["fsew0"]
-        elif test_on == "F01":
-            train_on = ["F02"]
-        else :
 
-            print("vous voulez apprendre sur un speaker et tester sur autre que fsew0")
-            train_on = []
+
        # elif "usc" in corpus_to_train_on:
         #    train_on = ["M3","MNGU0"]
        # elif "Haskins" in corpus_to_train_on:
@@ -102,16 +93,12 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     else :
         device = torch.device("cpu")
 
-    if not(only_one_sp):
-        suff = ""
-        if train_a_bit_on_test :
-            suff = "and_"+test_on+"_"
-        name_file = "train_on_"+name_corpus_concat+suff+"test_on_"+test_on+"_idx_"+str(select_arti)\
-                    +"_loss_"+str(loss_train)+"_typefilter_"+str(filter_type)+"_bn_"+str(batch_norma)
-    else :
-        name_file = "train_on_" +train_on[0] + "_test_on_" + test_on + "_idx_" + str(select_arti)+\
-                    "_loss_"+str(loss_train)+"_typefilter_"+str(filter_type)+"_bn_"+str(batch_norma)
-  #  logger = Logger('./log_' + name_file)
+    suff = ""
+    if train_a_bit_on_test :
+        suff = "and_"+test_on+"_"
+    name_file = "train_on_"+name_corpus_concat+suff+"test_on_"+test_on+"_idx_"+str(select_arti)\
+                +"_loss_"+str(loss_train)+"_typefilter_"+str(filter_type)+"_bn_"+str(batch_norma)
+
 
     previous_models = os.listdir("saved_models")
     previous_models_2 = [x[:len(name_file)] for x in previous_models if x.endswith(".txt")]
