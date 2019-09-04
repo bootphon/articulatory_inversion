@@ -63,6 +63,17 @@ def cross_val_for_rmse_has(speaker):
                     batch_norma=False, filter_type=filter_type,train_a_bit_on_test=False)
 
 
+def cross_val_for_both_90_has(speaker):
+    patience = 3
+    n_epochs = 50
+    select_arti = True
+    corpus_to_train_on = corpus
+    filter_type = 1
+    loss_train ="both_90"
+    train_model(test_on=speaker, n_epochs=n_epochs, loss_train=loss_train, patience=patience,
+                    select_arti=select_arti, corpus_to_train_on=corpus_to_train_on,
+                    batch_norma=False, filter_type=filter_type,train_a_bit_on_test=False)
+
 def cross_val_for_bn_has(speaker):
     patience = 3
     n_epochs = 50
@@ -99,13 +110,6 @@ if __name__=='__main__':
         for k in range(3):
             for sp in speakers:
                 cross_val_for_bn_has(sp)
-            #  proc = Process(target=cross_val_for_alpha_has, args=(sp,))
-            # procs.append(proc)
-            # proc.start()
-
-  #      for proc in procs:
-   #         proc.join()
-
 
     elif experience == "bn":
       for k in range(1):
@@ -117,11 +121,15 @@ if __name__=='__main__':
           for sp in speakers:
               cross_val_for_rmse_has(sp)
 
-    elif experience == "also_test":
+    elif experience == "also_test_rmse":
       for k in range(3):
           for sp in get_speakers_per_corpus("Haskins"):
               cross_val_for_rmse_has_and_test_speaker(sp)
 
+    elif experience == "also_test_both_90":
+      for k in range(3):
+          for sp in get_speakers_per_corpus("Haskins"):
+              cross_val_for_both_90_has(sp)
 
       #  for proc in procs:
      #       proc.join()
