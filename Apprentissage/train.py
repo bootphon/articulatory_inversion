@@ -64,7 +64,7 @@ def cpuStats():
 
 
 def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_train_on,batch_norma,filter_type,
-                train_a_bit_on_test,to_plot ):
+                train_a_bit_on_test ):
     name_corpus_concat = ""
     train_on = []
     delta_test=  1
