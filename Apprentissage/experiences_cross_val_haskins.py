@@ -51,7 +51,7 @@ def cross_val_for_rmse_has_and_test_speaker(speaker):
                     batch_norma=False, filter_type=filter_type,train_a_bit_on_test=True)
 
 
-def cross_val_for_rmse_has(speaker):
+def cross_val_for_rmse_has_and_test_speaker(speaker):
     patience = 3
     n_epochs = 50
     select_arti = True
@@ -60,7 +60,7 @@ def cross_val_for_rmse_has(speaker):
     loss_train ="rmse"
     train_model(test_on=speaker, n_epochs=n_epochs, loss_train=loss_train, patience=patience,
                     select_arti=select_arti, corpus_to_train_on=corpus_to_train_on,
-                    batch_norma=False, filter_type=filter_type,train_a_bit_on_test=False)
+                    batch_norma=False, filter_type=filter_type,train_a_bit_on_test=True)
 
 
 def cross_val_for_both_90_has(speaker):
@@ -119,7 +119,7 @@ if __name__=='__main__':
     elif experience == "rmse":
       for k in range(3):
           for sp in speakers:
-              cross_val_for_rmse_has(sp)
+              cross_val_for_rmse_has_and_test_speaker(sp)
 
     elif experience == "also_test_rmse":
       for k in range(3):
