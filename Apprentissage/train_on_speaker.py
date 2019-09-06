@@ -42,11 +42,13 @@ print(sys.argv)
 
 
 def train_model_on_speaker(test_on ,loss_train,pretrain_model):
+    """
+    Speaker scpecific learning : apprendre et test sur le même speaker.
+    Possibilité d'uiliser un pré-entrainement
+    """
     n_epochs = 50
     batch_norma = False
-    select_arti = True
     filter_type = 1
-    name_corpus_concat = ""
     delta_test=  1
     lr = 0.001
     to_plot = True
@@ -61,13 +63,11 @@ def train_model_on_speaker(test_on ,loss_train,pretrain_model):
         print("SANS PREENTRAINEMENT")
         name_file = "train_on_and_test_on" + test_on + "_loss_" + str(loss_train)
 
-    previous_models = os.listdir("saved_models")
     patience = 5
     hidden_dim = 300
     input_dim = 429
     batch_size = 10
     output_dim = 18
-
 
     early_stopping = EarlyStopping(name_file,patience=patience, verbose=True)
 
