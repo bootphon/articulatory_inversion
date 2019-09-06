@@ -217,12 +217,14 @@ class my_ac2art_modele(torch.nn.Module):
         idx_to_cons = [k for k in range(len(to_cons)) if to_cons[k]]
         for j in idx_to_cons:
             plt.figure()
-            plt.plot(y_pred[:, j],alpha=0.6)
+           # plt.plot(y_pred[:, j],alpha=0.6)
+            plt.plot(y_pred_smooth[:,j])
+
             plt.plot(y[:, j])
-            if len(y_pred_smooth)>0:
-                plt.plot(y_pred_smooth[:,j])
+
             plt.title("prediction_test_{0}_arti_{1}.png".format(self.name_file,str(j)))
-            plt.legend(["prediction", "vraie","pred smoothed"])
+            #plt.legend(["prediction", "vraie","pred smoothed"])
+            plt.legend(["prediction", "vraie"])
             save_pics_path = os.path.join(
                 "images_predictions\\{0}_arti_{1}.png".format(self.name_file,str(j)))
             plt.savefig(save_pics_path)
