@@ -1,8 +1,6 @@
 import torch
 import os
 import sys
-from sklearn.model_selection import train_test_split
-from scipy.signal import butter, lfilter, freqz
 import time
 import math
 from scipy.stats import pearsonr
@@ -11,11 +9,6 @@ from os.path import dirname
 import numpy as np
 from scipy import signal
 import scipy
-from torch.autograd import Variable
-
-try :
-    from Apprentissage import utils
-except :  import utils
 
 
 class my_bilstm(torch.nn.Module):
@@ -263,12 +256,12 @@ class my_bilstm(torch.nn.Module):
             rmse_per_arti_mean = np.mean(all_diff,axis=0)*std_ema
             rmse_per_arti_std = np.std(all_diff,axis=0)*std_ema
       #      print("rmse final : ", np.mean(rmse_per_arti_mean))
-       #     print("rmse mean per arti : \n", rmse_per_arti_mean)
+            print("rmse mean per arti : \n", rmse_per_arti_mean)
         #    print("rmse std per arti : \n", rmse_per_arti_std)
 
             pearson_per_arti_mean = np.mean(all_pearson, axis=0)
             pearson_per_arti_std = np.std(all_pearson, axis=0)
-            print("pearson final : ", np.mean(pearson_per_arti_mean))
+       #     print("pearson final : ", np.mean(pearson_per_arti_mean))
             print("pearson mean per arti : \n", pearson_per_arti_mean)
          #   print("pearson std per arti : \n", pearson_per_arti_std)
         return loss_test
