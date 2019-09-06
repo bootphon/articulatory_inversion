@@ -3,8 +3,8 @@
  dans articulators cest a dire 6 articulateurs en 2Dimensions.
  on ajoute une colonne correspondant à l'ouverture des lèvres, cest donc la 13ème colonne
  on ne normalise pas les données mais on conserve la std et mean des mfcc et ema pour pouvoir normaliser par la suiite)
-
 """
+
 import os
 import time
 import os,sys,inspect
@@ -16,12 +16,10 @@ import numpy as np
 import scipy.signal
 import matplotlib.pyplot as plt
 import scipy.interpolate
-from Traitement.add_dynamic_features import get_delta_features
 import librosa
 import scipy.io as sio
 import glob
-from Traitement.create_filesets import get_fileset_names
-from Traitement.fonctions_utiles import get_fileset_names, get_delta_features
+from Traitement.fonctions_utiles import get_fileset_names, get_delta_features, split_sentences
 
 """ after this script the order of the articulators is the following : """
 

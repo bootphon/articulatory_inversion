@@ -57,8 +57,6 @@ class Corpus():
 
         self.init_variables()
 
-
-
     def get_speakers(self):
         #TODO
         if self.name == "MNGU0":

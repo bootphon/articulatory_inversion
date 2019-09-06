@@ -123,11 +123,12 @@ def train_model_complete(test_on ,n_epochs ,loss_train,patience ,select_arti,cor
         if test_on in train_on:
             train_on.remove(test_on)
 
-    name_file = test_on+"_speaker_"+config+corpus_to_train_on+"_loss_"+str(loss_train)+"_filter_"+str(filter_type)+
+    name_file = test_on+"_speaker_"+config+corpus_to_train_on+"_loss_"+str(loss_train)+"_filter_"+str(filter_type)
     "_bn_"+str(batch_norma)
     previous_models = os.listdir("saved_models")
     previous_models_2 = [x[:len(name_file)] for x in previous_models if x.endswith(".txt")]
     n_previous_same = previous_models_2.count(name_file) #how many times our model was trained
+
     if n_previous_same > 0:
         print("this models has alread be trained {} times".format(n_previous_same))
     else :
@@ -161,17 +162,17 @@ def train_model_complete(test_on ,n_epochs ,loss_train,patience ,select_arti,cor
         model = model.to(device = device)
     load_old_model = True
     if load_old_model:
-     if os.path.exists(file_weights): # veut dire qu'on sest entraîné avant d'avoir le txt final
-        print("modèle précédent pas fini")
-        loaded_state = torch.load(file_weights,map_location = device)
-        model.load_state_dict(loaded_state)
-        model_dict = model.state_dict()
-        loaded_state = {k: v for k, v in loaded_state.items() if
-                        k in model_dict}  # only layers param that are in our current model
-        loaded_state = {k: v for k, v in loaded_state.items() if
-                        loaded_state[k].shape == model_dict[k].shape}  # only if layers have correct shapes
-        model_dict.update(loaded_state)
-        model.load_state_dict(model_dict)
+         if os.path.exists(file_weights): # veut dire qu'on sest entraîné avant d'avoir le txt final
+            print("modèle précédent pas fini")
+            loaded_state = torch.load(file_weights,map_location = device)
+            model.load_state_dict(loaded_state)
+            model_dict = model.state_dict()
+            loaded_state = {k: v for k, v in loaded_state.items() if
+                            k in model_dict}  # only layers param that are in our current model
+            loaded_state = {k: v for k, v in loaded_state.items() if
+                            loaded_state[k].shape == model_dict[k].shape}  # only if layers have correct shapes
+            model_dict.update(loaded_state)
+            model.load_state_dict(model_dict)
 
 
     def criterion_pearson(my_y,my_y_pred): # (L,K,13)
@@ -246,22 +247,24 @@ def train_model_complete(test_on ,n_epochs ,loss_train,patience ,select_arti,cor
     with open('categ_of_speakers.json', 'r') as fp:
         categ_of_speakers = json.load(fp) #dictionnaire en clé la categorie en valeur un dictionnaire
                                             # #avec les speakers dans la catégorie et les arti concernées par cette categorie
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr ) #, betas = beta_param)
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr )
     files_per_categ = dict()
     for categ in categ_of_speakers.keys():
         sp_in_categ = categ_of_speakers[categ]["sp"]
-        sp_in_categ = [sp for sp in sp_in_categ if sp in train_on]
-        # fichiers qui appartiennent à la categorie car le nom du speaker apparait touojurs dans le nom du fichier
-        files_train_this_categ = [[f for f in files_for_train if sp.lower() in f.lower() ]for sp in sp_in_categ]
+        sp_in_categ = [sp for sp in sp_in_categ if sp in train_on] #speakers that interest us & that are in this categ
 
+        # fichiers qui appartiennent à la categorie car le nom du speaker apparait touojurs dans le nom du fichier :
+        files_train_this_categ = [[f for f in files_for_train if sp.lower() in f.lower() ]for sp in sp_in_categ]
         files_train_this_categ = [item for sublist in files_train_this_categ for item in sublist] # flatten la liste de liste
+
         files_valid_this_categ = [[f for f in files_for_valid if sp.lower() in f.lower()] for sp in sp_in_categ]
         files_valid_this_categ = [item for sublist in files_valid_this_categ for item in sublist]  # flatten la liste de liste
 
         if len(files_train_this_categ) > 0 : #meaning we have at least one file in this categ
+            # on va doubler certains elements des "files_valid/train_this_categ" pour en avoir un multiple de batch size
             files_per_categ[categ] = dict()
-            N_iter_categ = int(len(files_train_this_categ)/batch_size)+1         # on veut qu'il y a en ait un multiple du batch size , on en double certains
-            n_a_ajouter = batch_size*N_iter_categ - len(files_train_this_categ) #si 14 element N_iter_categ vaut 2 et n_a_ajouter vaut 6
+            N_iter_categ = int(len(files_train_this_categ)/batch_size)+1
+            n_a_ajouter = batch_size*N_iter_categ - len(files_train_this_categ)
             files_train_this_categ = files_train_this_categ + files_train_this_categ[:n_a_ajouter] #nbr de fichier par categorie multiple du batch size
             random.shuffle(files_train_this_categ)
             files_per_categ[categ]["train"] = files_train_this_categ
@@ -305,7 +308,7 @@ def train_model_complete(test_on ,n_epochs ,loss_train,patience ,select_arti,cor
                 if select_arti:
                     arti_to_consider = categ_of_speakers[categ]["arti"]  # liste de 18 0/1 qui indique les arti à considérer
                     idx_to_ignore = [i for i, n in enumerate(arti_to_consider) if n == "0"]
-                    y_pred[:, :, idx_to_ignore] = 0
+                    y_pred[:, :, idx_to_ignore] = 0 #the grad associated to this value will be zero  : CHECK THAT
                    # y_pred[:,:,idx_to_ignore].detach()
                     #y[:,:,idx_to_ignore].requires_grad = False
 
@@ -399,10 +402,9 @@ def train_model_complete(test_on ,n_epochs ,loss_train,patience ,select_arti,cor
 
 
     if n_epochs>0:
-        model.epoch_ref = model.epoch_ref + epoch
+        model.epoch_ref = model.epoch_ref + epoch # voir si ca marche vrmt pour les rares cas ou on continue un training
         model.load_state_dict(torch.load(os.path.join("saved_models",name_file+'.pt')))
-        torch.save(model.state_dict(), os.path.join( "saved_models",name_file+".txt"))
-
+        torch.save(model.state_dict(), os.path.join( "saved_models",name_file+".txt")) #lorsque .txt ==> training terminé !
 
     random.shuffle(files_for_test)
     x, y = load_data(files_for_test)
@@ -411,7 +413,6 @@ def train_model_complete(test_on ,n_epochs ,loss_train,patience ,select_arti,cor
     std_speaker = np.load(os.path.join(root_folder,"Traitement","norm_values","std_ema_"+test_on+".npy"))
     arti_per_speaker = os.path.join(root_folder, "Traitement", "articulators_per_speaker.csv")
     csv.register_dialect('myDialect', delimiter=';')
-
 
     weight_apres = model.lowpass.weight.data[0, 0, :] #gain du filtre à la fin de l'apprentissage
   #  print("GAIN FILTRE APRES APPRENTISSAGE",sum(weight_apres.cpu()))
@@ -425,9 +426,9 @@ def train_model_complete(test_on ,n_epochs ,loss_train,patience ,select_arti,cor
 
     rmse_per_arti_mean, pearson_per_arti_mean = model.evaluate_on_test(x,y, std_speaker = std_speaker, to_plot=to_plot
                                                                        ,to_consider = arti_to_consider) #,filtered=True)
-    print("name file : ",name_file)
+    print("training done for : ",name_file)
 
-    def write_results_in_csv():
+    def write_results_in_csv(): #l'améliorer !!!!
         with open('resultats_modeles.csv', 'a') as f:
             writer = csv.writer(f)
             row_rmse = [name_file]+rmse_per_arti_mean.tolist()+[model.epoch_ref]
