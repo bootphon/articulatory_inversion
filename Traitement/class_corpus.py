@@ -1,8 +1,16 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+    Created 29 august 2019
+    by Maud Parrot
+    TODO : mettre cette entête sur toutes tes pages de code, avec un dexcriptif de ce que ça fait (j'ai mis une date random, tu peux mettre 'summer 2019)
+"""
 import os,sys,inspect
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0,parentdir)
 
+# TODO: beaucoup d'import on l'air inutiles, enlève les si c'ets le cas
 import os
 import time
 from os.path import dirname
@@ -28,8 +36,15 @@ root_folder = os.path.dirname(os.getcwd())
 
 
 class Corpus():
-
+    # TODO description de la classe et son utilité
     def __init__(self,name):
+        # TODO Faire un descriptif de chaque fonction sous cette forme:
+        """
+        Explication de la fonction
+        :param name: dire ce que c'est et type
+        (si la fonction return quelque chose, tu ajoutes;
+        return: description de ce que c'est et type)
+        """
         super(Corpus, self).__init__()
         self.name = name
         self.sampling_rate_ema = None
@@ -45,6 +60,7 @@ class Corpus():
 
 
     def get_speakers(self):
+        #TODO
         if self.name == "MNGU0":
             speakers = ["MNGU0"]
         elif self.name == "usc":
@@ -59,6 +75,7 @@ class Corpus():
 
 
     def init_variables(self):  #créer un script qui lit un fichier csv avec ces données
+        #TODO
         if self.name == "mocha":
             self.sampling_rate_wav = 16000
             self.sampling_rate_ema = 500
@@ -81,7 +98,9 @@ class Corpus():
 
 
 class Speaker():
+    #TODO
     def __init__(self,name):
+        #TODO
         self.name = name
         self.speakers = None
         self.corpus_name = None
@@ -111,6 +130,7 @@ class Speaker():
 
 
     def get_corpus_name(self):
+        #TODO
         if self.name == "MNGU0":
             corpus = "MNGU0"
         elif self.name in ["F1", "F5", "M1", "M3"]:
@@ -124,6 +144,7 @@ class Speaker():
         self.corpus_name =  corpus
 
     def smooth_data(self,ema,sr = 0):
+        #TODO
         pad = 30
         if sr == 0:
             sr = self.sampling_rate_ema
@@ -140,68 +161,75 @@ class Speaker():
 
 
     def calculate_norm_values(self):
-            list_EMA_traj = self.list_EMA_traj
-            list_MFCC_frames = self.list_MFCC_frames
+        #TODO
+        list_EMA_traj = self.list_EMA_traj
+        list_MFCC_frames = self.list_MFCC_frames
 
-            pad = 30
-            all_mean_ema = np.array([np.mean(traj, axis=0) for traj in list_EMA_traj])
-            np.save(os.path.join("norm_values", "all_mean_ema_" + self.name), all_mean_ema)
-            #    weights_moving_average = low_pass_filter_weight(cut_off=10, sampling_rate=self.sampling_rate_ema)
-            all_mean_ema = np.concatenate([np.expand_dims(np.pad(all_mean_ema[:, k], (pad, pad), "symmetric"), 1)
-                                           for k in range(all_mean_ema.shape[1])], axis=1)  # rajoute pad avant et apres
+        pad = 30
+        all_mean_ema = np.array([np.mean(traj, axis=0) for traj in list_EMA_traj])
+        np.save(os.path.join("norm_values", "all_mean_ema_" + self.name), all_mean_ema)
+        #    weights_moving_average = low_pass_filter_weight(cut_off=10, sampling_rate=self.sampling_rate_ema)
+        all_mean_ema = np.concatenate([np.expand_dims(np.pad(all_mean_ema[:, k], (pad, pad), "symmetric"), 1)
+                                       for k in range(all_mean_ema.shape[1])], axis=1)  # rajoute pad avant et apres
 
-            moving_average = np.array(
-                [np.mean(all_mean_ema[k - pad:k + pad], axis=0) for k in range(pad, len(all_mean_ema) - pad)])
+        moving_average = np.array(
+            [np.mean(all_mean_ema[k - pad:k + pad], axis=0) for k in range(pad, len(all_mean_ema) - pad)])
 
-            all_EMA_concat = np.concatenate([traj for traj in list_EMA_traj], axis=0)
-            std_ema = np.std(all_EMA_concat, axis=0)
-            std_ema[std_ema < 1e-3]=1
+        all_EMA_concat = np.concatenate([traj for traj in list_EMA_traj], axis=0)
+        std_ema = np.std(all_EMA_concat, axis=0)
+        std_ema[std_ema < 1e-3]=1
 
-            mean_ema = np.mean(np.array([np.mean(traj, axis=0) for traj in list_EMA_traj]),
-                               axis=0)  # apres que chaque phrase soit centrée
-            std_mfcc = np.mean(np.array([np.std(frame, axis=0) for frame in list_MFCC_frames]), axis=0)
-            mean_mfcc = np.mean(np.array([np.mean(frame, axis=0) for frame in list_MFCC_frames]), axis=0)
+        mean_ema = np.mean(np.array([np.mean(traj, axis=0) for traj in list_EMA_traj]),
+                           axis=0)  # apres que chaque phrase soit centrée
+        std_mfcc = np.mean(np.array([np.std(frame, axis=0) for frame in list_MFCC_frames]), axis=0)
+        mean_mfcc = np.mean(np.array([np.mean(frame, axis=0) for frame in list_MFCC_frames]), axis=0)
 
-            np.save(os.path.join("norm_values", "moving_average_ema_" + self.name), moving_average)
-            np.save(os.path.join("norm_values", "std_ema_" + self.name), std_ema)
-            np.save(os.path.join("norm_values", "mean_ema_" + self.name), mean_ema)
-            np.save(os.path.join("norm_values", "std_mfcc_" + self.name), std_mfcc)
-            np.save(os.path.join("norm_values", "mean_mfcc_" + self.name), mean_mfcc)
+        np.save(os.path.join("norm_values", "moving_average_ema_" + self.name), moving_average)
+        np.save(os.path.join("norm_values", "std_ema_" + self.name), std_ema)
+        np.save(os.path.join("norm_values", "mean_ema_" + self.name), mean_ema)
+        np.save(os.path.join("norm_values", "std_mfcc_" + self.name), std_mfcc)
+        np.save(os.path.join("norm_values", "mean_mfcc_" + self.name), mean_mfcc)
 
-            self.std_ema = std_ema
-            self.moving_average_ema = moving_average
-            self.mean_ema = mean_ema
-            self.mean_mfcc = mean_mfcc
-            self.std_mfcc = std_mfcc
+        self.std_ema = std_ema
+        self.moving_average_ema = moving_average
+        self.mean_ema = mean_ema
+        self.mean_mfcc = mean_mfcc
+        self.std_mfcc = std_mfcc
 
     def add_vocal_tract(self,my_ema):
         """
+        # TODO: description de la fonction, en ANGLAIS
         :param my_ema: trajectoires EMA (K points) disponibles
         :return: tableau (18,K) en rajoutant les 4 vocal tract , mettant à 0 les trajectoires non disponibles,
         et reorganise dans l'ordre les trajectoires.
         """
         #   print("adding vocal tracts for speaker {}".format(speaker))
         def add_lip_aperture(ema):
+            #TODO
             ind_1, ind_2 = [self.articulators.index("ul_y"), self.articulators.index("ll_y")]
             lip_aperture = ema[:, ind_1] - ema[:, ind_2]  # upperlip_y - lowerlip_y
             return lip_aperture
 
         def add_lip_protrusion(ema):
+            #TODO
             ind_1, ind_2 = [self.articulators.index("ul_x"), self.articulators.index("ll_x")]
             lip_protrusion = (ema[:, ind_1] + ema[:, ind_2]) / 2
             return lip_protrusion
 
         def add_TTCL(ema):  # tongue tip constriction location in degree
+            #TODO
             ind_1, ind_2 = [self.articulators.index("tt_x"), self.articulators.index("tt_y")]
             TTCL = ema[:, ind_1] / np.sqrt(ema[:, ind_1] ** 2 + ema[:, ind_2] ** 2)  # upperlip_y - lowerlip_y
             return TTCL
 
         def add_TBCL(ema):  # tongue body constriction location in degree
+            #TODO
             ind_1, ind_2 = [self.articulators.index("tb_x"), self.articulators.index("tb_y")]
             TBCL = ema[:, ind_1] / np.sqrt(ema[:, ind_1] ** 2 + ema[:, ind_2] ** 2)  # upperlip_y - lowerlip_y
             return TBCL
 
         def get_idx_to_ignore():
+            #TODO
             arti_per_speaker = os.path.join(root_folder, "Traitement", "articulators_per_speaker.csv")
             csv.register_dialect('myDialect', delimiter=';')
             with open(arti_per_speaker, 'r') as csvFile:
@@ -235,15 +263,18 @@ class Speaker():
         return my_ema
 
     def normalize_phrase(self,i,my_ema_filtered,my_mfcc):
+        #TODO
         my_ema_VT = (my_ema_filtered - self.moving_average_ema[i, :]) / self.std_ema
         my_mfcc = (my_mfcc - self.mean_mfcc) / self.std_mfcc
         return my_ema_VT,my_mfcc
 
     def synchro_ema_mfcc(self,my_ema, my_mfcc):
+        #TODO
         my_ema = scipy.signal.resample(my_ema, num=len(my_mfcc))
         return my_ema, my_mfcc
 
 
+# TODO: c'est utile ça ? Si non tu supprimes
 #aa = Speaker("fsew0")
 #aa.smooth_data("yo")
 #print(aa.speakers_with_velum)

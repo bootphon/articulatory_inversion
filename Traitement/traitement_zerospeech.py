@@ -1,3 +1,5 @@
+# TODO: ok ça faut revoir, essaie de diviser en fonction claire, et tu me mets le vrai script dans un main
+
 ### Lecture des données EMA pour le corpus MNGU0. On ne conserve que les données concercnant les articulateurs indiqués
 ### dans articulators cest a dire 6 articulateurs en 2Dimensions.
 ### on normalise on soustrayant pour chaque articulateur sa position moyenne et en divisant par sa std

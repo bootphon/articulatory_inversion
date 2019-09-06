@@ -19,6 +19,7 @@ import scipy
 
 
 def get_delta_features(array, window=5):
+    #TODO
     all_diff = []
     for lag in range(1, window + 1):
         padding = np.ones((lag, array.shape[1]))
@@ -33,6 +34,7 @@ def get_delta_features(array, window=5):
 
 
 def get_speakers_per_corpus(corpus):
+    #TODO
     if corpus == "MNGU0":
         speakers = ["MNGU0"]
     elif corpus == "usc":
@@ -52,6 +54,7 @@ donnees_path = os.path.join(root_folder, "Donnees_pretraitees")
 
 def get_fileset_names(speaker):
     """
+    #TODO: description de ce que tu fais et en ANGLAIS
     :param speaker: un des speaker
     :return: rien
     Ecrit pour le speaker 3 fichiers txt sp_train, sp_test, sp_valid avec les noms des fichiers du train/test/validation set
@@ -85,6 +88,7 @@ def get_fileset_names(speaker):
 
 def get_fileset_names_per_corpus(corpus):
     """
+    # TODO description
     :param corpus: un des corpus "mocha","usc","MNGU0","Haskins"
     :return:  rien, crée les fileset pour tous les speaker du corpus
     """
@@ -99,6 +103,7 @@ def get_fileset_names_per_corpus(corpus):
 #get_fileset_names_per_corpus("MNGU0")
 def read_csv_arti_ok_per_speaker():
     """
+    # TODO description
     :return:
     dictionnaire avec en clé les différentes categories de speaker (categ de A à F pour le moment). Au sein
     d'une catégorie les speakers ont les mêmes arti valides. Ces catégories sont tirées du fichier CSV qui est lu
@@ -133,6 +138,7 @@ def read_csv_arti_ok_per_speaker():
 
 
 def add_voicing(wav, sr):
+    # TODO
     hop_time = 10 / 1000  # en ms
     hop_length = int((hop_time * sr))
     N_frames = int(len(wav) / hop_length)
@@ -145,7 +151,7 @@ def add_voicing(wav, sr):
     #read_csv_arti_ok_per_speaker()
 
 def low_pass_filter_weight(cut_off,sampling_rate):
-
+    # TODO
     fc = cut_off/sampling_rate# Cutoff frequency as a fraction of the sampling rate (in (0, 0.5)).
     if fc > 0.5:
         raise Exception("La frequence de coupure doit etre au moins deux fois la frequence dechantillonnage")

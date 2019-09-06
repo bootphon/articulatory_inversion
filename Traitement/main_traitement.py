@@ -16,6 +16,7 @@ import time
 # from Traitement.create_filesets import get_fileset_names_per_corpus
 
 def main_traitement(corpus_to_treat=["mocha", "usc", "MNGU0", "Haskins"], max="All", split=False):
+    # TODO
     root_path = dirname(dirname(os.path.realpath(__file__)))
 
     if not os.path.exists(os.path.join(os.path.join(root_path, "Traitement", "norm_values"))):
@@ -36,6 +37,7 @@ def main_traitement(corpus_to_treat=["mocha", "usc", "MNGU0", "Haskins"], max="A
 
 
 def traitement_general_per_corpus(corp,max):
+    # TODO
     if corp == "MNGU0":
         traitement_general_mngu0(max)
     elif corp == "usc":
@@ -56,6 +58,7 @@ def traitement_general_per_corpus(corp,max):
  #   main_traitement(max=N_max)
 
 if __name__ == '__main__':
+    #TODO : ok c'est super ça, il faut juste que tu expliques dans le readme comment tu utilsies ça
     corpus = ["MNGU0","mocha","usc","Haskins"]
     procs = []
 

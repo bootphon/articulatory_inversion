@@ -1,3 +1,4 @@
+# TODO
 """ Lecture des données EMA pour le corpus MNGU0. On ne conserve que les données concernant les articulateurs indiqués
  dans articulators cest a dire 6 articulateurs en 2Dimensions.
  on ajoute une colonne correspondant à l'ouverture des lèvres, cest donc la 13ème colonne
@@ -65,6 +66,7 @@ import glob
 
 
 def traitement_general_usc(N_max):
+    #TODO
     corpus = "usc"
     my_corpus_class = Corpus(corpus)
 
@@ -80,7 +82,7 @@ def traitement_general_usc(N_max):
 
 
     def traitement_usc(speaker,N_max=N_max):
-
+    #TODO: normal fonction imbriquées ?
         my_speaker_class = Speaker(speaker)
         root_path = dirname(dirname(os.path.realpath(__file__)))
         path_files_treated = os.path.join(root_path, "Donnees_pretraitees",  speaker)
@@ -88,6 +90,7 @@ def traitement_general_usc(N_max):
         path_files_annotation = os.path.join(root_path, "Donnees_brutes", corpus, speaker, "trans")
 
         def create_missing_dir():
+            #TODO
             if not os.path.exists(os.path.join(path_files_treated, "ema")):
                 os.makedirs(os.path.join(path_files_treated, "ema"))
             if not os.path.exists(os.path.join(path_files_treated, "mfcc")):
@@ -109,6 +112,7 @@ def traitement_general_usc(N_max):
                 os.remove(f)
 
         def cut_all_files(marge):
+            # TODO
             #xtrm_temp_all_sentences = dict()
 
             for j in range(N):
@@ -172,6 +176,7 @@ def traitement_general_usc(N_max):
      #           json.dump(xtrm_temp_all_sentences, dico)
 
         def read_ema_file(m):
+            #TODO
             articulators = ["ul_x", "ul_y", "ll_x", "ll_y", "li_x", "li_y", "td_x", "td_y", "tb_x", "tb_y", "tt_x",
                             "tt_y"]
 
@@ -192,6 +197,7 @@ def traitement_general_usc(N_max):
             return my_ema
 
         def from_wav_to_mfcc(k):
+            #TODO
             path_wav = os.path.join(path_files_brutes, "wav_cut", EMA_files_2[k] + '.wav')
             data, sr = librosa.load(path_wav, sr=sampling_rate_wav_wanted)  # chargement de données
             my_mfcc = librosa.feature.mfcc(y=data, sr=sampling_rate_wav_wanted, n_mfcc=n_coeff,
@@ -206,6 +212,7 @@ def traitement_general_usc(N_max):
             return my_mfcc
 
         def remove_silences(k, my_ema, my_mfcc,marge):
+            #TODO
             # remove blanks at the beginning and the end, en sortie autant de lignes pour les deux
             id_phrase = EMA_files_2[k][16:]
          #   print("id_phrase",id_phrase)

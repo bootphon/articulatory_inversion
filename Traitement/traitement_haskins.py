@@ -1,3 +1,4 @@
+# TODO: ok description à traduire en anglais, et mettre sous la forme décrite en class_corpus.py
 """ Lecture des données EMA pour le corpus MNGU0. On ne conserve que les données concernant les articulateurs indiqués
  dans articulators cest a dire 6 articulateurs en 2Dimensions.
  on ajoute une colonne correspondant à l'ouverture des lèvres, cest donc la 13ème colonne
@@ -59,6 +60,7 @@ import glob
 
 
 def traitement_general_haskins(N_max):
+    # TODO
     corpus = 'Haskins'
     my_corpus_class = Corpus(corpus)
     sampling_rate_ema = 100  # toujours le même, mais lisible directement dans le fichier
@@ -77,12 +79,14 @@ def traitement_general_haskins(N_max):
     n_coeff = 13
 
     def traitement_haskins(speaker,N_max=N_max):
+        # TODO: pourquqoi tu as des def de fonctions imbriquées ?
         my_speaker_class = Speaker(speaker)
         root_path = dirname(dirname(os.path.realpath(__file__)))
         path_files_treated = os.path.join(root_path, "Donnees_pretraitees", speaker)
         path_files_brutes = os.path.join(root_path, "Donnees_brutes", corpus, speaker,"data")
 
         def create_missing_dir():
+            # TODO
             if not os.path.exists(os.path.join(path_files_treated, "ema")):
                 os.makedirs(os.path.join(path_files_treated, "ema"))
             if not os.path.exists(os.path.join(path_files_treated, "mfcc")):
@@ -102,7 +106,9 @@ def traitement_general_haskins(N_max):
 
 
         def read_ema_and_wav(k):
+            # TODO
             def detect_silence(ma_data):
+                # TODO
                 try:  # tous les fichiers ne sont pas organisés dans le même ordre dans le dictionnaire, il semble y avoir deux cas
                     mon_debut = ma_data[0][5][0][0][1][0][1]
                     ma_fin = ma_data[0][5][0][-1][1][0][0]
@@ -209,4 +215,5 @@ def traitement_general_haskins(N_max):
         traitement_haskins(sp,N_max = N_max)
         print("Done Haskins ",sp)
 
+# TODO: c'est normal ça ? C'est un test ? C'est quoi ? Mettre dans un main ou supprimer
 traitement_general_haskins(N_max = 0)

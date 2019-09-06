@@ -1,4 +1,4 @@
-
+# TODO
 
 """
 Module pour traiter les données du corpus mocha, pour les deux locuteurs (fsew0 et msak0)
@@ -38,18 +38,20 @@ np.seterr(all='raise')
 
 
 def traitement_general_mocha(N_max,on_speaker = None):
-
+    # TODO
     my_corpus_class = Corpus("mocha")
     sampling_rate_ema = my_corpus_class.sampling_rate_ema
     sampling_rate_wav = my_corpus_class.sampling_rate_wav
 
     def traitement_mocha(speaker,N_max):
+        # TODO: normal les fonctions imbriquées ?
         my_speaker_class = Speaker(speaker)
         root_path = dirname(dirname(os.path.realpath(__file__)))
         path_files_treated = os.path.join(root_path, "Donnees_pretraitees",  speaker)
         path_files_brutes = os.path.join(root_path, "Donnees_brutes", "mocha", speaker)
 
         def create_missing_dir():
+            #TODO
             if not os.path.exists(os.path.join(path_files_treated, "ema")):
                 os.makedirs(os.path.join(path_files_treated, "ema"))
             if not os.path.exists(os.path.join(path_files_treated, "mfcc")):
@@ -68,6 +70,7 @@ def traitement_general_mocha(N_max,on_speaker = None):
                 os.remove(f)
 
         def read_ema_file(k):
+            #TODO
             path_ema_file = os.path.join(path_files_brutes, EMA_files[k] + ".ema")
             with open(path_ema_file, 'rb') as ema_annotation:
                 column_names = [0] * n_columns
@@ -96,6 +99,7 @@ def traitement_general_mocha(N_max,on_speaker = None):
                 return ema_data
 
         def remove_silences(my_ema,my_mfcc,k):
+            #TODO
             # we remove silences on the mfcc and not on the wav
             # to keep info that there was a silence before (thx to the context trames)
             marge=0
@@ -120,6 +124,7 @@ def traitement_general_mocha(N_max,on_speaker = None):
             return my_ema, my_mfcc
 
         def from_wav_to_mfcc(my_wav):
+            #TODO
             my_mfcc = librosa.feature.mfcc(y=my_wav, sr=sampling_rate_wav, n_mfcc=n_coeff,
                                            n_fft=frame_length, hop_length=hop_length
                                            ).T
@@ -199,5 +204,5 @@ def traitement_general_mocha(N_max,on_speaker = None):
         traitement_mocha(sp,N_max = N_max)
         print("Done mocha ",sp)
 
-
+# TODO: supprimer ou main
 traitement_general_mocha(N_max=0)

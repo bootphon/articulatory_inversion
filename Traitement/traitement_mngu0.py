@@ -1,3 +1,4 @@
+# TODO
 """ Lecture des données EMA pour le corpus MNGU0. On ne conserve que les données concernant les articulateurs indiqués
  dans articulators cest a dire 6 articulateurs en 2Dimensions.
  on ajoute une colonne correspondant à l'ouverture des lèvres, cest donc la 13ème colonne
@@ -33,6 +34,7 @@ order_arti_MNGU0 = [
         'll_x','ll_y']
 
 def traitement_general_mngu0(N_max="All"):
+    # TODO
     speaker = "MNGU0"
     print("en cours MNGU0")
 
@@ -64,6 +66,7 @@ def traitement_general_mngu0(N_max="All"):
     n_coeff = 13
 
     def create_missing_dir():
+        # TODO: c'est normal les fonctions imbriquées ?
         if not os.path.exists(os.path.join(os.path.join(path_files_treated, "ema"))):
             os.makedirs(os.path.join(path_files_treated, "ema"))
         if not os.path.exists(os.path.join(os.path.join(path_files_treated, "ema_final"))):
@@ -79,6 +82,7 @@ def traitement_general_mngu0(N_max="All"):
             os.remove(f)
 
     def read_ema_file(k):
+        # TODO
         """
         :param i: index de l'uttérence (ie numero de phrase) dont les données EMA seront extraites
         :return: les données EMA en format npy pour l'utterance i avec les premiers traitements.
@@ -114,6 +118,7 @@ def traitement_general_mngu0(N_max="All"):
                     ema_data[j] = scipy.interpolate.splev(j, spline)
             return ema_data
     def remove_silences(k, my_ema, my_mfcc):
+        # TODO
         """
         :param k:  index de l'uttérence (ie numero de phrase) pour laquelle on va traiter le fichier EMA et MFCC
         :param my_ema: Données EMA en format .npy en sortie de la fonction first_step_ema_data(i)
@@ -148,6 +153,7 @@ def traitement_general_mngu0(N_max="All"):
         return my_ema, my_mfcc
 
     def from_wav_to_mfcc(my_wav): #reste à enlever les blancs et normaliser et ajouter trames passées et futures
+        # TODO
         """
            :param i: index de l'uttérence (ie numero de phrase) dont les données WAV seront extraites
            :return: les MFCC en format npy pour l'utterance i avec les premiers traitements.
@@ -170,6 +176,7 @@ def traitement_general_mngu0(N_max="All"):
         return my_mfcc
 
     def synchro_ema_mfcc(my_ema, my_mfcc):
+        #TODO
         n_frames_wanted = my_mfcc.shape[0]
         my_ema = scipy.signal.resample(my_ema, num=n_frames_wanted)
         return my_ema, my_mfcc
@@ -211,6 +218,6 @@ def traitement_general_mngu0(N_max="All"):
     print("Done ",speaker)
 
 
-
+# TODO: mettre dans un main ou supprimer
 traitement_general_mngu0(0)
 #print("duree : ",str(t2-t1))

@@ -1,0 +1,15 @@
+- Dans Traitement/ enlever not_used
+- C'est super d'avoir fait un readme, mais je veux bien que tu en fasses une version anglaise (parce que normalement c'est en anglais, idem pour tous les commentaires que tu fais dans ton code)
+- Tu fais bcp de blabla pour rien: dans ta partie traitement donnes juste les commandes à faire
+pour effecture les traitements (tu peux faire un fichier annexe ou tu mets les textes que tu as écrit
+pour décrire les process, mais dans un readme tu mets juste les actions qu'il faut fare pour utiliser ton code)
+- Mais bon j'ai l'impression que ton Readme n'est pas fini du tout... Du coup je te mets ce qu'il faudrait que tu indiques dans le readme dans le readme au vu de ton code:
+    - les requirements (ce qu'il faut installer pour que tu puisses utiliser le code), le mieux pour ça c'est de faire un requirements.txt qui puisse être utiliser par pip avec la liste des modules et les versions
+
+- Je t'ai mis des notes dans ton code avec des TODO, tu devrais les voir facilement avec pycharm:
+    - entête de toutes les pages (voire class_corpus.py)
+    - commentaires en anglais
+    - description de TOUTES les fonctions (description, param et return)
+    - enlever les import inutiles et les parties de code inutiles (en pycharm c pratique ils apparaissent en gris)
+    - si tu as des appels de fonctions à la fin prcéise si c'est un test ou non, et mets les dans des main ou supprimes les
+
