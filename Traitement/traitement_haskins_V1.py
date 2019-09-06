@@ -190,4 +190,5 @@ def traitement_general_haskins(N_max):
         print("Done Haskins ",sp)
 
 
-traitement_general_haskins(N_max=50)
+#Test
+# traitement_general_haskins(N_max=50)
