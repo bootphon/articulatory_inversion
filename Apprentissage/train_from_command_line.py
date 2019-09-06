@@ -1,3 +1,5 @@
+# TODO
+
 import os,sys,inspect
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
@@ -10,7 +12,7 @@ from Traitement.fonctions_utiles import get_speakers_per_corpus
 import sys
 import argparse
 
-
+# TODO: all comments in english
 # plus souvent fixe
 n_epochs = 50
 loss_train = "both_90"
@@ -36,7 +38,7 @@ train_a_bit_on_test = False # si False le speaker-test est exclu du training set
 # CHOISIR LES PARAMETRES QUE TU VEUX MODIFIER RAPIDEMENT A PARTIR DE LA LIGNE DE COMMANDE ET AJOUTE LES EN DESSOUS
 
 if __name__=='__main__':
-
+    # TODO: passer en argparse
     test_on = sys.argv[1] #"F01"
     corpus_to_train_on = sys.argv[2] #"[Haskins]"  # si directement dans la console guillements non nécéssaires
     train_a_bit_on_test = sys.argv[3] # False

@@ -1,3 +1,4 @@
+# TODO: je suppose que ça tu jettes ?
 ### ETUDIER ARTI 6
 
 from class_network import my_bilstm

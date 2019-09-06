@@ -1,3 +1,5 @@
+# TODO
+
 import os,sys,inspect
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
@@ -35,12 +37,14 @@ import json
 
 
 root_folder = os.path.dirname(os.getcwd())
+# TODO: c'est toujtours juste ça ? DIre comment utiliser ce script dans le readme, si il y a des choses à changer selon les utilisateurs, il vaut mieux que ce soit de arguments du script
 fileset_path = os.path.join(root_folder, "Donnees_pretraitees", "fileset")
 
 print(sys.argv)
 
 
 def test_model(test_on ,model_name,was_trained_on=False):
+    # TODO
     n_epochs = 50
     batch_norma = False
     select_arti = True
@@ -135,7 +139,7 @@ def test_model(test_on ,model_name,was_trained_on=False):
 
 
 if __name__=='__main__':
-
+    # TODO: passe en argparse
     test_on =  sys.argv[1]
     model_name = sys.argv[2]
     was_trained_on = sys.argv[3].lower()=="true"

@@ -1,17 +1,20 @@
+# TODO
 import os,sys,inspect
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0,parentdir)
 
 from multiprocessing import Process
-
 from Apprentissage.train import train_model
 from Traitement.fonctions_utiles import get_speakers_per_corpus
 import sys
 import argparse
+
 corpus = "[mocha,MNGU0,usc,Haskins]"
 speakers_cross_val = ["fsew0","msak0","M1","F01","M01","MNGU0"]
+
 def cross_val_for_type_filter(sp):
+    # TODO
     patience = 3
     n_epochs = 50
     select_arti = True
@@ -27,6 +30,7 @@ def cross_val_for_type_filter(sp):
 
 
 def cross_val_for_alpha(sp):
+    #TODO
     patience = 3
     n_epochs = 50
     select_arti = True
@@ -43,6 +47,7 @@ def cross_val_for_alpha(sp):
 
 
 def cross_val_for_bn(sp):
+    #TODO
     patience = 3
     n_epochs = 50
     select_arti = True
@@ -61,6 +66,7 @@ def cross_val_for_bn(sp):
 
 
 if __name__=='__main__':
+    # TODO: je veux bien un détail de ce que tu fais ici
     experience = sys.argv[1]
     if experience == "filter":
         procs = []

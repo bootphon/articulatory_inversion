@@ -1,3 +1,5 @@
+# TODO
+
 """
 ce script est composé de deux fonctions.
 La première d'apprendre la correspondance "articulatoires" "velum" sur le corpus MOCHA.
@@ -26,6 +28,7 @@ from torch.autograd import Variable
 
 
 def concat_all_numpy_from(path,speaker="",file_type=""):
+    " TODO"
     list = []
     for r, d, f in os.walk(path):
         for file in f:
@@ -35,7 +38,7 @@ def concat_all_numpy_from(path,speaker="",file_type=""):
                     list.append(data_file)
     return list #
 
-
+# TODO: c'est toujours vrai ça ? Si dépend utilisateur: à changer
 root_folder = os.path.dirname(os.getcwd())
 fileset_path = os.path.join(root_folder,"Donnees_pretraitees","fileset_train_fsew0_test_msak0")
 arti_fsew0 = np.load(os.path.join(fileset_path,"Y_train.npy"),allow_pickle=True)
@@ -47,7 +50,9 @@ X = [arti_mocha[i][:,:-2] for i in range(len(arti_mocha))] # input : all the art
 Y= [arti_mocha[i][:,-2:] for i in range(len(arti_mocha))] #output velum_x and velum_y
 
 class test_filter(torch.nn.Module):
+    # TODO
     def __init__(self):
+        # TODO
         super(test_filter, self).__init__()
         self.sampling_rate = 500
         self.input_dim = 12 # all arti
@@ -66,6 +71,7 @@ class test_filter(torch.nn.Module):
         self.init_filter_layer()
 
     def prepare_batch(self, x, y):
+        # TODO
         max_lenght = np.max([len(phrase) for phrase in x])
         new_x = torch.zeros((self.batch_size, max_lenght, self.input_dim), dtype=torch.double)
         new_y = torch.zeros((self.batch_size, max_lenght,self.output_dim), dtype=torch.double)
@@ -79,6 +85,7 @@ class test_filter(torch.nn.Module):
         return x, y
 
     def get_filter_weights(self,cutoff):
+        #TODO
         #print(cutoff)
         c = cutoff.item()
         fc = cutoff.item() / self.sampling_rate  # Cutoff frequency as a fraction of the sampling rate (in (0, 0.5)).
@@ -100,6 +107,7 @@ class test_filter(torch.nn.Module):
         return h
 
     def init_filter_layer(self):
+        #TODO
         cutoff  = torch.tensor(self.cutoff,dtype=torch.float64).view(1,1)
         self.cutoff = Variable( cutoff,requires_grad=True)
         self.cutoff.require_grads = True
@@ -119,6 +127,7 @@ class test_filter(torch.nn.Module):
         self.lowpass = lowpass
 
     def filter_layer(self,y):
+        #TODO
         L= len(y[0])
         y = y.double()
     #    y_smoothed = torch.zeros(self.batch_size,L,self.output_dim)
@@ -144,6 +153,7 @@ class test_filter(torch.nn.Module):
         return y_smoothed
 
     def forward(self, x):
+        #TODO
         dense_out = torch.nn.functional.relu(self.first_layer(x))
         dense_out_2 = torch.nn.functional.relu(self.second_layer(dense_out))
         y_pred = self.readout_layer(dense_out_2)
@@ -154,6 +164,7 @@ class test_filter(torch.nn.Module):
 
 
 def train_model(lr=0.05,n_epochs=20):
+    #TODO
     pourcent_valid = 0.1
     pourcent_test = 0.3
     X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=pourcent_test, random_state=1)
@@ -213,6 +224,7 @@ def train_model(lr=0.05,n_epochs=20):
       #  print("1 et 2 same ? ",weights_before==weights_after_1)
        # print("2 et 3 same ? ",weights_after_2==weights_after_1)
 
+# TODO: c'est normal ça ? SI c'est pour un test il faut le mettre dans un main
 train_model(n_epochs=2,lr=0.01)
 
 
