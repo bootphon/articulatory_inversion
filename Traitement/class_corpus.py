@@ -42,8 +42,6 @@ class Corpus():
 
         self.init_variables()
 
-
-
     def get_speakers(self):
         if self.name == "MNGU0":
             speakers = ["MNGU0"]

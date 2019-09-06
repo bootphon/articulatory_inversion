@@ -1,9 +1,4 @@
-""" Lecture des données EMA pour le corpus MNGU0. On ne conserve que les données concernant les articulateurs indiqués
- dans articulators cest a dire 6 articulateurs en 2Dimensions.
- on ajoute une colonne correspondant à l'ouverture des lèvres, cest donc la 13ème colonne
- on ne normalise pas les données mais on conserve la std et mean des mfcc et ema pour pouvoir normaliser par la suiite)
 
-"""
 import os
 import time
 import os,sys,inspect
@@ -17,12 +12,10 @@ import matplotlib.pyplot as plt
 import scipy.interpolate
 
 import librosa
-from Apprentissage.utils import low_pass_filter_weight
-from Traitement.split_sentences import split_sentences
-from Traitement.fonctions_utiles import get_delta_features,get_fileset_names
+
+from Traitement.fonctions_utiles import get_delta_features,get_fileset_names, split_sentences
 import scipy.io as sio
 import shutil
-#from Traitement.create_filesets import get_fileset_names
 import glob
 import json
 

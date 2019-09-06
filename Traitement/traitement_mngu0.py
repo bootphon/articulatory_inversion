@@ -1,9 +1,4 @@
-""" Lecture des données EMA pour le corpus MNGU0. On ne conserve que les données concernant les articulateurs indiqués
- dans articulators cest a dire 6 articulateurs en 2Dimensions.
- on ajoute une colonne correspondant à l'ouverture des lèvres, cest donc la 13ème colonne
- on ne normalise pas les données mais on conserve la std et mean des mfcc et ema pour pouvoir normaliser par la suiite)
 
-"""
 import os,sys,inspect
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
@@ -20,11 +15,10 @@ import librosa
 import shutil
 
 import glob
-from Traitement.split_sentences import split_sentences
 import multiprocessing as mp
 
 from Traitement.class_corpus import Speaker
-from Traitement.fonctions_utiles import get_fileset_names,get_delta_features
+from Traitement.fonctions_utiles import get_fileset_names,get_delta_features,split_sentences
 
 """ after this script the order of the articulators is the following : """
 order_arti_MNGU0 = [
@@ -212,5 +206,5 @@ def traitement_general_mngu0(N_max="All"):
 
 
 
-traitement_general_mngu0(0)
+traitement_general_mngu0(200)
 #print("duree : ",str(t2-t1))

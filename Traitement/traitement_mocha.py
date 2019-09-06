@@ -1,18 +1,5 @@
 
 
-"""
-Module pour traiter les données du corpus mocha, pour les deux locuteurs (fsew0 et msak0)
-On filtre sur les 6 articulateurs indiqués .
-Enleve les silences en début et fin.
-Resample ema pour avoir 1 position par articulateur pour chaque frame mfcc.
-
-Normalisation : on calcule la moyenne glissante des positions moyennes des articulateurs pour chaque trame, puis
-on soustrait cette moyenne. A la fin on rajoute à chaque position la position moyenne sur l'ensemble des phrases (et
-pas seulement celle autour de la trame en question). Cette moyenne glissante est implémentée avec le même filtre passe
-bas que pour filtrer les trajectoires, mais cette fois ci avec une fréquence de coupure de 10Hz.
-On normalise ensuite en divisant par l'écart type max (sur lensemble des articulateurs).
-
-"""
 import os,sys,inspect
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
@@ -29,7 +16,7 @@ import scipy.interpolate
 import librosa
 import shutil
 
-from Traitement.fonctions_utiles import get_fileset_names, get_delta_features
+from Traitement.fonctions_utiles import get_fileset_names, get_delta_features, split_sentences
 import glob
 import multiprocessing as mp
 from Traitement.class_corpus import Corpus,Speaker
