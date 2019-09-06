@@ -1,3 +1,5 @@
+# TODO
+
 import os,sys,inspect
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
@@ -43,6 +45,7 @@ print(sys.argv)
 
 
 def memReport(all = False):
+    # TODO: tu l'uilises ça ?
     nb_object = 0
     for obj in gc.get_objects():
         if torch.is_tensor(obj):
@@ -53,6 +56,7 @@ def memReport(all = False):
 
 
 def cpuStats():
+    # TODO : tu l'utilises ça ?
     print(sys.version)
     print(psutil.cpu_percent())
     print(psutil.virtual_memory())  # physical memory usage
@@ -65,6 +69,7 @@ def cpuStats():
 
 def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_train_on,batch_norma,filter_type,
                 train_a_bit_on_test ):
+    # TODO: elle est un peu longue cette foncton, il y a aucun moyen pour que tu la découpes en sous fonctions ?
     name_corpus_concat = ""
     train_on = []
     delta_test=  1
@@ -147,6 +152,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
 
 
     def criterion_pearson(my_y,my_y_pred): # (L,K,13)
+        # TODO
         y_1 = my_y - torch.mean(my_y,dim=1,keepdim=True)
         y_pred_1 = my_y_pred - torch.mean(my_y_pred,dim=1,keepdim=True)
         nume=  torch.sum(y_1* y_pred_1,dim=1,keepdim=True) # y*y_pred multi terme à terme puis on somme pour avoir (L,1,13)
@@ -166,8 +172,10 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     criterion_rmse = torch.nn.MSELoss(reduction='sum')
 
     def criterion_both(L):
+        # TODO
         L = L/100 #% de pearson dans la loss
         def criterion_both_lbd(my_y,my_ypred):
+            # TODO: evite les fonctions imbriquées
             a = L * criterion_pearson(my_y, my_ypred)
             b = (1 - L) * criterion_rmse(my_y, my_ypred) / 1000
             new_loss = a + b
@@ -333,6 +341,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
         # ================================================================== #
         #                        Tensorboard Logging                         #
         # ================================================================== #
+        # TODO: enlève tous els trucs inutiles
 
         # 1. Log scalar values (scalar summary)
         info = {'loss': loss_train_this_epoch}
@@ -433,6 +442,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
     #model.evaluate_on_test(x,y, to_plot=to_plot,filtered=False)
 
 if __name__=='__main__':
+    # TODO: tous les comments dans le argparse doivent être en anglais
     import argparse
     parser = argparse.ArgumentParser(description='Train and save a model.')
     parser.add_argument('test_on', type=str,
@@ -469,6 +479,7 @@ if __name__=='__main__':
                         help='do you want to add a part of the speaker test in the training set')
 
     args = parser.parse_args()
+    # TODO: pq tu as à la fois des sys.argv et des args?
     test_on =  sys.argv[1]
     n_epochs = int(sys.argv[2])
     loss_train = sys.argv[3]

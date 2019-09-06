@@ -1,3 +1,4 @@
+# TODO
 import os,sys,inspect
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
@@ -38,6 +39,7 @@ speakers = get_speakers_per_corpus(corpus)
 
 
 def cross_val_for_type_filter_has_indep(): #influence du filtre ==> pas bcp
+    # TODO
     corpus_to_train_on = str(corpus)
     for filter_type in [0,1,2] :
         count = 0
@@ -62,6 +64,7 @@ def cross_val_for_type_filter_has_indep(): #influence du filtre ==> pas bcp
 
 
 def cross_val_for_bn_has_indep(): #influence du filtre ==> pas bcp
+    # TODO
     corpus_to_train_on = str(corpus)
     for batch_norma in ["True","False"] :
         count = 0
@@ -86,6 +89,7 @@ def cross_val_for_bn_has_indep(): #influence du filtre ==> pas bcp
 
 
 def cross_val_for_alpha_has_indep(): #influence du filtre ==> pas bcp
+    # TODO
     corpus_to_train_on = str(corpus)
     for alpha in [0,20,40,60,80,100] :
         count = 0
@@ -110,6 +114,7 @@ def cross_val_for_alpha_has_indep(): #influence du filtre ==> pas bcp
 
 
 def cross_val_indep(): #influence du filtre ==> pas bcp
+    # TODO
     corpus_to_train_on = str(corpus)
     for alpha in [0,20,40,60,80,100] :
         count = 0
@@ -135,6 +140,7 @@ def cross_val_indep(): #influence du filtre ==> pas bcp
 
 
 def cross_val_for_both_90_has_and_test_speaker(speaker): #resultats de non généralisation both90
+    # TODO
     patience = 3
     n_epochs = 50
     select_arti = True
@@ -146,10 +152,12 @@ def cross_val_for_both_90_has_and_test_speaker(speaker): #resultats de non gén�
                     batch_norma=False, filter_type=filter_type,train_a_bit_on_test=True)
 
 def speaker_dependant(speaker):
+    # TODO
     train_model_on_speaker(speaker,"rmse","non")
     train_model_on_speaker(speaker,"both_90","non")
 
 if __name__=='__main__':
+    # TODO: j'ai l'imression que dans ce main il y a des problèmes de nom de fonctions ?
     experience = sys.argv[1]
     speakers = ["M01", "M02", "M03", "M04"]
 

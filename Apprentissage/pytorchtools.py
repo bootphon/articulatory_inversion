@@ -1,11 +1,14 @@
+# TODO: d'où vient ce code ? Si tu l'as pris de pytorch il faut le mettre, et mettre le site d'où tu l'as pris
 import numpy as np
 import os
 import torch
 
 class EarlyStopping:
+    # TODO
     """Early stops the training if validation loss doesn't improve after a given patience."""
     def __init__(self, speaker, patience=7, verbose=False):
         """
+        # TODO
         Args:
             patience (int): How long to wait after last time validation loss improved.
                             Default: 7
@@ -22,7 +25,7 @@ class EarlyStopping:
         self.epoch = None
 
     def __call__(self, val_loss, model):
-
+        # TODO
         score = -val_loss
 
         if self.best_score is None:
@@ -39,6 +42,7 @@ class EarlyStopping:
             self.counter = 0
 
     def save_checkpoint(self, val_loss, model):
+        # TODO
         '''Saves model when validation loss decrease.'''
         if self.verbose:
             print(f'Validation loss decreased ({self.val_loss_min:.6f} --> {val_loss:.6f}).  Saving model ...')

@@ -1,3 +1,5 @@
+# TODO
+
 import os,sys,inspect
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
@@ -35,6 +37,7 @@ from os import listdir
 import json
 from Apprentissage.logger import Logger
 
+# TODO: SI pas général à mettre dans les arguments du script
 root_folder = os.path.dirname(os.getcwd())
 fileset_path = os.path.join(root_folder, "Donnees_pretraitees", "fileset")
 
@@ -42,6 +45,7 @@ print(sys.argv)
 
 
 def memReport(all = False):
+    #TODO: tu utilises ça ?
     nb_object = 0
     for obj in gc.get_objects():
         if torch.is_tensor(obj):
@@ -52,6 +56,7 @@ def memReport(all = False):
 
 
 def cpuStats():
+    # TODO tu utilises ça ?
     print(sys.version)
     print(psutil.cpu_percent())
     print(psutil.virtual_memory())  # physical memory usage
@@ -63,7 +68,9 @@ def cpuStats():
 
 def train_model_complete(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_train_on,batch_norma,filter_type,
                 train_a_bit_on_test,to_plot, lr,delta_test,config):
+    # TODO: je pense que tu peux découper ça en sous fonctions pour que ce soit plus lisible et débuggagble
     """
+    TODO: description, et apparemment la variable train_a_bit_on_test n'est pas utilisée
     :param test_on: (str) one speaker's name we want to test on, the speakers and the corpus the come frome can be seen in
     "fonction_utiles.py", in the function "get_speakers_per_corpus'.
 
@@ -176,6 +183,7 @@ def train_model_complete(test_on ,n_epochs ,loss_train,patience ,select_arti,cor
 
 
     def criterion_pearson(my_y,my_y_pred): # (L,K,13)
+        # TODO: à sortir pas besoin imbriqué
         y_1 = my_y - torch.mean(my_y,dim=1,keepdim=True)
         y_pred_1 = my_y_pred - torch.mean(my_y_pred,dim=1,keepdim=True)
         nume=  torch.sum(y_1* y_pred_1,dim=1,keepdim=True) # y*y_pred multi terme à terme puis on somme pour avoir (L,1,13)
@@ -195,8 +203,10 @@ def train_model_complete(test_on ,n_epochs ,loss_train,patience ,select_arti,cor
     criterion_rmse = torch.nn.MSELoss(reduction='sum')
 
     def criterion_both(L):
+        # TODO
         L = L/100 #% de pearson dans la loss
         def criterion_both_lbd(my_y,my_ypred):
+            #TODO
             a = L * criterion_pearson(my_y, my_ypred)
             b = (1 - L) * criterion_rmse(my_y, my_ypred) / 1000
             new_loss = a + b
@@ -215,6 +225,7 @@ def train_model_complete(test_on ,n_epochs ,loss_train,patience ,select_arti,cor
     criterion = criterion_both(lbd)
 
     def plot_filtre(weights) :
+        # TODO
         print("GAIN", sum(weights))
         freqs, h = signal.freqz(weights)
         freqs = freqs * 100 / (2 * np.pi)  # freq in hz
@@ -429,6 +440,7 @@ def train_model_complete(test_on ,n_epochs ,loss_train,patience ,select_arti,cor
     print("training done for : ",name_file)
 
     def write_results_in_csv(): #l'améliorer !!!!
+        # TODO
         with open('resultats_modeles.csv', 'a') as f:
             writer = csv.writer(f)
             row_rmse = [name_file]+rmse_per_arti_mean.tolist()+[model.epoch_ref]

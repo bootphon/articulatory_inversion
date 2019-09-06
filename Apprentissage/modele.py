@@ -1,3 +1,5 @@
+#TODO
+
 import torch
 import os,sys,inspect
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
@@ -16,7 +18,9 @@ import scipy
 from torch.autograd import Variable
 from Apprentissage import utils
 import gc
+
 def memReport(all = False):
+    #TODO: mais elle te sert cette fonction ?
     nb_object = 0
     for obj in gc.get_objects():
         if torch.is_tensor(obj):
@@ -28,6 +32,7 @@ def memReport(all = False):
 
 
 class my_ac2art_modele(torch.nn.Module):
+    # TODO: là c'est super important de bien détailler
     def __init__(self, hidden_dim, input_dim, output_dim, batch_size,name_file="", sampling_rate=100,
                  window=5, cutoff=10,cuda_avail =False,modele_filtered=False,batch_norma=False):
         root_folder = os.path.dirname(os.getcwd())
@@ -82,6 +87,7 @@ class my_ac2art_modele(torch.nn.Module):
 
     def prepare_batch(self, x, y):
         """
+        #TODO : il faut que tu décrives ce que ça fait, et le type entré/sortie en ANGLAIS
         :param x: liste de B données accoustiques de longueurs variables  (B souvent 10 batchsize sauf pour l'éval)
         :param y: liste de B données articulatoires correspondantes de longueurs variables (B souvent 10 batchsize sauf pour l'éval)
         :return: les x et y zeropaddé de telle sorte que chacun ait la même longueur.
@@ -103,6 +109,7 @@ class my_ac2art_modele(torch.nn.Module):
         return x, y
 
     def forward(self, x, filter_output =None) :
+        # TODO
         if filter_output is None :
             filter_output = (self.modele_filtered != 0)
         dense_out =  torch.nn.functional.relu(self.first_layer(x))
@@ -126,8 +133,9 @@ class my_ac2art_modele(torch.nn.Module):
         return y_pred
 
     def init_filter_layer(self):
-
+        # TODO : est ce que les fonctions imbriquées sont nécessaires ?
         def get_filter_weights():
+            #TODO
             cutoff = torch.tensor(self.cutoff, dtype=torch.float64,requires_grad=True).view(1, 1)
             fc = torch.div(cutoff,
                   self.sampling_rate)  # Cutoff frequency as a fraction of the sampling rate (in (0, 0.5)).
@@ -149,6 +157,7 @@ class my_ac2art_modele(torch.nn.Module):
             return h
 
         def get_filter_weights_en_dur():
+            # TODO
             fc = self.cutoff/self.sampling_rate
             if fc > 0.5:
                 raise Exception("La frequence de coupure doit etre au moins deux fois la frequence dechantillonnage")
@@ -178,7 +187,7 @@ class my_ac2art_modele(torch.nn.Module):
         elif self.modele_filtered == 3:
             lowpass.weight = torch.nn.Parameter(weight_init)
 
-        else : #0 balek ou 1 en dur
+        else : #0 balek ou 1 en dur TODO: hum.. balek ?
             lowpass.weight = torch.nn.Parameter(weight_init,requires_grad = False)
 
 
@@ -187,6 +196,7 @@ class my_ac2art_modele(torch.nn.Module):
         self.lowpass = lowpass
 
     def filter_layer(self, y):
+        # TODO
         B = len(y) # batch size
         L = len(y[0])
         #     y= y.view(self.batch_size,self.output_dim,L)
@@ -196,6 +206,7 @@ class my_ac2art_modele(torch.nn.Module):
             traj_arti = y[:, :, i].view(B, 1, L)
           #  print("traj arti shape",traj_arti.shape)
             traj_arti_smoothed = self.lowpass(traj_arti)  # prend que une seule dimension
+            # TODO: enlève tous les codes non nécessaires
             #difference = int((L-traj_arti_smoothed.shape[2])/ 2)
             #if difference != 0:
               #  print("PAS MEME SHAPE AVANT ET APRES FILTRAGE !")
@@ -211,6 +222,7 @@ class my_ac2art_modele(torch.nn.Module):
         return y_smoothed
 
     def plot_results(self, y, y_pred,y_pred_smooth = None,to_cons=[]):
+        # TODO
         print("you chose to plot")
         plt.figure()
 
@@ -233,6 +245,7 @@ class my_ac2art_modele(torch.nn.Module):
 
     def evaluate_on_test(self,X_test,Y_test, std_speaker ,to_plot=False,to_consider=None,verbose=True):
         """
+        # TODO: description nécessaire
         :param X_test:  list of all the input of the test set
         :param Y_test:  list of all the target of the test set
         :param std_speaker : list of the std of each articulator, useful to calculate the RMSE of the predicction

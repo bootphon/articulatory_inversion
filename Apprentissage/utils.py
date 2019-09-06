@@ -1,3 +1,4 @@
+# TODO: ah bon c'est un code facebook ? Je pense pas... change l'entête
 # Copyright (c) 2018-present, Facebook, Inc.
 # All rights reserved.
 #
@@ -16,7 +17,7 @@ from numpy.random import choice
 
 def load_filenames(train_on,batch_size,part=["train"]):
     """
-
+    # TODO: description en anglais
     :param train_on:  liste des locuteurs sur lesquels on apprend (parmis "fsew0","msak0","MNGU0")
     :param batch_size: nombre de phrase sur lesquelles on veut apprendre au sein d'un batch
     :return: x,y deux listes de longueur batch_size. x contient des numpy array de format (K,429) et y de format (K, nombre_arti)
@@ -60,6 +61,7 @@ def load_filenames(train_on,batch_size,part=["train"]):
     return train_files
 
 def load_filenames_deter(train_on,part=["train"]):
+    # TODO
     path_files = os.path.join(os.path.dirname(os.getcwd()),"Donnees_pretraitees","fileset")
     filenames = []
     for speaker in train_on:
@@ -71,7 +73,7 @@ def load_filenames_deter(train_on,part=["train"]):
 
 def load_data(files_names,filtered=True):
     """
-
+    TODO: description
     :param files_names: liste des n
     :param filtered:
     :return:
@@ -105,6 +107,7 @@ def load_data(files_names,filtered=True):
 #print(x[0].shape,y[0].shape)
 
 def chirp(f0, f1, T, fs):
+    # TODO: description propre
     # f0 is the lower bound of the frequency range, in Hz
     # f1 is the upper bound of the frequency range, in Hz
     # T is the duration of the chirp, in seconds
@@ -112,15 +115,19 @@ def chirp(f0, f1, T, fs):
     slope = (f1-f0)/float(T)
 
     def chirp_wave(t):
+        # TODO: pq imbriqué ?
         return np.cos((0.5*slope*t+f0)*2*np.pi*t)
     return [chirp_wave(t) for t in np.linspace(0, T, T*fs).tolist()]
 
 
 def window(window_type, N):
+    # TODO
     def hanning(n):
+        # TODO: pq imbriqué ? Fait une classe plutot
         return 0.5*(1 - np.cos(2 * np.pi * (n - 1) / (N - 1)))
 
     def hamming(n):
+        # TODO idem
         return 0.54 - 0.46 * np.cos(2 * np.pi * (n - 1) / (N - 1))
 
     if window_type == 'hanning':
@@ -130,15 +137,18 @@ def window(window_type, N):
 
 
 def low_pass_filter_weight_old(cut_off,sampling_rate,len_window,window_type="hanning"):
+    # TODO
     N=len_window-1
     if cut_off>sampling_rate/2:
         raise Exception("La frequence de coupure doit etre au moins deux fois la frequence dechantillonnage")
     def hanning_un_point(n):
+        # TODO
         value=0.5*(1 - np.cos(2 * np.pi * n/N))
         return value
     hanning_weights = [hanning_un_point(n) for n in range(len_window)]
     cut_off_norm = cut_off/sampling_rate
     def sinc_un_point(n):
+        # TODO
         if n!= len_window/2:
             value = np.sin(2*np.pi*cut_off_norm*(n-N/2))/(np.pi*(n-N/2))
         else :
@@ -158,7 +168,7 @@ def low_pass_filter_weight_old(cut_off,sampling_rate,len_window,window_type="han
 #low_pass_filter_weight(cut_off=70,sampling_rate=200,len_window=100)
 
 def low_pass_filter_weight(cut_off,sampling_rate):
-
+    # TODO
     fc = cut_off/sampling_rate # Cutoff frequency as a fraction of the sampling rate (in (0, 0.5)).
     print(fc)
     if fc > 0.5:
@@ -217,6 +227,7 @@ def low_pass_filter_weight(cut_off,sampling_rate):
 
 
 
+# TODO: si inutile à supprimer
 #weights = low_pass_filter_weight(30,500)
 """
 f_1=20
