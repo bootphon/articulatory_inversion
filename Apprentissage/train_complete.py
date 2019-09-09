@@ -54,7 +54,6 @@ def memReport(all = False):
             nb_object += 1
     print('nb objects tensor', nb_object)
 
-
 def cpuStats():
     # TODO tu utilises ça ?
     print(sys.version)
@@ -64,6 +63,121 @@ def cpuStats():
     py = psutil.Process(pid)
     memoryUse = py.memory_info()[0] / 2. ** 30  # memory use in GB...I think
     print('memory GB:', memoryUse)
+
+def criterion_pearson(y,y_pred, cuda_avail, device): # (L,K,13)
+    # TODO: à sortir pas besoin imbriqué
+    y_1 = y - torch.mean(y,dim=1,keepdim=True)
+    y_pred_1 = y_pred - torch.mean(y_pred,dim=1,keepdim=True)
+    nume=  torch.sum(y_1* y_pred_1,dim=1,keepdim=True) # y*y_pred multi terme à terme puis on somme pour avoir (L,1,13)
+  #pour chaque trajectoire on somme le produit de la vriae et de la predite
+    deno =  torch.sqrt(torch.sum(y_1 ** 2,dim=1,keepdim=True)) * torch.sqrt(torch.sum(y_pred_1 ** 2,dim=1,keepdim=True))# use Pearson correlation
+    # deno zero veut dire ema constant à 0 on remplace par des 1
+    minim = torch.tensor(0.01,dtype=torch.float64)
+    if cuda_avail:
+        minim = minim.to(device=device)
+        deno = deno.to(device=device)
+        nume = nume.to(device=device)
+    deno = torch.max(deno,minim)
+    my_loss = torch.div(nume,deno)
+    my_loss = torch.sum(my_loss) #pearson doit etre le plus grand possible
+    return -my_loss
+
+
+def criterion_both(L, cuda_avail,device):
+    # TODO
+    L = L/100 #% de pearson dans la loss
+
+    def criterion_both_lbd(my_y,my_ypred):
+        #TODO
+        a = L * criterion_pearson(my_y, my_ypred,cuda_avail,device)
+        b = (1 - L) * torch.nn.MSELoss(reduction='sum')(my_y, my_ypred) / 1000
+        new_loss = a + b
+      #  print(a,b,new_loss)
+       # return new_loss
+        return new_loss
+    return criterion_both_lbd
+
+
+def plot_filtre(weights) :
+        # TODO
+        print("GAIN", sum(weights))
+        freqs, h = signal.freqz(weights)
+        freqs = freqs * 100 / (2 * np.pi)  # freq in hz
+        plt.plot(freqs, 20 * np.log10(abs(h)), 'r')
+        plt.title("Allure filtre passe bas à la fin de l'apprentissage pour filtre en dur")
+        plt.ylabel('Amplitude [dB]')
+        plt.xlabel("real frequency")
+        plt.show()
+
+def give_me_train_on(corpus_to_train_on,test_on,config):
+    name_corpus_concat = ""
+
+    if config == "spe":  # speaker specific
+        corpus_to_train_on = ""
+        train_on = [""]  # only train on the test speaker
+
+    elif config in ["indep", "dep"]:  # train on other corpuses
+        train_on = []
+        corpus_to_train_on = corpus_to_train_on[1:-1].split(",")
+        for corpus in corpus_to_train_on:
+            sp = get_speakers_per_corpus(corpus)
+            train_on = train_on + sp
+            name_corpus_concat = name_corpus_concat + corpus + "_"
+        if test_on in train_on:
+            train_on.remove(test_on)
+
+    return name_corpus_concat, train_on
+
+def give_me_train_valid_test(train_on,test_on, config, batch_size):
+    if config == "spec":
+        files_for_train = load_filenames_deter([test_on], part=["train"])
+        files_for_valid = load_filenames_deter([test_on], part=["valid"])
+        files_for_test = load_filenames_deter([test_on], part=["test"])
+
+    elif config == "dep":
+        files_for_train = load_filenames_deter(train_on, part=["train", "test"]) + \
+                          load_filenames_deter([test_on], part=["train"])
+        files_for_valid = load_filenames_deter(train_on, part=["valid"]) + \
+                          load_filenames_deter([test_on], part=["valid"])
+        files_for_test = load_filenames_deter([test_on], part=["test"])
+
+    elif config == "indep":
+        files_for_train = load_filenames_deter(train_on, part=["train", "test"])
+        files_for_valid = load_filenames_deter(train_on, part=["valid"])
+        files_for_test = load_filenames_deter([test_on], part=["train", "valid", "test"])
+
+    files_per_categ = dict()
+
+    with open('categ_of_speakers.json', 'r') as fp:
+        categ_of_speakers = json.load(fp)  # dictionnaire en clé la categorie en valeur un dictionnaire
+        # #avec les speakers dans la catégorie et les arti concernées par cette categorie
+
+    for categ in categ_of_speakers.keys():
+        sp_in_categ = categ_of_speakers[categ]["sp"]
+        sp_in_categ = [sp for sp in sp_in_categ if sp in train_on] #speakers that interest us & that are in this categ
+
+        # fichiers qui appartiennent à la categorie car le nom du speaker apparait touojurs dans le nom du fichier :
+        files_train_this_categ = [[f for f in files_for_train if sp.lower() in f.lower() ]for sp in sp_in_categ]
+        files_train_this_categ = [item for sublist in files_train_this_categ for item in sublist] # flatten la liste de liste
+
+        files_valid_this_categ = [[f for f in files_for_valid if sp.lower() in f.lower()] for sp in sp_in_categ]
+        files_valid_this_categ = [item for sublist in files_valid_this_categ for item in sublist]  # flatten la liste de liste
+
+        if len(files_train_this_categ) > 0 : #meaning we have at least one file in this categ
+            # on va doubler certains elements des "files_valid/train_this_categ" pour en avoir un multiple de batch size
+            files_per_categ[categ] = dict()
+            N_iter_categ = int(len(files_train_this_categ)/batch_size)+1
+            n_a_ajouter = batch_size*N_iter_categ - len(files_train_this_categ)
+            files_train_this_categ = files_train_this_categ + files_train_this_categ[:n_a_ajouter] #nbr de fichier par categorie multiple du batch size
+            random.shuffle(files_train_this_categ)
+            files_per_categ[categ]["train"] = files_train_this_categ
+            N_iter_categ = int(len(  files_valid_this_categ) / batch_size) + 1  # on veut qu'il y a en ait un multiple du batch size , on en double certains
+            n_a_ajouter = batch_size * N_iter_categ - len(files_valid_this_categ)  # si 14 element N_iter_categ vaut 2 et n_a_ajouter vaut 6
+            files_valid_this_categ = files_valid_this_categ + files_valid_this_categ[:n_a_ajouter] # nbr de fichier par categorie multiple du batch size
+            random.shuffle(files_valid_this_categ)
+            files_per_categ[categ]["valid"] = files_valid_this_categ
+        return files_per_categ, files_for_test
+
 
 
 def train_model_complete(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_train_on,batch_norma,filter_type,
@@ -114,24 +228,11 @@ def train_model_complete(test_on ,n_epochs ,loss_train,patience ,select_arti,cor
     """
 
 
+    name_corpus_concat, train_on = give_me_train_on(corpus_to_train_on, test_on,config)
 
-    name_corpus_concat = ""
-    if config == "spe": #speaker specific
-        corpus_to_train_on = ""
-        train_on = [""]  # only train on the test speaker
-
-    elif config in ["indep","dep"] : # train on other corpuses
-        train_on = []
-        corpus_to_train_on = corpus_to_train_on[1:-1].split(",")
-        for corpus in corpus_to_train_on:
-            sp = get_speakers_per_corpus(corpus)
-            train_on = train_on + sp
-            name_corpus_concat = name_corpus_concat + corpus + "_"
-        if test_on in train_on:
-            train_on.remove(test_on)
-
-    name_file = test_on+"_speaker_"+config+corpus_to_train_on+"_loss_"+str(loss_train)+"_filter_"+str(filter_type)
+    name_file = test_on+"_speaker_"+config+name_corpus_concat+"_loss_"+str(loss_train)+"_filter_"+str(filter_type)
     "_bn_"+str(batch_norma)
+
     previous_models = os.listdir("saved_models")
     previous_models_2 = [x[:len(name_file)] for x in previous_models if x.endswith(".txt")]
     n_previous_same = previous_models_2.count(name_file) #how many times our model was trained
@@ -153,15 +254,14 @@ def train_model_complete(test_on ,n_epochs ,loss_train,patience ,select_arti,cor
     else :
         device = torch.device("cpu")
 
-
     hidden_dim = 300
     input_dim = 429
     batch_size = 10
     output_dim = 18
     early_stopping = EarlyStopping(name_file,patience=patience, verbose=True)
     model = my_ac2art_modele(hidden_dim=hidden_dim, input_dim=input_dim, name_file=name_file, output_dim=output_dim,
-                      batch_size=batch_size, cuda_avail=cuda_avail,
-                      modele_filtered=filter_type,batch_norma=batch_norma)
+                             batch_size=batch_size, cuda_avail=cuda_avail,
+                             modele_filtered=filter_type,batch_norma=batch_norma)
     model = model.double()
 
     file_weights = os.path.join("saved_models", name_file +".pt")
@@ -169,7 +269,7 @@ def train_model_complete(test_on ,n_epochs ,loss_train,patience ,select_arti,cor
         model = model.to(device = device)
     load_old_model = True
     if load_old_model:
-         if os.path.exists(file_weights): # veut dire qu'on sest entraîné avant d'avoir le txt final
+        if os.path.exists(file_weights): # veut dire qu'on sest entraîné avant d'avoir le txt final
             print("modèle précédent pas fini")
             loaded_state = torch.load(file_weights,map_location = device)
             model.load_state_dict(loaded_state)
@@ -181,113 +281,21 @@ def train_model_complete(test_on ,n_epochs ,loss_train,patience ,select_arti,cor
             model_dict.update(loaded_state)
             model.load_state_dict(model_dict)
 
-
-    def criterion_pearson(my_y,my_y_pred): # (L,K,13)
-        # TODO: à sortir pas besoin imbriqué
-        y_1 = my_y - torch.mean(my_y,dim=1,keepdim=True)
-        y_pred_1 = my_y_pred - torch.mean(my_y_pred,dim=1,keepdim=True)
-        nume=  torch.sum(y_1* y_pred_1,dim=1,keepdim=True) # y*y_pred multi terme à terme puis on somme pour avoir (L,1,13)
-      #pour chaque trajectoire on somme le produit de la vriae et de la predite
-        deno =  torch.sqrt(torch.sum(y_1 ** 2,dim=1,keepdim=True)) * torch.sqrt(torch.sum(y_pred_1 ** 2,dim=1,keepdim=True))# use Pearson correlation
-        # deno zero veut dire ema constant à 0 on remplace par des 1
-        minim = torch.tensor(0.01,dtype=torch.float64)
-        if cuda_avail:
-            minim = minim.to(device=device)
-            deno = deno.to(device=device)
-            nume = nume.to(device=device)
-        deno = torch.max(deno,minim)
-        my_loss = torch.div(nume,deno)
-        my_loss = torch.sum(my_loss) #pearson doit etre le plus grand possible
-        return -my_loss
-
-    criterion_rmse = torch.nn.MSELoss(reduction='sum')
-
-    def criterion_both(L):
-        # TODO
-        L = L/100 #% de pearson dans la loss
-        def criterion_both_lbd(my_y,my_ypred):
-            #TODO
-            a = L * criterion_pearson(my_y, my_ypred)
-            b = (1 - L) * criterion_rmse(my_y, my_ypred) / 1000
-            new_loss = a + b
-          #  print(a,b,new_loss)
-           # return new_loss
-            return new_loss
-        return criterion_both_lbd
-
     if loss_train == "rmse":
         lbd = 0
     elif loss_train == "pearson" :
         lbd = 100
     elif loss_train[:4] == "both":
         lbd = int(loss_train[5:])
-
     criterion = criterion_both(lbd)
 
-    def plot_filtre(weights) :
-        # TODO
-        print("GAIN", sum(weights))
-        freqs, h = signal.freqz(weights)
-        freqs = freqs * 100 / (2 * np.pi)  # freq in hz
-        plt.plot(freqs, 20 * np.log10(abs(h)), 'r')
-        plt.title("Allure filtre passe bas à la fin de l'apprentissage pour filtre en dur")
-        plt.ylabel('Amplitude [dB]')
-        plt.xlabel("real frequency")
-        plt.show()
+    files_per_categ, files_for_test = give_me_train_valid_test(train_on,test_on,config, batch_size)
 
-
-    #code qui suit peut être + compact mais ainsi on voit bien sur qui on apprend et test
-    if config == "spec":
-        files_for_train = load_filenames_deter([test_on],part= ["train"])
-        files_for_valid = load_filenames_deter([test_on],part = ["valid"])
-        files_for_test = load_filenames_deter([test_on],part=["test"])
-
-    elif config == "dep":
-        files_for_train = load_filenames_deter(train_on, part=["train","test"])+\
-                          load_filenames_deter([test_on], part=["train"])
-        files_for_valid = load_filenames_deter(train_on, part=["valid"]) + \
-                          load_filenames_deter([test_on], part=["valid"])
-        files_for_test = load_filenames_deter([test_on], part=["test"])
-
-    elif config == "indep":
-        files_for_train = load_filenames_deter(train_on, part=["train", "test"])
-        files_for_valid = load_filenames_deter(train_on, part=["valid"])
-        files_for_test = load_filenames_deter([test_on], part=["train","valid","test"])
-
-
-    with open('categ_of_speakers.json', 'r') as fp:
-        categ_of_speakers = json.load(fp) #dictionnaire en clé la categorie en valeur un dictionnaire
-                                            # #avec les speakers dans la catégorie et les arti concernées par cette categorie
     optimizer = torch.optim.Adam(model.parameters(), lr=lr )
-    files_per_categ = dict()
-    for categ in categ_of_speakers.keys():
-        sp_in_categ = categ_of_speakers[categ]["sp"]
-        sp_in_categ = [sp for sp in sp_in_categ if sp in train_on] #speakers that interest us & that are in this categ
-
-        # fichiers qui appartiennent à la categorie car le nom du speaker apparait touojurs dans le nom du fichier :
-        files_train_this_categ = [[f for f in files_for_train if sp.lower() in f.lower() ]for sp in sp_in_categ]
-        files_train_this_categ = [item for sublist in files_train_this_categ for item in sublist] # flatten la liste de liste
-
-        files_valid_this_categ = [[f for f in files_for_valid if sp.lower() in f.lower()] for sp in sp_in_categ]
-        files_valid_this_categ = [item for sublist in files_valid_this_categ for item in sublist]  # flatten la liste de liste
-
-        if len(files_train_this_categ) > 0 : #meaning we have at least one file in this categ
-            # on va doubler certains elements des "files_valid/train_this_categ" pour en avoir un multiple de batch size
-            files_per_categ[categ] = dict()
-            N_iter_categ = int(len(files_train_this_categ)/batch_size)+1
-            n_a_ajouter = batch_size*N_iter_categ - len(files_train_this_categ)
-            files_train_this_categ = files_train_this_categ + files_train_this_categ[:n_a_ajouter] #nbr de fichier par categorie multiple du batch size
-            random.shuffle(files_train_this_categ)
-            files_per_categ[categ]["train"] = files_train_this_categ
-            N_iter_categ = int(len(  files_valid_this_categ) / batch_size) + 1  # on veut qu'il y a en ait un multiple du batch size , on en double certains
-            n_a_ajouter = batch_size * N_iter_categ - len(files_valid_this_categ)  # si 14 element N_iter_categ vaut 2 et n_a_ajouter vaut 6
-            files_valid_this_categ = files_valid_this_categ + files_valid_this_categ[:n_a_ajouter] # nbr de fichier par categorie multiple du batch size
-            random.shuffle(files_valid_this_categ)
-            files_per_categ[categ]["valid"] = files_valid_this_categ
-
 
     categs_to_consider = files_per_categ.keys()
-
+    with open('categ_of_speakers.json', 'r') as fp:
+        categ_of_speakers = json.load(fp)  # dictionnaire en clé la categorie en valeur un dictionnaire
     plot_filtre_chaque_epochs = False
 
     for epoch in range(n_epochs):
@@ -333,7 +341,7 @@ def train_model_complete(test_on ,n_epochs ,loss_train,patience ,select_arti,cor
 
         loss_train_this_epoch = loss_train_this_epoch/n_this_epoch
 
-        if epoch%delta_test ==0:  #toutes les delta_test epochs on évalue le modèle sur validation et on sauvegarde le modele si le score est meilleur
+        if epoch%delta_test == 0:  #toutes les delta_test epochs on évalue le modèle sur validation et on sauvegarde le modele si le score est meilleur
             loss_vali = 0
             n_valid = 0
             for categ in categs_to_consider:  # de A à F pour le moment
@@ -359,74 +367,33 @@ def train_model_complete(test_on ,n_epochs ,loss_train,patience ,select_arti,cor
                     loss_courant = criterion(y, y_pred)
                     loss_vali += loss_courant.item()
             loss_vali  = loss_vali/n_valid
-
-
+        torch.cuda.empty_cache()
         model.all_validation_loss.append(loss_vali)
         model.all_training_loss.append(loss_train_this_epoch)
         early_stopping(loss_vali, model)
+        if early_stopping.early_stop:
+            print("Early stopping, n epochs : ", model.epoch_ref + epoch)
+            break
 
-        # ================================================================== #
-        #                        Tensorboard Logging                         #
-        # ================================================================== #
-
-        # 1. Log scalar values (scalar summary)
-        info = {'loss': loss_train_this_epoch}
-
-        for tag, value in info.items():
-           # print("tag valu",tag,value)
-            logger.scalar_summary(tag, value, epoch + 1)
-
-        # 2. Log values and gradients of the parameters (histogram summary)
-    #    for tag, value in model.named_parameters():
-     #       tag = tag.replace('.', '/')
-      #      logger.histo_summary(tag, value.data.cpu().numpy(), epoch + 1)
-       #     logger.histo_summary(tag + '/grad', value.grad.data.cpu().numpy(), epoch + 1)
-
-        # 3. Log training images (image summary)
-       # info = {'images': images.view(-1, 28, 28)[:10].cpu().numpy()}
-
-        #for tag, images in info.items():
-         #   logger.image_summary(tag, images, epoch + 1)
-#
-        if epoch>0 : # on divise le learning rate par deux dès qu'on surapprend un peu par rapport au validation set
+        if epoch > 0:  # on divise le learning rate par deux dès qu'on surapprend un peu par rapport au validation set
             if loss_vali > model.all_validation_loss[-1]:
                 for param_group in optimizer.param_groups:
                     param_group['lr'] = param_group['lr'] / 2
                     (param_group["lr"])
 
-            #model.all_test_loss += [model.all_test_loss[-1]] * (epoch+previous_epoch - len(model.all_test_loss))
-           # print("\n ---------- epoch" + str(epoch) + " ---------")
-            #early_stopping.epoch = previous_epoch+epoch
+        logger.scalar_summary('loss_train', loss_train_this_epoch, model.epoch_ref )
+        logger.scalar_summary('loss_valid', loss_vali, model.epoch_ref)
 
-          #  print("train loss ", loss.item())
-          #  print("valid loss ", loss_vali)
-
-         #   logger.scalar_summary('loss_valid', loss_vali,
-          #                        model.epoch_ref)
-           # logger.scalar_summary('loss_train', loss.item(), model.epoch_ref)
-
-            torch.cuda.empty_cache()
-
-        if early_stopping.early_stop:
-            print("Early stopping, n epochs : ",model.epoch_ref+epoch)
-            break
-
-
-    if n_epochs>0:
-        model.epoch_ref = model.epoch_ref + epoch # voir si ca marche vrmt pour les rares cas ou on continue un training
+    if n_epochs > 0:
+        model.epoch_ref = model.epoch_ref + epoch  # voir si ca marche vrmt pour les rares cas ou on continue un training
         model.load_state_dict(torch.load(os.path.join("saved_models",name_file+'.pt')))
         torch.save(model.state_dict(), os.path.join( "saved_models",name_file+".txt")) #lorsque .txt ==> training terminé !
-
     random.shuffle(files_for_test)
     x, y = load_data(files_for_test)
     print("evaluation on speaker {}".format(test_on))
-
     std_speaker = np.load(os.path.join(root_folder,"Traitement","norm_values","std_ema_"+test_on+".npy"))
     arti_per_speaker = os.path.join(root_folder, "Traitement", "articulators_per_speaker.csv")
     csv.register_dialect('myDialect', delimiter=';')
-
-    weight_apres = model.lowpass.weight.data[0, 0, :] #gain du filtre à la fin de l'apprentissage
-  #  print("GAIN FILTRE APRES APPRENTISSAGE",sum(weight_apres.cpu()))
     with open(arti_per_speaker, 'r') as csvFile:
         reader = csv.reader(csvFile, dialect="myDialect")
         next(reader)
@@ -435,21 +402,17 @@ def train_model_complete(test_on ,n_epochs ,loss_train,patience ,select_arti,cor
                 arti_to_consider = row[1:19]
                 arti_to_consider = [int(x) for x in arti_to_consider]
 
-    rmse_per_arti_mean, pearson_per_arti_mean = model.evaluate_on_test(x,y, std_speaker = std_speaker, to_plot=to_plot
-                                                                       ,to_consider = arti_to_consider) #,filtered=True)
+    rmse_per_arti_mean, pearson_per_arti_mean = model.evaluate_on_test(x, y, std_speaker = std_speaker, to_plot=to_plot
+                                                                       , to_consider = arti_to_consider)
     print("training done for : ",name_file)
 
-    def write_results_in_csv(): #l'améliorer !!!!
-        # TODO
-        with open('resultats_modeles.csv', 'a') as f:
-            writer = csv.writer(f)
-            row_rmse = [name_file]+rmse_per_arti_mean.tolist()+[model.epoch_ref]
-            row_pearson  =[name_file]+pearson_per_arti_mean.tolist() + [model.epoch_ref]
-            writer.writerow(row_rmse)
-            writer.writerow(row_pearson)
-    add_results_in_csv = True
-    if add_results_in_csv :
-        write_results_in_csv()
+    # write result in csv
+    with open('resultats_modeles.csv', 'a') as f:
+        writer = csv.writer(f)
+        row_rmse = [name_file]+rmse_per_arti_mean.tolist()+[model.epoch_ref]
+        row_pearson = [name_file]+pearson_per_arti_mean.tolist() + [model.epoch_ref]
+        writer.writerow(row_rmse)
+        writer.writerow(row_pearson)
 
     weight_apres = model.lowpass.weight.data[0, 0, :].cpu()
     plot_allure_filtre = False #if True affiche  la réponse fréquentielle du filtre à la fin de l'apprentissage
