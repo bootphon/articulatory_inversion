@@ -1,5 +1,10 @@
-# TODO
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+    Created august 2019
+    by Maud Parrot
 
+"""
 import os,sys,inspect
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
@@ -16,25 +21,28 @@ import numpy as np
 
 import gc
 import psutil
-from Apprentissage.modele import my_ac2art_modele
+from Training.modele import my_ac2art_modele
 import torch
 import os
 import csv
 import sys
-from Apprentissage.utils import load_data, load_filenames_deter
-from Apprentissage.pytorchtools import EarlyStopping
+from Training.tools_learning import load_filenames_deter, load_data
+from Training.pytorchtools import EarlyStopping
 import random
 from scipy import signal
 import matplotlib.pyplot as plt
-from Traitement.fonctions_utiles import get_speakers_per_corpus
+from Preprocessing.tools_preprocessing import get_speakers_per_corpus
 import json
-from Apprentissage.logger import Logger
+from Training.logger import Logger
 
 root_folder = os.path.dirname(os.getcwd())
 
 
 def memReport(all = False):
-    #TODO: tu utilises ça ?
+    """
+    :param all: show size of each obj
+    use if memory errors
+    """
     nb_object = 0
     for obj in gc.get_objects():
         if torch.is_tensor(obj):
@@ -45,7 +53,9 @@ def memReport(all = False):
 
 
 def cpuStats():
-    # TODO tu utilises ça ?
+    """
+    use in case of memory errors
+    """
     print(sys.version)
     print(psutil.cpu_percent())
     print(psutil.virtual_memory())  # physical memory usage
@@ -116,7 +126,7 @@ def plot_filtre(weights):
     freqs, h = signal.freqz(weights)
     freqs = freqs * 100 / (2 * np.pi)  # freq in hz
     plt.plot(freqs, 20 * np.log10(abs(h)), 'r')
-    plt.title("Allure filtre passe bas à la fin de l'apprentissage pour filtre en dur")
+    plt.title("Allure filtre passe bas à la fin de l'Training pour filtre en dur")
     plt.ylabel('Amplitude [dB]')
     plt.xlabel("real frequency")
     plt.show()
@@ -132,8 +142,7 @@ def give_me_train_on(corpus_to_train_on, test_on, config):
     """
     name_corpus_concat = ""
 
-    if config == "spe":  # speaker specific
-        corpus_to_train_on = ""
+    if config == "spec":  # speaker specific
         train_on = [""]  # only train on the test speaker
 
     elif config in ["indep", "dep"]:  # train on other corpuses
@@ -182,37 +191,36 @@ def give_me_train_valid_test(train_on, test_on, config, batch_size):
         files_for_valid = load_filenames_deter(train_on, part=["valid"])
         files_for_test = load_filenames_deter([test_on], part=["train", "valid", "test"])
 
-    files_per_categ = dict()
-
     with open('categ_of_speakers.json', 'r') as fp:
         categ_of_speakers = json.load(fp)  # dictionnary { categ : dict_2} where
                                             # dict_2 :{  speakers : [sp_1,..], arti  : [0,1,1...]  }
+    files_per_categ = dict()
+
     for categ in categ_of_speakers.keys():
         sp_in_categ = categ_of_speakers[categ]["sp"]
-        sp_in_categ = [sp for sp in sp_in_categ if sp in train_on] #speakers that interest us & that are in this categ
-
+        #sp_in_categ = [sp for sp in sp_in_categ if sp in train_on] #speakers that interest us & that are in this categ
         files_train_this_categ = [[f for f in files_for_train if sp.lower() in f.lower() ]for sp in sp_in_categ]  #the speaker name is always in the namefile
         files_train_this_categ = [item for sublist in files_train_this_categ for item in sublist] # flatten la liste de liste
 
         files_valid_this_categ = [[f for f in files_for_valid if sp.lower() in f.lower()] for sp in sp_in_categ]
         files_valid_this_categ = [item for sublist in files_valid_this_categ for item in sublist]  # flatten la liste de liste
-
         if len(files_train_this_categ) > 0 : #meaning we have at least one file in this categ
-            files_per_categ[categ] = dict()
             N_iter_categ = int(len(files_train_this_categ)/batch_size)+1
             n_a_ajouter = batch_size*N_iter_categ - len(files_train_this_categ)
             files_train_this_categ = files_train_this_categ + files_train_this_categ[:n_a_ajouter] #nbr de fichier par categorie multiple du batch size
             random.shuffle(files_train_this_categ)
+            files_per_categ[categ] = dict()
             files_per_categ[categ]["train"] = files_train_this_categ
             N_iter_categ = int(len(  files_valid_this_categ) / batch_size) + 1  # on veut qu'il y a en ait un multiple du batch size , on en double certains
             n_a_ajouter = batch_size * N_iter_categ - len(files_valid_this_categ)  # si 14 element N_iter_categ vaut 2 et n_a_ajouter vaut 6
             files_valid_this_categ = files_valid_this_categ + files_valid_this_categ[:n_a_ajouter] # nbr de fichier par categorie multiple du batch size
             random.shuffle(files_valid_this_categ)
             files_per_categ[categ]["valid"] = files_valid_this_categ
-        return files_per_categ, files_for_test
+
+    return files_per_categ, files_for_test
 
 
-def train_model_complete(test_on ,n_epochs, loss_train, patience, select_arti, corpus_to_train_on, batch_norma
+def train_model(test_on ,n_epochs, loss_train, patience, select_arti, corpus_to_train_on, batch_norma
                          , filter_type, to_plot, lr, delta_test, config):
     """
     :param test_on: (str) one speaker's name we want to test on, the speakers and the corpus the come frome can be seen in
@@ -313,7 +321,7 @@ def train_model_complete(test_on ,n_epochs, loss_train, patience, select_arti, c
         lbd = 100
     elif loss_train[:4] == "both":
         lbd = int(loss_train[5:])
-    criterion = criterion_both(lbd)
+    criterion = criterion_both(lbd, cuda_avail, device)
 
     files_per_categ, files_for_test = give_me_train_valid_test(train_on,test_on,config, batch_size)
 
@@ -325,17 +333,14 @@ def train_model_complete(test_on ,n_epochs, loss_train, patience, select_arti, c
     plot_filtre_chaque_epochs = False
 
     for epoch in range(n_epochs):
-
         weights = model.lowpass.weight.data[0, 0, :].cpu()
-
         if plot_filtre_chaque_epochs :
             plot_filtre(weights)
-
         n_this_epoch = 0
         random.shuffle(list(categs_to_consider))
         loss_train_this_epoch = 0
-
         for categ in categs_to_consider:  # de A à F pour le momen
+
             files_this_categ_courant = files_per_categ[categ]["train"] #on na pas encore apprit dessus au cours de cette epoch
             random.shuffle(files_this_categ_courant)
 
@@ -417,8 +422,8 @@ def train_model_complete(test_on ,n_epochs, loss_train, patience, select_arti, c
     random.shuffle(files_for_test)
     x, y = load_data(files_for_test)
     print("evaluation on speaker {}".format(test_on))
-    std_speaker = np.load(os.path.join(root_folder,"Traitement","norm_values","std_ema_"+test_on+".npy"))
-    arti_per_speaker = os.path.join(root_folder, "Traitement", "articulators_per_speaker.csv")
+    std_speaker = np.load(os.path.join(root_folder,"Preprocessing","norm_values","std_ema_"+test_on+".npy"))
+    arti_per_speaker = os.path.join(root_folder, "Preprocessing", "articulators_per_speaker.csv")
     csv.register_dialect('myDialect', delimiter=';')
     with open(arti_per_speaker, 'r') as csvFile:
         reader = csv.reader(csvFile, dialect="myDialect")
@@ -445,3 +450,50 @@ def train_model_complete(test_on ,n_epochs, loss_train, patience, select_arti, c
     if plot_allure_filtre :
         plot_filtre(weight_apres)
 
+
+if __name__=='__main__':
+
+    parser = argparse.ArgumentParser(description='Train and save a model.')
+
+    parser.add_argument('test_on', type=str,
+                        help='the speaker we want to test on')
+
+    parser.add_argument('--n_epochs', type=int, default=50,
+                        help='max number of epochs to train the model')
+
+    parser.add_argument("--loss_train",type = str, default="both_90",
+                        help = " 'both_alpha' with alpha from 0 to 100, coeff of pearson is the combined loss")
+
+    parser.add_argument("--patience",type=int, default=5,
+                        help = "patience before early topping")
+
+    parser.add_argument("--select_arti", type = bool,default=True,
+                        help = "whether to learn only on available parameters or not")
+
+    parser.add_argument('corpus_to_train_on', type=str,
+                        help='list of the corpus we want to train on ')
+
+    parser.add_argument('--batch_norma', type=bool, default= False,
+                        help='whether to add batch norma after lstm layyers')
+
+    parser.add_argument('--filter_type', type=int, default=1,
+                        help='0 filter outside of nn, 1 filter with fixed weights, 2 filter with adaptable weights')
+
+    parser.add_argument('--to_plot', type=bool, default= False,
+                        help='whether to save one graph of prediction & target of the test ')
+
+    parser.add_argument('--lr', type = float, default = 0.001,
+                         help='learning rate of Adam optimizer ')
+
+    parser.add_argument('--delta_test', type=int, default=1,
+                         help='how often evaluate the validation set')
+
+    parser.add_argument('config', type=str,
+                        help='spec or dep or indep that stands for speaker specific/dependant/independant')
+
+    args = parser.parse_args()
+
+    train_model(test_on=args.test_on,n_epochs=args.n_epochs, loss_train=args.loss_train,
+                         patience=args.patience, select_arti=args.select_arti, corpus_to_train_on=args.corpus_to_train_on,
+                         batch_norma=args.batch_norma, filter_type=args.filter_type, to_plot=args.to_plot,
+                         lr=args.lr, delta_test=args.delta_test, config=args.config)
