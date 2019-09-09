@@ -3,10 +3,9 @@
 """
     Created august 2019
     by Maud Parrot
-    2 classes useful since we have 4 corpuses and 19 speakers. each corpus has common attributes, and there are
-    common attributes for all speakers as well (and function for the preprocessing)
-    1 class for the corpus instance ,  contains parameters about the corpus
-    1 class for the speaker instance, inherit of corpus class,  contains functions for the preprocessing
+    A class for speaker instance, useful because speakers in one corpus share some attributes and the preprocessing
+    functions. Also, all speakers share some attributes.
+    This class is used in each preprocessing script.
 """
 import os,sys,inspect
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
@@ -25,78 +24,7 @@ import csv
 
 root_folder = os.path.dirname(os.getcwd())
 
-
-class Corpus():
-    """
-    There are some common attributes among all corpuses , this class avoid redefining those attributes
-    in each preprocessing script.
-    Parent of the speaker class
-    attention never used , only speaker is used in the new version of preprocessing
-    """
-    def __init__(self, name):
-        """
-        :param name: name of the corpus (Haskins , MNGU0, USC or mocha)
-        """
-        super(Corpus, self).__init__()
-        self.name = name
-        self.sampling_rate_wav_wanted = 16000
-        self.frame_time = 25/1000
-        self.hop_time = 10/1000
-        self.hop_length = int(self.hop_time * self.sampling_rate_wav_wanted)
-        self.frame_length = int(self.frame_time * self.sampling_rate_wav_wanted)
-        self.window = 5
-        self.n_coeff = 13
-        self.sampling_rate_ema = None
-        self.sampling_rate_wav = None
-        self.speakers = None
-        self.get_speakers()
-        self.articulators = ['tt_x', 'tt_y', 'td_x', 'td_y', 'tb_x', 'tb_y', 'li_x', 'li_y'
-                             , 'ul_x', 'ul_y', 'll_x', 'll_y']
-        self.speakers_with_velum = ["fsew0", "msak0", "faet0", "ffes0", "falh0"]
-        self.init_variables()
-
-    def get_speakers(self):
-        """
-        define the list of speakers for this corpus
-        """
-        if self.name == "MNGU0":
-            speakers = ["MNGU0"]
-        elif self.name == "usc":
-            speakers = ["F1", "F5", "M1", "M3"]
-        elif self.name == "Haskins":
-            speakers = ["F01", "F02", "F03", "F04", "M01", "M02", "M03", "M04"]
-        elif self.name == "mocha":
-            speakers = ["fsew0", "msak0", "faet0", "ffes0", "maps0", "mjjn0", "falh0"]
-        else:
-            raise NameError("vous navez pas choisi un des corpus")
-        self.speakers = speakers
-
-    def init_variables(self):  #créer un script qui lit un fichier csv avec ces données
-        """
-        Initialize some parameters depending on the corpus
-        """
-        if self.name == "mocha":
-            self.sampling_rate_wav = 16000
-            self.sampling_rate_ema = 500
-            self.cutoff = 10
-
-        elif self.name == "MNGU0":
-            self.sampling_rate_wav = 16000
-            self.sampling_rate_ema = 200
-            self.cutoff = 10
-
-        elif self.name == "usc":
-            self.sampling_rate_wav = 20000
-            self.sampling_rate_ema = 100
-            self.cutoff = 10
-
-        elif self.name == "Haskins":
-            self.sampling_rate_wav = 44100
-            self.sampling_rate_ema = 100
-            self.cutoff = 20
-
-
-class Speaker(Corpus):
+class Speaker():
     """
     The speakers share some preprocessing function.
     They have some specific attributes that are defined by the parent class (Corpus)
@@ -110,12 +38,24 @@ class Speaker(Corpus):
         self.speakers = None
         self.corpus = None
         self.get_corpus_name()
-        super().__init__(self.corpus)
+        self.sampling_rate_wav_wanted = 16000
+        self.frame_time = 25 / 1000
+        self.hop_time = 10 / 1000
+        self.hop_length = int(self.hop_time * self.sampling_rate_wav_wanted)
+        self.frame_length = int(self.frame_time * self.sampling_rate_wav_wanted)
+        self.window = 5
+        self.n_coeff = 13
+        self.sampling_rate_ema = None
+        self.sampling_rate_wav = None
+        self.speakers = None
+        self.articulators = ['tt_x', 'tt_y', 'td_x', 'td_y', 'tb_x', 'tb_y', 'li_x', 'li_y'
+            , 'ul_x', 'ul_y', 'll_x', 'll_y']
+        self.speakers_with_velum = ["fsew0", "msak0", "faet0", "ffes0", "falh0"]
+        self.init_corpus_param()
         self.EMA_files = None
         if self.speaker in self.speakers_with_velum:
             self.articulators = ['tt_x', 'tt_y', 'td_x', 'td_y', 'tb_x', 'tb_y', 'li_x', 'li_y',
                                  'ul_x', 'ul_y', 'll_x', 'll_y', 'v_x', 'v_y']
-
         self.list_EMA_traj = []
         self.list_MFCC_frames = []
 
@@ -140,6 +80,30 @@ class Speaker(Corpus):
         else:
             raise NameError("vous navez pas choisi un des speasker")
         self.corpus = corpus
+
+    def init_corpus_param(self):
+        """
+        Initialize some parameters depending on the corpus
+        """
+        if self.corpus == "mocha":
+            self.sampling_rate_wav = 16000
+            self.sampling_rate_ema = 500
+            self.cutoff = 10
+
+        elif self.corpus == "MNGU0":
+            self.sampling_rate_wav = 16000
+            self.sampling_rate_ema = 200
+            self.cutoff = 10
+
+        elif self.corpus == "usc":
+            self.sampling_rate_wav = 20000
+            self.sampling_rate_ema = 100
+            self.cutoff = 10
+
+        elif self.corpus == "Haskins":
+            self.sampling_rate_wav = 44100
+            self.sampling_rate_ema = 100
+            self.cutoff = 20
 
     def smooth_data(self, ema, sr=0):
         """
@@ -263,11 +227,8 @@ class Speaker(Corpus):
             return idx_to_ignore
 
         lip_aperture = add_lip_aperture(my_ema)
-
         lip_protrusion = add_lip_protrusion(my_ema)
-
         TTCL = add_TTCL(my_ema)
-
         TBCL = add_TBCL(my_ema)
 
         if self.speaker in self.speakers_with_velum:  # 14 arti de 0 à 13 (2*6 + 2)
@@ -304,7 +265,6 @@ class Speaker(Corpus):
         :return: ema and mfcc synchronized
         the ema traj is downsampled to have 1 position for 1 frame mfcc
         """
-
         my_ema = scipy.signal.resample(my_ema, num=len(my_mfcc))
         return my_ema, my_mfcc
 
