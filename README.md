@@ -39,7 +39,10 @@ experiments : ...
 
 # Usage
 1) download the data and put them in the correct folders.
-2) Preprocessing : python main_preprocessing.py 0 (for a test put 50)
+2) Preprocessing : (for a test put 50)
+```console
+python main_preprocessing.py 0 
+```
 3) Training : python train.py "F01" ["Haskins"] "indep"    [ this is to train on all the speakers except F01 of the Haskins corpus with the default parameters ]
 
 
