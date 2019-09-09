@@ -21,7 +21,7 @@ import numpy as np
 import argparse
 import gc
 import psutil
-from Training.modele import my_ac2art_modele
+from Training.model import my_ac2art_model
 import torch
 import os
 import csv

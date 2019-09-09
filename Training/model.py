@@ -34,7 +34,7 @@ def memReport(all = False):
     print('nb objects tensor', nb_object)
 
 
-class my_ac2art_modele(torch.nn.Module):
+class my_ac2art_model(torch.nn.Module):
     """
     pytorch implementation of neural network
     """
@@ -45,7 +45,7 @@ class my_ac2art_modele(torch.nn.Module):
         :param input_dim: int, input dimension of the acoustic features for 1 frame mfcc (usually 429)
         :param output_dim: int, # of trajectories to predict (usually 18)
         :param batch_size:  int, usually 10
-        :param name_file: str, name of the modele
+        :param name_file: str, name of the model
         :param sampling_rate: int, sampling rate of the ema data for the smoothing (usually 100)
         :param window: int, window size for the smoothing usually 5
         :param cutoff: int, intial cutoff frequency for the smoothing, usually 10Hz
@@ -54,7 +54,7 @@ class my_ac2art_modele(torch.nn.Module):
         "unfix" : weights are updated during the training
         :param batch_norma: bool, whether to add batch normalization after the lstm layers
         """
-        super(my_ac2art_modele, self).__init__()
+        super(my_ac2art_model, self).__init__()
         self.input_dim = input_dim
         self.output_dim = output_dim
         self.hidden_dim = hidden_dim

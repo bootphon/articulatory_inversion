@@ -14,7 +14,7 @@ os.environ["VECLIB_MAXIMUM_THREADS"] = ncpu # export VECLIB_MAXIMUM_THREADS=4
 os.environ["NUMEXPR_NUM_THREADS"] = ncpu # export NUMEXPR_NUM_THREADS=4
 import numpy as np
 import argparse
-from Training.modele import my_ac2art_modele
+from Training.model import my_ac2art_model
 import sys
 import torch
 import os
