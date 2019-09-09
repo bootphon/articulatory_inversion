@@ -211,6 +211,7 @@ class Speaker_usc(Speaker):
         Go through each sentence doing the preprocessing + adding the trajectoires and mfcc to a list, in order to
         calculate the norm values over all sentences of the speaker
         """
+        self.create_missing_dir()
         EMA_files = sorted(
             [name[:-4] for name in os.listdir(os.path.join(self.path_files_brutes, "mat")) if name.endswith(".mat")])
 
@@ -263,6 +264,7 @@ def traitement_general_usc(N_max):
     """
     corpus = 'usc'
     speakers_usc = get_speakers_per_corpus(corpus)
+    speakers_usc = ["F5"]
     for sp in speakers_usc :
         print("En cours usc ",sp)
         speaker = Speaker_usc(sp,N_max)

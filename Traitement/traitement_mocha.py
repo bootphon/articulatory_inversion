@@ -167,6 +167,8 @@ class Speaker_mocha(Speaker):
         Go through each sentence doing the preprocessing + adding the trajectoires and mfcc to a list, in order to
         calculate the norm values over all sentences of the speaker
         """
+        self.create_missing_dir()
+
         N = len(self.EMA_files)
         if self.N_max != 0:
             N = self.N_max

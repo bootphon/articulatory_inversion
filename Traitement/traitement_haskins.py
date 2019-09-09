@@ -150,6 +150,7 @@ class Speaker_Haskins(Speaker):
         calculate the norm values over all sentences of the speaker
         :return:
         """
+        self.create_missing_dir()
         N = len(self.EMA_files)
         if self.N_max != 0:
             N = int(self.N_max)  # on coupe N fichiers
