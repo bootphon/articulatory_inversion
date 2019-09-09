@@ -16,7 +16,7 @@ import os
 import numpy as np
 import scipy.signal
 import scipy.interpolate
-from Traitement.fonctions_utiles import low_pass_filter_weight
+from Preprocessing.tools_preprocessing import low_pass_filter_weight
 import csv
 
 
@@ -215,7 +215,7 @@ class Speaker():
             """
             :return: index of articulations that are not available for this speaker. Based on the local csv file
             """
-            arti_per_speaker = os.path.join(root_folder, "Traitement", "articulators_per_speaker.csv")
+            arti_per_speaker = os.path.join(root_folder, "Preprocessing", "articulators_per_speaker.csv")
             csv.register_dialect('myDialect', delimiter=';')
             with open(arti_per_speaker, 'r') as csvFile:
                 reader = csv.reader(csvFile, dialect="myDialect")
