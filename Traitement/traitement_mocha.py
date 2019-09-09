@@ -112,11 +112,11 @@ class Speaker_mocha(Speaker):
                     ema_data[j] = scipy.interpolate.splev(j, spline)
             return ema_data
 
-    def remove_silences(self,my_ema, my_mfcc, k):
+    def remove_silences(self,ema, mfcc, k):
         """
           :param k:  utterance index (wrt the list EMA_files)
-          :param my_ema: the ema list of traj
-          :param my_mfcc: the mfcc features
+          :param ema: the ema list of traj
+          :param mfcc: the mfcc features
           :return: the data (ema and mfcc) without the silence at the beginning and end of the recording
          For some speakers we have annotation that gives in second when the voice starts and ends.
          For those speakers : get those extremity , calculates the equivalence in # of ema points and # of mfcc frames
@@ -131,36 +131,36 @@ class Speaker_mocha(Speaker):
                 ]
             xtrm = [max(float(labels[0][1]) - marge, 0), float(labels[-1][0]) + marge]
             xtrm_temp_ema = [int(xtrm[0] * self.sampling_rate_ema),
-                             min(int((xtrm[1] * self.sampling_rate_ema) + 1), len(my_ema))]
+                             min(int((xtrm[1] * self.sampling_rate_ema) + 1), len(ema))]
 
             xtrm_temp_mfcc = [int(xtrm[0] / self.hop_time),
                               int(np.ceil(xtrm[1] / self.hop_time))]
 
-            my_mfcc = my_mfcc[xtrm_temp_mfcc[0]:xtrm_temp_mfcc[1]]
+            mfcc = mfcc[xtrm_temp_mfcc[0]:xtrm_temp_mfcc[1]]
 
-            my_ema = my_ema[xtrm_temp_ema[0]:xtrm_temp_ema[1], :]
+            ema = ema[xtrm_temp_ema[0]:xtrm_temp_ema[1], :]
 
-        return my_ema, my_mfcc
+        return ema, mfcc
 
-    def from_wav_to_mfcc(self,my_wav):
+    def from_wav_to_mfcc(self,wav):
         """
-       :param my_wav: list of intensity points of the wav file
+       :param wav: list of intensity points of the wav file
        :return: the acoustic features( K,429); where K in the # of frames.
        calculations of the mfcc with librosa , + Delta and DeltaDelta, + 10 context frames
        # of acoustic features per frame: 13 ==> 13*3 = 39 ==> 39*11 = 429.
        parameters for mfcc calculation are defined in class_corpus
        """
-        my_mfcc = librosa.feature.mfcc(y=my_wav, sr=self.sampling_rate_wav, n_mfcc=self.n_coeff,
+        mfcc = librosa.feature.mfcc(y=wav, sr=self.sampling_rate_wav, n_mfcc=self.n_coeff,
                                        n_fft=self.frame_length, hop_length=self.hop_length
                                        ).T
-        dyna_features = get_delta_features(my_mfcc)
+        dyna_features = get_delta_features(mfcc)
         dyna_features_2 = get_delta_features(dyna_features)
-        my_mfcc = np.concatenate((my_mfcc, dyna_features, dyna_features_2), axis=1)
-        padding = np.zeros((self.window, my_mfcc.shape[1]))
-        frames = np.concatenate([padding, my_mfcc, padding])
+        mfcc = np.concatenate((mfcc, dyna_features, dyna_features_2), axis=1)
+        padding = np.zeros((self.window, mfcc.shape[1]))
+        frames = np.concatenate([padding, mfcc, padding])
         full_window = 1 + 2 * self.window
-        my_mfcc = np.concatenate([frames[j:j + len(my_mfcc)] for j in range(full_window)], axis=1)  # add context
-        return my_mfcc
+        mfcc = np.concatenate([frames[j:j + len(mfcc)] for j in range(full_window)], axis=1)  # add context
+        return mfcc
 
     def traitement_general_speaker(self):
         """

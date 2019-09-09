@@ -83,14 +83,10 @@ class Speaker_MNGU0(Speaker):
 
 
     def read_ema_file(self,k):
-        # TODO
         """
-        :param i: index de l'uttérence (ie numero de phrase) dont les données EMA seront extraites
-        :return: les données EMA en format npy pour l'utterance i avec les premiers traitements.
-        :traitement : lecture du fichier .ema et recup des données, filtre sur les articulateurs qui nous intéressent ,
-        ajout du lip aperture, interpolation pour données manquantes
-        En sortie nparray de dimension (K,13), où K dépend de la longueur de la phrase
-         (fréquence d'échantillonnage de 200Hz donc K = 200*durée_en_sec)
+        read the ema file, first preprocessing,
+        :param i: utterance index (wrt EMA files)
+        :return: npy array (K,12) , K depends on the duration of the recording, 12 trajectories
         """
         path_ema_file = os.path.join(self.path_ema_files, self.EMA_files[k] + ".ema")
         with open(path_ema_file, 'rb') as ema_annotation:
@@ -108,9 +104,7 @@ class Speaker_MNGU0(Speaker):
             ema_data = np.fromfile(ema_annotation, "float32").reshape(n_frames, self.n_columns + 2)
             cols_index = [column_names.index(col) for col in self.articulators_init]
             ema_data = ema_data[:, cols_index]
-            ema_data = ema_data*100  #données initiales en 10^-5m on les met en millimètre
-
-            #dabord enlever les nan avant de lisser et sous echantillonner
+            ema_data = ema_data*100  #initial data in  10^-5m , we turn it to mm
             if np.isnan(ema_data).sum() != 0:
                 # Build a cubic spline out of non-NaN values.
                 spline = scipy.interpolate.splrep( np.argwhere(~np.isnan(ema_data).ravel()), ema_data[~np.isnan(ema_data)], k=3)
@@ -119,11 +113,11 @@ class Speaker_MNGU0(Speaker):
                     ema_data[j] = scipy.interpolate.splev(j, spline)
             return ema_data
 
-    def remove_silences(self,k, my_ema, my_mfcc):
+    def remove_silences(self,k, ema, mfcc):
         """
         :param k:  utterance index (wrt the list EMA_files)
-        :param my_ema: the ema list of traj
-        :param my_mfcc: the mfcc features
+        :param ema: the ema list of traj
+        :param mfcc: the mfcc features
         :return: the data (ema and mfcc) without the silence at the beginning and end of the recording
         reads the annotation file to get (in sec) the extremity of the voice,
         calculates the equivalence in # of ema points and # of mfcc frames
@@ -140,35 +134,35 @@ class Speaker_MNGU0(Speaker):
         xtrm = [max(start_time-marge,0), end_time+marge]
 
         xtrm_temp_ema = [int(np.floor(xtrm[0] * self.sampling_rate_ema)),
-                         int(min(np.floor(xtrm[1] * self.sampling_rate_ema) + 1, len(my_ema)))]
+                         int(min(np.floor(xtrm[1] * self.sampling_rate_ema) + 1, len(ema)))]
 
         xtrm_temp_mfcc = [int(np.floor(xtrm[0] / self.hop_time)),
                           int(np.ceil(xtrm[1] / self.hop_time))]
 
-        my_mfcc = my_mfcc[xtrm_temp_mfcc[0]:xtrm_temp_mfcc[1]]
-        my_ema = my_ema[xtrm_temp_ema[0]:xtrm_temp_ema[1], :]
-        return my_ema, my_mfcc
+        mfcc = mfcc[xtrm_temp_mfcc[0]:xtrm_temp_mfcc[1]]
+        ema = ema[xtrm_temp_ema[0]:xtrm_temp_ema[1], :]
+        return ema, mfcc
 
-    def from_wav_to_mfcc(self,my_wav):
+    def from_wav_to_mfcc(self,wav):
         """
-        :param my_wav: list of intensity points of the wav file
+        :param wav: list of intensity points of the wav file
         :return: the acoustic features( K,429); where K in the # of frames.
         calculations of the mfcc with librosa , + Delta and DeltaDelta, + 10 context frames
         # of acoustic features per frame: 13 ==> 13*3 = 39 ==> 39*11 = 429.
         parameters for mfcc calculation are defined in class_corpus
         """
 
-        my_mfcc = librosa.feature.mfcc(y=my_wav, sr=self.sampling_rate_wav, n_mfcc=self.n_coeff,
+        mfcc = librosa.feature.mfcc(y=wav, sr=self.sampling_rate_wav, n_mfcc=self.n_coeff,
                                     n_fft=self.frame_length, hop_length=self.hop_length
                                     ).T
-        dyna_features = get_delta_features(my_mfcc)
+        dyna_features = get_delta_features(mfcc)
         dyna_features_2 = get_delta_features(dyna_features)
-        my_mfcc = np.concatenate((my_mfcc, dyna_features, dyna_features_2), axis=1)
-        padding = np.zeros((self.window, my_mfcc.shape[1]))
-        frames = np.concatenate([padding, my_mfcc, padding])
+        mfcc = np.concatenate((mfcc, dyna_features, dyna_features_2), axis=1)
+        padding = np.zeros((self.window, mfcc.shape[1]))
+        frames = np.concatenate([padding, mfcc, padding])
         full_window = 1 + 2 * self.window
-        my_mfcc = np.concatenate([frames[i:i + len(my_mfcc)] for i in range(full_window)], axis=1)
-        return my_mfcc
+        mfcc = np.concatenate([frames[i:i + len(mfcc)] for i in range(full_window)], axis=1)
+        return mfcc
 
     def traitement_general_speaker(self):
         """
@@ -200,7 +194,6 @@ class Speaker_MNGU0(Speaker):
                 os.path.join(root_path, "Donnees_pretraitees", self.speaker, "ema_final", self.EMA_files[i] + ".npy"))
             mfcc = np.load(os.path.join(root_path, "Donnees_pretraitees", self.speaker, "mfcc", self.EMA_files[i] + ".npy"))
             ema_VT_smooth_norma, mfcc = self.normalize_phrase(i, ema_VT_smooth, mfcc)
-            # ema_VT_smooth_norma = my_speaker_class.smooth_data(ema_VT_smooth_norma)
             np.save(os.path.join(root_path, "Donnees_pretraitees", self.speaker, "mfcc", self.EMA_files[i]), mfcc)
             np.save(os.path.join(root_path, "Donnees_pretraitees", self.speaker, "ema_final", self.EMA_files[i]),
                     ema_VT_smooth_norma)
