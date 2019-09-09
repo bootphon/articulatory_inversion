@@ -23,7 +23,7 @@ import scipy.signal
 import scipy.interpolate
 import librosa
 from Traitement.fonctions_utiles import get_speakers_per_corpus
-from Traitement.class_corpus import Speaker,Corpus
+from Traitement.class_corpus import Speaker
 import glob
 
 root_path = dirname(dirname(os.path.realpath(__file__)))
