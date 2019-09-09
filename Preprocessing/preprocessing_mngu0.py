@@ -14,7 +14,7 @@ sys.path.insert(0,parentdir)
 import scipy.signal
 import scipy.interpolate
 import scipy.io as sio
-from Preprocessing.fonctions_utiles import get_fileset_names, get_delta_features, split_sentences
+from Preprocessing.tools_preprocessing import get_fileset_names, get_delta_features, split_sentences
 
 from os.path import dirname
 import numpy as np
@@ -22,7 +22,7 @@ import scipy.signal
 
 import scipy.interpolate
 import librosa
-from Preprocessing.fonctions_utiles import get_speakers_per_corpus
+from Preprocessing.tools_preprocessing import get_speakers_per_corpus
 from Preprocessing.class_corpus import Speaker
 import glob
 
