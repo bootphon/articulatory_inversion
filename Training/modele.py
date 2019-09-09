@@ -38,9 +38,8 @@ class my_ac2art_modele(torch.nn.Module):
     """
     pytorch implementation of neural network
     """
-    # TODO: là c'est super important de bien détailler
     def __init__(self, hidden_dim, input_dim, output_dim, batch_size,name_file="", sampling_rate=100,
-                 window=5, cutoff=10,cuda_avail =False,modele_filtered=False,batch_norma=False):
+                 window=5, cutoff=10,cuda_avail =False, filter_type=1, batch_norma=False):
         """
         :param hidden_dim: int, hidden dimension of lstm (usually 300)
         :param input_dim: int, input dimension of the acoustic features for 1 frame mfcc (usually 429)
@@ -51,7 +50,8 @@ class my_ac2art_modele(torch.nn.Module):
         :param window: int, window size for the smoothing usually 5
         :param cutoff: int, intial cutoff frequency for the smoothing, usually 10Hz
         :param cuda_avail: bool, whether gpu is available
-        :param modele_filtered: bool, whether to smooth the data during the forward
+        :param filter type: str, "out": filter outside the nn, "fix" : weights are FIXED,
+        "unfix" : weights are updated during the training
         :param batch_norma: bool, whether to add batch normalization after the lstm layers
         """
         super(my_ac2art_modele, self).__init__()
@@ -72,7 +72,7 @@ class my_ac2art_modele(torch.nn.Module):
         self.readout_layer = torch.nn.Linear(hidden_dim*2  , output_dim)
         self.batch_size = batch_size
         self.sigmoid = torch.nn.Sigmoid()
-        self.modele_filtered=modele_filtered
+        self.filter_type=filter_type
         self.softmax = torch.nn.Softmax(dim=output_dim)
         self.tanh = torch.nn.Tanh()
         self.sampling_rate = sampling_rate
@@ -124,7 +124,7 @@ class my_ac2art_modele(torch.nn.Module):
         :return: the articulatory prediction (Batchsize, K,18) based on the current weights
         """
         if filter_output is None :
-            filter_output = (self.modele_filtered != 0)
+            filter_output = (self.filter_type != "out")
         dense_out =  torch.nn.functional.relu(self.first_layer(x))
         dense_out_2 = torch.nn.functional.relu(self.second_layer(dense_out))
         lstm_out, hidden_dim = self.lstm_layer(dense_out_2)
@@ -200,19 +200,20 @@ class my_ac2art_modele(torch.nn.Module):
         padding = int(0.5*((C_in-1)*stride-C_in+window_size))+23
 
         # maybe the two functions do exactly the same...
-        if self.modele_filtered in [0,1,3] :
+
+        if self.filter_type in ["out","fix"] :
             weight_init = self.get_filter_weights_en_dur()
-        elif self.modele_filtered == 2:
+        elif self.filter_type == "unfix":
             weight_init = self.get_filter_weights()
 
         weight_init = weight_init.view((1, 1, -1))
         lowpass = torch.nn.Conv1d(C_in,self.output_dim, window_size, stride=1, padding=padding, bias=False)
 
-        if self.modele_filtered == 2: # 2 we let the weights move
-            lowpass.weight = torch.nn.Parameter(weight_init,requires_grad= True)
+        if self.filter_type == "unfix":  # we let the weights move
+            lowpass.weight = torch.nn.Parameter(weight_init,requires_grad=True)
 
-        else : # 0 we don't care the filter won't be applied, 1 the wieghts are fixed
-            lowpass.weight = torch.nn.Parameter(weight_init,requires_grad = False)
+        else :  # "out" we don't care the filter won't be applied, or "fix" the wieghts are fixed
+            lowpass.weight = torch.nn.Parameter(weight_init,requires_grad=False)
 
         lowpass = lowpass.double()
         self.lowpass = lowpass
@@ -234,32 +235,36 @@ class my_ac2art_modele(torch.nn.Module):
             y_smoothed[:, :, i] = traj_arti_smoothed
         return y_smoothed
 
-    def plot_results(self, y, y_pred,y_pred_smooth = None,to_cons=[]):
+    def plot_results(self, y, y_pred_smoothed=None, y_pred_not_smoothed= None, to_cons=[]):
         """
         :param y: one TRUE arti trajectory
-        :param y_pred: one predicted arti trajectory not smoothed (forwoard with filtered=False)
-        :param y_pred_smooth:  one predicted arti trajectory (smoothed)
+        :param y_pred_not_smoothed: one predicted arti trajectory not smoothed (forward with filtered=False)
+        :param y_pred_smoothed:  one predicted arti trajectory (smoothed)
         :param to_cons:  articulations available to consider (list of 0/1)
-        save the graph of each available trajectory predicted and true
+        save the graph of each available trajectory predicted and true.
+        If y_pred is given, also plot the non smoothed pred
         """
         print("you chose to plot")
         plt.figure()
         idx_to_cons = [k for k in range(len(to_cons)) if to_cons[k]]
         for j in idx_to_cons:
             plt.figure()
-           # plt.plot(y_pred[:, j],alpha=0.6)
-            plt.plot(y_pred_smooth[:,j])
+            if y_pred_not_smoothed is not None :
+                plt.plot(y_pred_not_smoothed[:, j],alpha=0.6)
+            plt.plot(y_pred_smoothed[:, j])
             plt.plot(y[:, j])
             plt.title("prediction_test_{0}_arti_{1}.png".format(self.name_file,str(j)))
-            #plt.legend(["prediction", "vraie","pred smoothed"])
-            plt.legend(["prediction", "vraie"])
+
+            if y_pred_not_smoothed is not None:
+                plt.legend(["prediction", "target", "pred smoothed"])
+            else:
+                plt.legend(["prediction", "target"])
             save_pics_path = os.path.join(
-                "images_predictions\\{0}_arti_{1}.png".format(self.name_file,str(j)))
+                "images_predictions\\{0}_arti_{1}.png".format(self.name_file, str(j)))
             plt.savefig(save_pics_path)
             plt.close('all')
 
-
-    def evaluate_on_test(self,X_test,Y_test, std_speaker ,to_plot=False,to_consider=None,verbose=True):
+    def evaluate_on_test(self, X_test, Y_test, std_speaker, to_plot=False, to_consider=None, verbose=True):
         """
         :param X_test:  list of all the input of the test set
         :param Y_test:  list of all the target of the test set
@@ -274,44 +279,41 @@ class my_ac2art_modele(torch.nn.Module):
         indices_to_plot = np.random.choice(len(X_test), 2, replace=False)
         for i in range(len(X_test)):
                 L = len(X_test[i])
-                x_torch = torch.from_numpy(X_test[i]).view(1,L,self.input_dim)  #x (1,L,429)
+                x_torch = torch.from_numpy(X_test[i]).view(1, L, self.input_dim)  #x (1,L,429)
                 y = Y_test[i].reshape((L, self.output_dim))                     #y (L,13)
                 if self.cuda_avail:
-                    x_torch = x_torch.to(device = self.device)
-
-                y_pred_passmooth = self(x_torch,False).double() #output y_pred (1,L,13)
-                y_pred = self(x_torch,True).double()
+                    x_torch = x_torch.to(device=self.device)
+                y_pred_not_smoothed = self(x_torch, False).double() #output y_pred (1,L,13)
+                y_pred_smoothed = self(x_torch, True).double()
                 if self.cuda_avail:
-                    y_pred_passmooth = y_pred_passmooth.cpu()
-                    y_pred = y_pred.cpu()
-
-                y_pred_passmooth = y_pred_passmooth.detach().numpy().reshape((L, self.output_dim))  # y_pred (L,13)
-                y_pred= y_pred.detach().numpy().reshape((L, self.output_dim))  # y_pred (L,13)
+                    y_pred_not_smoothed = y_pred_not_smoothed.cpu()
+                    y_pred_smoothed = y_pred_smoothed.cpu()
+                y_pred_not_smoothed = y_pred_not_smoothed.detach().numpy().reshape((L, self.output_dim))  # y_pred (L,13)
+                y_pred_smoothed= y_pred_smoothed.detach().numpy().reshape((L, self.output_dim))  # y_pred (L,13)
                 if to_plot:
-                   if i in indices_to_plot:
-                        self.plot_results(y, y_pred_passmooth, y_pred,to_consider)
-
-                rmse = np.sqrt(np.mean(np.square(y - y_pred), axis=0))  # calculate rmse
+                    if i in indices_to_plot:
+                        self.plot_results(y, y_pred_smoothed = y_pred_smoothed, y_pred_not_smoothed=y_pred_not_smoothed, to_cons = to_consider)
+                rmse = np.sqrt(np.mean(np.square(y - y_pred_smoothed), axis=0))  # calculate rmse
                 rmse = np.reshape(rmse, (1, self.output_dim))
-                rmse = rmse*std_speaker #unormalize
+                rmse = rmse*std_speaker  # unormalize
                 all_diff = np.concatenate((all_diff, rmse))
                 pearson = [0]*self.output_dim
                 for k in range(self.output_dim):
-                    pearson[k] = np.corrcoef(y[:,k].T,y_pred[:,k].T)[0,1]
-                pearson = np.array(pearson).reshape((1,self.output_dim))
-                all_pearson = np.concatenate((all_pearson,pearson))
-        all_pearson=all_pearson[1:]
-        all_pearson[:,idx_to_ignore]=0
+                    pearson[k] = np.corrcoef(y[:, k].T, y_pred_smoothed[:, k].T)[0, 1]
+                pearson = np.array(pearson).reshape((1, self.output_dim))
+                all_pearson = np.concatenate((all_pearson, pearson))
+        all_pearson = all_pearson[1:]
+        all_pearson[:, idx_to_ignore] = 0
         all_diff = all_diff[1:]
-        all_diff[:,idx_to_ignore] = 0
+        all_diff[:, idx_to_ignore] = 0
         pearson_per_arti_mean = np.mean(all_pearson, axis=0)
         rmse_per_arti_mean = np.mean(all_diff, axis=0)
         if verbose:
-            print("rmse final : ", np.mean(rmse_per_arti_mean[rmse_per_arti_mean!=0]))
+            print("rmse final : ", np.mean(rmse_per_arti_mean[rmse_per_arti_mean != 0]))
             print("rmse mean per arti : \n", rmse_per_arti_mean)
-            print("pearson final : ", np.mean(pearson_per_arti_mean[rmse_per_arti_mean!=0]))
+            print("pearson final : ", np.mean(pearson_per_arti_mean[rmse_per_arti_mean != 0]))
             print("pearson mean per arti : \n", pearson_per_arti_mean)
-        return rmse_per_arti_mean,pearson_per_arti_mean
+        return rmse_per_arti_mean, pearson_per_arti_mean
 
 
 

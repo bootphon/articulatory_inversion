@@ -2,14 +2,19 @@
 from __future__ import division
 import numpy as np
 import os
-import torch
 
 
-def load_filenames_deter(train_on,part=["train"]):
+def load_filenames_deter(speakers, part=["train"]):
+    """
+    :param speakers: list of speakers we want the filesets
+    :param part: list ["train","valid","test"] (or less) of part of fileset we want from the speakers
+    :return: a list of the filenames corresponding to the asked part for asked speakers
+    based on the fileset files already
+    """
     # TODO
     path_files = os.path.join(os.path.dirname(os.getcwd()),"Donnees_pretraitees","fileset")
     filenames = []
-    for speaker in train_on:
+    for speaker in speakers:
         for p in part:
             names = open(os.path.join( path_files , speaker + "_" + p + ".txt"), "r").read().split()
             filenames = filenames + names

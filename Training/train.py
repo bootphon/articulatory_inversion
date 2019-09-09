@@ -8,7 +8,7 @@
 import os,sys,inspect
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
-sys.path.insert(0,parentdir)
+sys.path.insert(0, parentdir)
 
 ncpu="10"
 import os
@@ -18,7 +18,7 @@ os.environ["MKL_NUM_THREADS"] = ncpu # export MKL_NUM_THREADS=4
 os.environ["VECLIB_MAXIMUM_THREADS"] = ncpu # export VECLIB_MAXIMUM_THREADS=4
 os.environ["NUMEXPR_NUM_THREADS"] = ncpu # export NUMEXPR_NUM_THREADS=4
 import numpy as np
-
+import argparse
 import gc
 import psutil
 from Training.modele import my_ac2art_modele
@@ -38,7 +38,7 @@ from Training.logger import Logger
 root_folder = os.path.dirname(os.getcwd())
 
 
-def memReport(all = False):
+def memReport(all=False):
     """
     :param all: show size of each obj
     use if memory errors
@@ -77,19 +77,19 @@ def criterion_pearson(y, y_pred, cuda_avail, device):
     // Idea : integrate the range of the traj here, making the loss for each sentence as the weighted average of the
     losses with weight proportional to the range of the traj (?)
     """
-    y_1 = y - torch.mean(y,dim=1,keepdim=True)
-    y_pred_1 = y_pred - torch.mean(y_pred,dim=1,keepdim=True)
-    nume=  torch.sum(y_1* y_pred_1,dim=1,keepdim=True) # (B,1,18)
-    deno =  torch.sqrt(torch.sum(y_1 ** 2,dim=1,keepdim=True)) * \
-            torch.sqrt(torch.sum(y_pred_1 ** 2,dim=1,keepdim=True))# (B,1,18)
+    y_1 = y - torch.mean(y, dim=1, keepdim=True)
+    y_pred_1 = y_pred - torch.mean(y_pred,dim=1, keepdim=True)
+    nume = torch.sum(y_1 * y_pred_1, dim=1, keepdim=True)  # (B,1,18)
+    deno = torch.sqrt(torch.sum(y_1 ** 2, dim=1, keepdim=True)) * \
+        torch.sqrt(torch.sum(y_pred_1 ** 2, dim=1, keepdim=True))  # (B,1,18)
 
-    minim = torch.tensor(0.01,dtype=torch.float64) # avoid division by 0
+    minim = torch.tensor(0.01,dtype=torch.float64)  # avoid division by 0
     if cuda_avail:
         minim = minim.to(device=device)
         deno = deno.to(device=device)
         nume = nume.to(device=device)
-    deno = torch.max(deno,minim) # replace 0 by minimum
-    my_loss = torch.div(nume, deno) # (B,1,18)
+    deno = torch.max(deno, minim)  # replace 0 by minimum
+    my_loss = torch.div(nume, deno)  # (B,1,18)
     my_loss = torch.sum(my_loss)
     return -my_loss
 
@@ -102,17 +102,16 @@ def criterion_both(L, cuda_avail, device):
     :return: the function that calculates the combined loss of 1 prediction. This function will be used as a criterion
     """
     L = L/100
-    def criterion_both_lbd(my_y,my_ypred):
+
+    def criterion_both_lbd(my_y, my_ypred):
         """
         :param my_y: target
         :param my_ypred: perdiction
         :return: the loss for the combined loss
         """
-        a = L * criterion_pearson(my_y, my_ypred,cuda_avail,device)
+        a = L * criterion_pearson(my_y, my_ypred, cuda_avail, device)
         b = (1 - L) * torch.nn.MSELoss(reduction='sum')(my_y, my_ypred) / 1000
         new_loss = a + b
-      #  print(a,b,new_loss)
-       # return new_loss
         return new_loss
     return criterion_both_lbd
 
@@ -164,7 +163,7 @@ def give_me_train_valid_test(train_on, test_on, config, batch_size):
     :param test_on: the speaker test
     :param config: either spec/dep/indep
     :param batch_size
-    :return: files_per_categ :  dictionnary where keys are categories present in the training set. For each category
+    :return: files_per_categ :  dictionnary where keys are the categories present in the training set. For each category
     we have a dictionnary with 2 keys (train, valid), and the values is a list of the namefiles for this categ and this
     part (train/valid)
             files_for_test : list of the files of the test set
@@ -198,30 +197,36 @@ def give_me_train_valid_test(train_on, test_on, config, batch_size):
 
     for categ in categ_of_speakers.keys():
         sp_in_categ = categ_of_speakers[categ]["sp"]
-        #sp_in_categ = [sp for sp in sp_in_categ if sp in train_on] #speakers that interest us & that are in this categ
-        files_train_this_categ = [[f for f in files_for_train if sp.lower() in f.lower() ]for sp in sp_in_categ]  #the speaker name is always in the namefile
-        files_train_this_categ = [item for sublist in files_train_this_categ for item in sublist] # flatten la liste de liste
+
+        files_train_this_categ = [[f for f in files_for_train if sp.lower() in f.lower()]
+                                  for sp in sp_in_categ]  # the speaker name is always in the namefile
+        files_train_this_categ = [item for sublist in files_train_this_categ
+                                  for item in sublist]  # flatten the list of list
 
         files_valid_this_categ = [[f for f in files_for_valid if sp.lower() in f.lower()] for sp in sp_in_categ]
-        files_valid_this_categ = [item for sublist in files_valid_this_categ for item in sublist]  # flatten la liste de liste
-        if len(files_train_this_categ) > 0 : #meaning we have at least one file in this categ
+        files_valid_this_categ = [item for sublist in files_valid_this_categ for item in sublist]
+
+        if len(files_train_this_categ) > 0:  # meaning we have at least one file in this categ
+            files_per_categ[categ] = dict()
+
             N_iter_categ = int(len(files_train_this_categ)/batch_size)+1
             n_a_ajouter = batch_size*N_iter_categ - len(files_train_this_categ)
-            files_train_this_categ = files_train_this_categ + files_train_this_categ[:n_a_ajouter] #nbr de fichier par categorie multiple du batch size
+            files_train_this_categ = files_train_this_categ +\
+                                    files_train_this_categ[:n_a_ajouter]  #so that lenght is a multiple of batchsize
             random.shuffle(files_train_this_categ)
-            files_per_categ[categ] = dict()
             files_per_categ[categ]["train"] = files_train_this_categ
-            N_iter_categ = int(len(  files_valid_this_categ) / batch_size) + 1  # on veut qu'il y a en ait un multiple du batch size , on en double certains
-            n_a_ajouter = batch_size * N_iter_categ - len(files_valid_this_categ)  # si 14 element N_iter_categ vaut 2 et n_a_ajouter vaut 6
-            files_valid_this_categ = files_valid_this_categ + files_valid_this_categ[:n_a_ajouter] # nbr de fichier par categorie multiple du batch size
+
+            N_iter_categ = int(len( files_valid_this_categ) / batch_size) + 1
+            n_a_ajouter = batch_size * N_iter_categ - len(files_valid_this_categ)
+            files_valid_this_categ = files_valid_this_categ + files_valid_this_categ[:n_a_ajouter]
             random.shuffle(files_valid_this_categ)
             files_per_categ[categ]["valid"] = files_valid_this_categ
 
     return files_per_categ, files_for_test
 
 
-def train_model(test_on ,n_epochs, loss_train, patience, select_arti, corpus_to_train_on, batch_norma
-                         , filter_type, to_plot, lr, delta_test, config):
+def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_train_on, batch_norma, filter_type,
+                to_plot, lr, delta_test, config):
     """
     :param test_on: (str) one speaker's name we want to test on, the speakers and the corpus the come frome can be seen in
     "fonction_utiles.py", in the function "get_speakers_per_corpus'.
@@ -261,7 +266,6 @@ def train_model(test_on ,n_epochs, loss_train, patience, select_arti, corpus_to_
     :return: [rmse, pearson] . rmse the is the list of the 18 rmse (1 per articulator), same for pearson.
     """
 
-
     name_corpus_concat, train_on = give_me_train_on(corpus_to_train_on, test_on,config)
 
     name_file = test_on+"_speaker_"+config+name_corpus_concat+"_loss_"+str(loss_train)+"_filter_"+str(filter_type)
@@ -269,33 +273,32 @@ def train_model(test_on ,n_epochs, loss_train, patience, select_arti, corpus_to_
 
     previous_models = os.listdir("saved_models")
     previous_models_2 = [x[:len(name_file)] for x in previous_models if x.endswith(".txt")]
-    n_previous_same = previous_models_2.count(name_file) #how many times our model was trained
+    n_previous_same = previous_models_2.count(name_file)  #how many times our model was trained
 
     if n_previous_same > 0:
         print("this models has alread be trained {} times".format(n_previous_same))
     else :
         print("first time for this model")
-    name_file = name_file + "_" + str(n_previous_same) # each model trained only once ,
+    name_file = name_file + "_" + str(n_previous_same)  # each model trained only once ,
     # this script doesnt continue a previous training if it was ended ie if there is a .txt
     print("going to train the model with name",name_file)
     logger = Logger('./logs')
 
-
     cuda_avail = torch.cuda.is_available()
     print(" cuda ?", cuda_avail)
-    if cuda_avail :
+    if cuda_avail:
         device = torch.device("cuda")
-    else :
+    else:
         device = torch.device("cpu")
 
     hidden_dim = 300
     input_dim = 429
     batch_size = 10
     output_dim = 18
-    early_stopping = EarlyStopping(name_file,patience=patience, verbose=True)
+    early_stopping = EarlyStopping(name_file, patience=patience, verbose=True)
     model = my_ac2art_modele(hidden_dim=hidden_dim, input_dim=input_dim, name_file=name_file, output_dim=output_dim,
                              batch_size=batch_size, cuda_avail=cuda_avail,
-                             modele_filtered=filter_type,batch_norma=batch_norma)
+                             filter_type=filter_type, batch_norma=batch_norma)
     model = model.double()
 
     file_weights = os.path.join("saved_models", name_file +".pt")
@@ -341,7 +344,7 @@ def train_model(test_on ,n_epochs, loss_train, patience, select_arti, corpus_to_
         loss_train_this_epoch = 0
         for categ in categs_to_consider:  # de A à F pour le momen
 
-            files_this_categ_courant = files_per_categ[categ]["train"] #on na pas encore apprit dessus au cours de cette epoch
+            files_this_categ_courant = files_per_categ[categ]["train"]  #on na pas encore apprit dessus au cours de cette epoch
             random.shuffle(files_this_categ_courant)
 
             while len(files_this_categ_courant) > 0:
@@ -476,24 +479,24 @@ if __name__=='__main__':
     parser.add_argument('--batch_norma', type=bool, default= False,
                         help='whether to add batch norma after lstm layyers')
 
-    parser.add_argument('--filter_type', type=int, default=1,
-                        help='0 filter outside of nn, 1 filter with fixed weights, 2 filter with adaptable weights')
+    parser.add_argument('--filter_type', type=str, default="fix",
+                        help='"out" filter outside of nn, "fix" filter with fixed weights, "unfix" filter with adaptable weights')
 
     parser.add_argument('--to_plot', type=bool, default= False,
                         help='whether to save one graph of prediction & target of the test ')
 
     parser.add_argument('--lr', type = float, default = 0.001,
-                         help='learning rate of Adam optimizer ')
+                        help='learning rate of Adam optimizer ')
 
     parser.add_argument('--delta_test', type=int, default=1,
-                         help='how often evaluate the validation set')
+                        help='how often evaluate the validation set')
 
     parser.add_argument('config', type=str,
                         help='spec or dep or indep that stands for speaker specific/dependant/independant')
 
     args = parser.parse_args()
 
-    train_model(test_on=args.test_on,n_epochs=args.n_epochs, loss_train=args.loss_train,
-                         patience=args.patience, select_arti=args.select_arti, corpus_to_train_on=args.corpus_to_train_on,
-                         batch_norma=args.batch_norma, filter_type=args.filter_type, to_plot=args.to_plot,
-                         lr=args.lr, delta_test=args.delta_test, config=args.config)
+    train_model(test_on=args.test_on, n_epochs=args.n_epochs, loss_train=args.loss_train,
+                patience=args.patience, select_arti=args.select_arti, corpus_to_train_on=args.corpus_to_train_on,
+                batch_norma=args.batch_norma, filter_type=args.filter_type, to_plot=args.to_plot,
+                lr=args.lr, delta_test=args.delta_test, config=args.config)
