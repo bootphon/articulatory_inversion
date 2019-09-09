@@ -5,15 +5,15 @@ parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 from os.path import dirname
 
-from Traitement.traitement_haskins import traitement_general_haskins
-from Traitement.traitement_mngu0 import traitement_general_mngu0
-from Traitement.traitement_usc_timit import traitement_general_usc
-from Traitement.traitement_mocha import traitement_general_mocha
+from Preprocessing.preprocessing_haskins import Preprocessing_general_haskins
+from Preprocessing.preprocessing_mngu0 import Preprocessing_general_mngu0
+from Preprocessing.preprocessing_usc_timit import Preprocessing_general_usc
+from Preprocessing.preprocessing_mocha import Preprocessing_general_mocha
 import argparse
 from multiprocessing import Process
 
 
-def traitement_general_per_corpus(corp,max):
+def Preprocessing_general_per_corpus(corp,max):
     """
     :param corp: corpus we want to do the preprocess
     :param max:  max of files to preprocess (useful for test), 0 to treat all files
@@ -21,13 +21,13 @@ def traitement_general_per_corpus(corp,max):
      """
 
     if corp == "MNGU0":
-        traitement_general_mngu0(max)
+        Preprocessing_general_mngu0(max)
     elif corp == "usc":
-        traitement_general_usc(max)
+        Preprocessing_general_usc(max)
     elif corp == "Haskins":
-        traitement_general_haskins(max)
+        Preprocessing_general_haskins(max)
     elif corp == "mocha":
-        traitement_general_mocha(max)
+        Preprocessing_general_mocha(max)
 
 
 if __name__ == '__main__':
@@ -47,7 +47,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     N_max = int(sys.argv[1])
     for co in corpus:
-        proc = Process(target=traitement_general_per_corpus, args=(co,N_max))
+        proc = Process(target=Preprocessing_general_per_corpus, args=(co,N_max))
         procs.append(proc)
         proc.start()
 
@@ -57,25 +57,25 @@ if __name__ == '__main__':
 
 
 #not used anymore
-def main_traitement(corpus_to_treat=["mocha", "usc", "MNGU0", "Haskins"], max=0):
+def main_Preprocessing(corpus_to_treat=["mocha", "usc", "MNGU0", "Haskins"], max=0):
     """
     :param corpus_to_treat: corpus we want to do the preprocess
     :param max:  # max of files to preprocess (useful for test), if 0 all files
-    to preprocessing of each corpus one after the other calling the "traitement_general_&corpus" fonction
+    to preprocessing of each corpus one after the other calling the "Preprocessing_general_&corpus" fonction
     """
     root_path = dirname(dirname(os.path.realpath(__file__)))
 
-    if not os.path.exists(os.path.join(os.path.join(root_path, "Traitement", "norm_values"))):
-        os.makedirs(os.path.join(os.path.join(root_path, "Traitement", "norm_values")))
+    if not os.path.exists(os.path.join(os.path.join(root_path, "Preprocessing", "norm_values"))):
+        os.makedirs(os.path.join(os.path.join(root_path, "Preprocessing", "norm_values")))
 
     if "mocha" in corpus_to_treat:
-        traitement_general_mocha(max)
+        Preprocessing_general_mocha(max)
 
     if "MNGU0" in corpus_to_treat:
-        traitement_general_mngu0(max)
+        Preprocessing_general_mngu0(max)
 
     if "usc" in corpus_to_treat:
-        traitement_general_usc(max)
+        Preprocessing_general_usc(max)
 
     if "Haskins" in corpus_to_treat:
-        traitement_general_haskins(max)
+        Preprocessing_general_haskins(max)

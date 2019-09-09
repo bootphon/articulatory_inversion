@@ -98,7 +98,7 @@ def read_csv_arti_ok_per_speaker():
     available for this category,"speakers" : list of speakers in this category}
     The dict is created based on the csv file "articulators_per_speaer"
     """
-    arti_per_speaker = os.path.join(root_folder,"Traitement", "articulators_per_speaker.csv")
+    arti_per_speaker = os.path.join(root_folder,"Preprocessing", "articulators_per_speaker.csv")
     csv.register_dialect('myDialect', delimiter=';')
     categ_of_speakers = dict()
     with open(arti_per_speaker, 'r') as csvFile:
@@ -120,7 +120,7 @@ def read_csv_arti_ok_per_speaker():
         print("categ ",cle)
         print(categ_of_speakers[cle])
 
-    with open(os.path.join(root_folder,"Apprentissage","categ_of_speakers.json"), 'w') as dico:
+    with open(os.path.join(root_folder,"Training","categ_of_speakers.json"), 'w') as dico:
         json.dump(categ_of_speakers, dico)
 
 
