@@ -16,7 +16,7 @@ import numpy as np
 from scipy import signal
 import scipy
 from torch.autograd import Variable
-from Apprentissage import utils
+from Training import tools_learning
 import gc
 
 def memReport(all = False):
