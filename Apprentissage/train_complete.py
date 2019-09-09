@@ -16,32 +16,21 @@ import numpy as np
 
 import gc
 import psutil
-from Apprentissage.class_network import my_bilstm
 from Apprentissage.modele import my_ac2art_modele
-import sys
 import torch
 import os
 import csv
 import sys
-from sklearn.model_selection import train_test_split
-from Apprentissage.utils import load_filenames, load_data, load_filenames_deter
+from Apprentissage.utils import load_data, load_filenames_deter
 from Apprentissage.pytorchtools import EarlyStopping
-import time
 import random
-from os.path import dirname
 from scipy import signal
 import matplotlib.pyplot as plt
 from Traitement.fonctions_utiles import get_speakers_per_corpus
-import scipy
-from os import listdir
 import json
 from Apprentissage.logger import Logger
 
-# TODO: SI pas général à mettre dans les arguments du script
 root_folder = os.path.dirname(os.getcwd())
-fileset_path = os.path.join(root_folder, "Donnees_pretraitees", "fileset")
-
-print(sys.argv)
 
 
 def memReport(all = False):
@@ -54,6 +43,7 @@ def memReport(all = False):
             nb_object += 1
     print('nb objects tensor', nb_object)
 
+
 def cpuStats():
     # TODO tu utilises ça ?
     print(sys.version)
@@ -64,31 +54,50 @@ def cpuStats():
     memoryUse = py.memory_info()[0] / 2. ** 30  # memory use in GB...I think
     print('memory GB:', memoryUse)
 
-def criterion_pearson(y,y_pred, cuda_avail, device): # (L,K,13)
-    # TODO: à sortir pas besoin imbriqué
+
+def criterion_pearson(y, y_pred, cuda_avail, device):
+    """
+    :param y: nparray (B,K,18) target trajectories of the batch (size B) , padded (K = maxlenght)
+    :param y_pred: nparray (B,K,18) predicted trajectories of the batch (size B), padded (K = maxlenght
+    :param cuda_avail: bool whether gpu is available
+    :param device: the device
+    :return: loss function for this prediction for loss = pearson correlation
+    for each pair of trajectories (target & predicted) we calculate the pearson correlation between the two
+    we sum all the pearson correlation to obtain the loss function
+    // Idea : integrate the range of the traj here, making the loss for each sentence as the weighted average of the
+    losses with weight proportional to the range of the traj (?)
+    """
     y_1 = y - torch.mean(y,dim=1,keepdim=True)
     y_pred_1 = y_pred - torch.mean(y_pred,dim=1,keepdim=True)
-    nume=  torch.sum(y_1* y_pred_1,dim=1,keepdim=True) # y*y_pred multi terme à terme puis on somme pour avoir (L,1,13)
-  #pour chaque trajectoire on somme le produit de la vriae et de la predite
-    deno =  torch.sqrt(torch.sum(y_1 ** 2,dim=1,keepdim=True)) * torch.sqrt(torch.sum(y_pred_1 ** 2,dim=1,keepdim=True))# use Pearson correlation
-    # deno zero veut dire ema constant à 0 on remplace par des 1
-    minim = torch.tensor(0.01,dtype=torch.float64)
+    nume=  torch.sum(y_1* y_pred_1,dim=1,keepdim=True) # (B,1,18)
+    deno =  torch.sqrt(torch.sum(y_1 ** 2,dim=1,keepdim=True)) * \
+            torch.sqrt(torch.sum(y_pred_1 ** 2,dim=1,keepdim=True))# (B,1,18)
+
+    minim = torch.tensor(0.01,dtype=torch.float64) # avoid division by 0
     if cuda_avail:
         minim = minim.to(device=device)
         deno = deno.to(device=device)
         nume = nume.to(device=device)
-    deno = torch.max(deno,minim)
-    my_loss = torch.div(nume,deno)
-    my_loss = torch.sum(my_loss) #pearson doit etre le plus grand possible
+    deno = torch.max(deno,minim) # replace 0 by minimum
+    my_loss = torch.div(nume, deno) # (B,1,18)
+    my_loss = torch.sum(my_loss)
     return -my_loss
 
 
-def criterion_both(L, cuda_avail,device):
-    # TODO
-    L = L/100 #% de pearson dans la loss
-
+def criterion_both(L, cuda_avail, device):
+    """
+    :param L: parameter in the combined loss of rmse and pearson (loss = (1-L)*rmse + L*pearson ) between 0 and 100
+    :param cuda_avail: bool if gpu is available
+    :param device: device
+    :return: the function that calculates the combined loss of 1 prediction. This function will be used as a criterion
+    """
+    L = L/100
     def criterion_both_lbd(my_y,my_ypred):
-        #TODO
+        """
+        :param my_y: target
+        :param my_ypred: perdiction
+        :return: the loss for the combined loss
+        """
         a = L * criterion_pearson(my_y, my_ypred,cuda_avail,device)
         b = (1 - L) * torch.nn.MSELoss(reduction='sum')(my_y, my_ypred) / 1000
         new_loss = a + b
@@ -98,18 +107,29 @@ def criterion_both(L, cuda_avail,device):
     return criterion_both_lbd
 
 
-def plot_filtre(weights) :
-        # TODO
-        print("GAIN", sum(weights))
-        freqs, h = signal.freqz(weights)
-        freqs = freqs * 100 / (2 * np.pi)  # freq in hz
-        plt.plot(freqs, 20 * np.log10(abs(h)), 'r')
-        plt.title("Allure filtre passe bas à la fin de l'apprentissage pour filtre en dur")
-        plt.ylabel('Amplitude [dB]')
-        plt.xlabel("real frequency")
-        plt.show()
+def plot_filtre(weights):
+    """
+    :param weights: weights of the low pass filter
+    plot the impulse response of the filter, with gain in GB
+    """
+    print("GAIN", sum(weights))
+    freqs, h = signal.freqz(weights)
+    freqs = freqs * 100 / (2 * np.pi)  # freq in hz
+    plt.plot(freqs, 20 * np.log10(abs(h)), 'r')
+    plt.title("Allure filtre passe bas à la fin de l'apprentissage pour filtre en dur")
+    plt.ylabel('Amplitude [dB]')
+    plt.xlabel("real frequency")
+    plt.show()
 
-def give_me_train_on(corpus_to_train_on,test_on,config):
+
+def give_me_train_on(corpus_to_train_on, test_on, config):
+    """
+    :param corpus_to_train_on: list of all the corpus name to train on
+    :param test_on: the speaker test name
+    :param config:  either specific/dependant/independant
+    :return: name_corpus_concat : concatenation of the corpus name, used only for the name of the modele
+            train_on : list of the speakers to train_on (except the test speaker)
+    """
     name_corpus_concat = ""
 
     if config == "spe":  # speaker specific
@@ -128,7 +148,23 @@ def give_me_train_on(corpus_to_train_on,test_on,config):
 
     return name_corpus_concat, train_on
 
-def give_me_train_valid_test(train_on,test_on, config, batch_size):
+
+def give_me_train_valid_test(train_on, test_on, config, batch_size):
+    """
+    :param train_on: list of corpus to train on
+    :param test_on: the speaker test
+    :param config: either spec/dep/indep
+    :param batch_size
+    :return: files_per_categ :  dictionnary where keys are categories present in the training set. For each category
+    we have a dictionnary with 2 keys (train, valid), and the values is a list of the namefiles for this categ and this
+    part (train/valid)
+            files_for_test : list of the files of the test set
+    3 configurations that impacts the train/valid/test set (if we train a bit on test speaker, we have to be sure that
+    the don't test on files that were in the train set)
+    - spec : for speaker specific, learning and testing only on the speaker test
+    - dep : for speaker dependant, learning on speakers in train_on and a part of the speaker test
+    - indep : for speaker independant, learnong on other speakers.
+    """
     if config == "spec":
         files_for_train = load_filenames_deter([test_on], part=["train"])
         files_for_valid = load_filenames_deter([test_on], part=["valid"])
@@ -149,22 +185,19 @@ def give_me_train_valid_test(train_on,test_on, config, batch_size):
     files_per_categ = dict()
 
     with open('categ_of_speakers.json', 'r') as fp:
-        categ_of_speakers = json.load(fp)  # dictionnaire en clé la categorie en valeur un dictionnaire
-        # #avec les speakers dans la catégorie et les arti concernées par cette categorie
-
+        categ_of_speakers = json.load(fp)  # dictionnary { categ : dict_2} where
+                                            # dict_2 :{  speakers : [sp_1,..], arti  : [0,1,1...]  }
     for categ in categ_of_speakers.keys():
         sp_in_categ = categ_of_speakers[categ]["sp"]
         sp_in_categ = [sp for sp in sp_in_categ if sp in train_on] #speakers that interest us & that are in this categ
 
-        # fichiers qui appartiennent à la categorie car le nom du speaker apparait touojurs dans le nom du fichier :
-        files_train_this_categ = [[f for f in files_for_train if sp.lower() in f.lower() ]for sp in sp_in_categ]
+        files_train_this_categ = [[f for f in files_for_train if sp.lower() in f.lower() ]for sp in sp_in_categ]  #the speaker name is always in the namefile
         files_train_this_categ = [item for sublist in files_train_this_categ for item in sublist] # flatten la liste de liste
 
         files_valid_this_categ = [[f for f in files_for_valid if sp.lower() in f.lower()] for sp in sp_in_categ]
         files_valid_this_categ = [item for sublist in files_valid_this_categ for item in sublist]  # flatten la liste de liste
 
         if len(files_train_this_categ) > 0 : #meaning we have at least one file in this categ
-            # on va doubler certains elements des "files_valid/train_this_categ" pour en avoir un multiple de batch size
             files_per_categ[categ] = dict()
             N_iter_categ = int(len(files_train_this_categ)/batch_size)+1
             n_a_ajouter = batch_size*N_iter_categ - len(files_train_this_categ)
@@ -179,12 +212,9 @@ def give_me_train_valid_test(train_on,test_on, config, batch_size):
         return files_per_categ, files_for_test
 
 
-
-def train_model_complete(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_train_on,batch_norma,filter_type,
-                train_a_bit_on_test,to_plot, lr,delta_test,config):
-    # TODO: je pense que tu peux découper ça en sous fonctions pour que ce soit plus lisible et débuggagble
+def train_model_complete(test_on ,n_epochs, loss_train, patience, select_arti, corpus_to_train_on, batch_norma
+                         , filter_type, to_plot, lr, delta_test, config):
     """
-    TODO: description, et apparemment la variable train_a_bit_on_test n'est pas utilisée
     :param test_on: (str) one speaker's name we want to test on, the speakers and the corpus the come frome can be seen in
     "fonction_utiles.py", in the function "get_speakers_per_corpus'.
 
@@ -210,10 +240,6 @@ def train_model_complete(test_on ,n_epochs ,loss_train,patience ,select_arti,cor
 
     :param filter_type: (int) either 0 1 or 2. 0 the filter is outside of the network, 1 it is inside and the weight are fixed
     during the training, 2 the weights get adjusted during the training
-
-    :param train_a_bit_on_test: (bool) wheter or not to add some speaker-test info in the training set.
-    If true we add its training part  to the train set and its validation part to the validation set
-    (then we test on the test part only)
 
     :param to_plot: (bool) if true the trajectories of one random test sentence are saved in "images_predictions"
 
@@ -415,7 +441,7 @@ def train_model_complete(test_on ,n_epochs ,loss_train,patience ,select_arti,cor
         writer.writerow(row_pearson)
 
     weight_apres = model.lowpass.weight.data[0, 0, :].cpu()
-    plot_allure_filtre = False #if True affiche  la réponse fréquentielle du filtre à la fin de l'apprentissage
+    plot_allure_filtre = False
     if plot_allure_filtre :
         plot_filtre(weight_apres)
 
