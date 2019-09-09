@@ -16,16 +16,16 @@ import numpy as np
 
 import gc
 import psutil
-from Apprentissage.class_network import my_bilstm
-from Apprentissage.modele import my_ac2art_modele
+from Training.class_network import my_bilstm
+from Training.modele import my_ac2art_modele
 import sys
 import torch
 import os
 import csv
 import sys
 from sklearn.model_selection import train_test_split
-from Apprentissage.utils import load_filenames, load_data, load_filenames_deter
-from Apprentissage.pytorchtools import EarlyStopping
+from Training.utils import load_filenames, load_data, load_filenames_deter
+from Training.pytorchtools import EarlyStopping
 import time
 import random
 from os.path import dirname
@@ -432,7 +432,7 @@ def train_model(test_on ,n_epochs ,loss_train,patience ,select_arti,corpus_to_tr
         freqs, h = signal.freqz(weight_apres.cpu())
         freqs = freqs * 100 / (2 * np.pi)  # freq in hz
         plt.plot(freqs, 20 * np.log10(abs(h)), 'r')
-        plt.title("Allure filtre passe bas à la fin de l'apprentissage pour filtre en dur")
+        plt.title("Allure filtre passe bas à la fin de l'Training pour filtre en dur")
         plt.ylabel('Amplitude [dB]')
         plt.xlabel("real frequency")
         plt.show()
