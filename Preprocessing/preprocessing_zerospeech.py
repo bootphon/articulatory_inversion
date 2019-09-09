@@ -17,7 +17,7 @@ import scipy.interpolate
 import sys
 
 
-from Traitement.fonctions_utiles import get_delta_features
+from Preprocessing.fonctions_utiles import get_delta_features
 import librosa
 root_path = dirname(dirname(os.path.realpath(__file__)))
 

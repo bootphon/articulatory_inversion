@@ -20,7 +20,7 @@ sys.path.insert(0,parentdir)
 import scipy.signal
 import scipy.interpolate
 import scipy.io as sio
-from Traitement.fonctions_utiles import get_fileset_names, get_delta_features, split_sentences
+from Preprocessing.fonctions_utiles import get_fileset_names, get_delta_features, split_sentences
 
 from os.path import dirname
 import numpy as np
@@ -28,8 +28,8 @@ import scipy.signal
 
 import scipy.interpolate
 import librosa
-from Traitement.fonctions_utiles import get_speakers_per_corpus
-from Traitement.class_corpus import Speaker
+from Preprocessing.fonctions_utiles import get_speakers_per_corpus
+from Preprocessing.class_corpus import Speaker
 import glob
 
 root_path = dirname(dirname(os.path.realpath(__file__)))
@@ -144,7 +144,7 @@ class Speaker_Haskins(Speaker):
         ema = scipy.signal.resample(ema, num=n_frames_wanted)
         return ema, mfcc
 
-    def traitement_general_speaker(self):
+    def Preprocessing_general_speaker(self):
         """
         Go through each sentence doing the preprocessing + adding the trajectoires and mfcc to a list, in order to
         calculate the norm values over all sentences of the speaker
@@ -183,7 +183,7 @@ class Speaker_Haskins(Speaker):
         get_fileset_names(self.speaker)
 
 
-def traitement_general_haskins(N_max):
+def Preprocessing_general_haskins(N_max):
     """
     :param N_max: #max of files to treat (0 to treat all files), useful for test
     go through all the speakers of Haskins
@@ -193,9 +193,9 @@ def traitement_general_haskins(N_max):
     for sp in speakers_Has :
         print("En cours Haskins ",sp)
         speaker = Speaker_Haskins(sp,N_max)
-        speaker.traitement_general_speaker()
+        speaker.Preprocessing_general_speaker()
         print("Done Haskins ",sp)
 
 
 #Test :
-#traitement_general_haskins(N_max=50)
+#Preprocessing_general_haskins(N_max=50)
