@@ -296,7 +296,7 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
     batch_size = 10
     output_dim = 18
     early_stopping = EarlyStopping(name_file, patience=patience, verbose=True)
-    model = my_ac2art_modele(hidden_dim=hidden_dim, input_dim=input_dim, name_file=name_file, output_dim=output_dim,
+    model = my_ac2art_model(hidden_dim=hidden_dim, input_dim=input_dim, name_file=name_file, output_dim=output_dim,
                              batch_size=batch_size, cuda_avail=cuda_avail,
                              filter_type=filter_type, batch_norma=batch_norma)
     model = model.double()

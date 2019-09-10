@@ -5,18 +5,9 @@ import os,sys,inspect
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0,parentdir)
-from sklearn.model_selection import train_test_split
-from scipy.signal import butter, lfilter, freqz
-import time
 import math
-from scipy.stats import pearsonr
 import matplotlib.pyplot as plt
-from os.path import dirname
 import numpy as np
-from scipy import signal
-import scipy
-from torch.autograd import Variable
-from Training import tools_learning
 import gc
 
 def memReport(all = False):

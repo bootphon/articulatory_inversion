@@ -14,24 +14,14 @@ os.environ["VECLIB_MAXIMUM_THREADS"] = ncpu # export VECLIB_MAXIMUM_THREADS=4
 os.environ["NUMEXPR_NUM_THREADS"] = ncpu # export NUMEXPR_NUM_THREADS=4
 import numpy as np
 import argparse
-from Training.model import my_ac2art_model
-import sys
 import torch
 import os
 import csv
 import sys
-from sklearn.model_selection import train_test_split
 from Training.tools_learning import load_data, load_filenames_deter
-from Training.pytorchtools import EarlyStopping
-import time
 import random
-from os.path import dirname
 from scipy import signal
 import matplotlib.pyplot as plt
-from Preprocessing.tools_preprocessing import get_speakers_per_corpus
-import scipy
-from os import listdir
-import json
 
 
 root_folder = os.path.dirname(os.getcwd())
