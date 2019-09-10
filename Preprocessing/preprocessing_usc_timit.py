@@ -258,7 +258,7 @@ def Preprocessing_general_usc(N_max):
     speakers_usc = get_speakers_per_corpus(corpus)
     speakers_usc = ["F5"]
     for sp in speakers_usc :
-        print("En cours usc ",sp)
+        print("In progress usc ",sp)
         speaker = Speaker_usc(sp,N_max)
         speaker.Preprocessing_general_speaker()
         print("Done usc ",sp)

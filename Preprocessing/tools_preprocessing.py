@@ -77,6 +77,7 @@ def get_fileset_names(speaker):
     test_files = EMA_files_names[n_train:n_train+n_test]
     valid_files = EMA_files_names[n_train+n_test:]
 
+
     outF = open(os.path.join(root_folder,"Preprocessed_data","fileset",speaker+"_train.txt"), "w")
     outF.write('\n'.join(train_files) + '\n')
     outF.close()

@@ -190,7 +190,7 @@ def Preprocessing_general_haskins(N_max):
     corpus = 'Haskins'
     speakers_Has = get_speakers_per_corpus(corpus)
     for sp in speakers_Has :
-        print("En cours Haskins ",sp)
+        print("In progress Haskins ",sp)
         speaker = Speaker_Haskins(sp,N_max)
         speaker.Preprocessing_general_speaker()
         print("Done Haskins ",sp)

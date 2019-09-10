@@ -222,7 +222,7 @@ def Preprocessing_general_mocha(N_max):
     corpus = 'mocha'
     speakers_mocha = get_speakers_per_corpus(corpus)
     for sp in speakers_mocha :
-        print("En cours mocha ",sp)
+        print("In progress mocha ",sp)
         speaker = Speaker_mocha(sp,N_max)
         speaker.Preprocessing_general_speaker()
         print("Done mocha ",sp)
