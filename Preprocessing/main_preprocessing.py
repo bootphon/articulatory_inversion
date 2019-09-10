@@ -20,6 +20,9 @@ def Preprocessing_general_per_corpus(corp, max):
     perform the preprocess for the asked corpus
      """
 
+    if not os.path.exists("norm_values"):
+        os.makedirs("norm_values")
+
     if corp == "MNGU0":
         Preprocessing_general_mngu0(max)
     elif corp == "usc":
