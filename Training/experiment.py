@@ -45,9 +45,13 @@ speakers = get_speakers_per_corpus("Haskins")
 config = "indep"
 
 
-def cross_val(corpus_to_train_on):
+
+
+
+
+def cross_val_config(corpus_to_train_on):
     """
-    performs the cross validation on corpus_to_train_on for 3 types of filter in order to evaluate the impact of the filter
+    performs the cross validation on Haskins corpus for 3 types of filter in order to evaluate the impact of the filter
     the parameters (other than typefilter) are defined above and can be modified
     the results of the experiment are printed (future work : add results in csv expliciting the experiment)
     """
@@ -56,35 +60,36 @@ def cross_val(corpus_to_train_on):
     for co in str(corpus_to_train_on[1:-1]).split(","):
         speakers = speakers + get_speakers_per_corpus(co)
 
+    for config in ["spec","indep","dep"]:
+        count = 0
+        rmse_all, pearson_all = np.zeros((len(speakers), output_dim)), np.zeros((len(speakers), output_dim))
+        for speaker in speakers :
+            rmse, pearson = train_model(test_on=speaker, n_epochs=n_epochs, loss_train=loss_train,patience=patience,
+                                        select_arti=select_arti, corpus_to_train_on=corpus_to_train_on,
+                                        batch_norma=batch_norma, filter_type=filter_type, to_plot=to_plot,
+                                        lr=lr, delta_test=delta_test, config=config)
+            rmse_all[count, :] = rmse
+            pearson_all[count, :] = pearson
+            count += 1
 
-    count = 0
-    rmse_all, pearson_all = np.zeros((len(speakers), output_dim)), np.zeros((len(speakers), output_dim))
-    for speaker in speakers:
-        rmse, pearson = train_model(test_on=speaker, n_epochs=n_epochs, loss_train=loss_train, patience=patience,
-                                    select_arti=select_arti, corpus_to_train_on=corpus_to_train_on,
-                                    batch_norma=batch_norma, filter_type=filter_type, to_plot=to_plot,
-                                    lr=lr, delta_test=delta_test, config=config)
-        rmse_all[count, :] = rmse
-        pearson_all[count, :] = pearson
-        count += 1
-    results_rmse = np.mean(rmse_all, axis=0)
-    results_pearson = np.mean(pearson_all, axis=0)
-    std_rmse = np.std(rmse_all, axis=0)
-    std_pearson = np.std(pearson_all, axis=0)
-    print("for filter type {} results are".format(filter_type))
-    print("RMSE mean ", results_rmse)
-    print("RMSE std ", std_rmse)
-    print("PEARSON ", results_pearson)
-    print(" PEARSON STD", std_pearson)
-    today = date.today().strftime("%d/%m/%Y")
-    with open('experiment_results_general.csv', 'a') as f:
-        writer = csv.writer(f)
-        row_rmse_mean = [today, "rmse_mean"] + results_rmse.tolist()
-        row_rmse_std = [today, "rmse_std"] + std_rmse.tolist()
-        row_pearson_mean = [today, "pearson_mean"] + results_pearson.tolist()
-        row_pearson_std = [today, "pearson_std"] + std_pearson.tolist()
-        for row in [row_rmse_mean, row_rmse_std, row_pearson_mean, row_pearson_std]:
-            writer.writerow(row)
+        results_rmse = np.mean(rmse_all, axis=0)
+        results_pearson = np.mean(pearson_all, axis=0)
+        std_rmse = np.std(rmse_all, axis=0)
+        std_pearson = np.std(pearson_all, axis=0)
+        print("for filter type {} results are".format(filter_type))
+        print("RMSE mean ", results_rmse)
+        print("RMSE std ", std_rmse)
+        print("PEARSON ", results_pearson)
+        print(" PEARSON STD", std_pearson)
+        today = date.today().strftime("%d/%m/%Y")
+        with open('experiment_results_config.csv', 'a') as f:
+            writer = csv.writer(f)
+            row_rmse_mean = [today, config, "rmse_mean"] + results_rmse.tolist()
+            row_rmse_std = [today, config,"rmse_std"] + std_rmse.tolist()
+            row_pearson_mean = [today, config, "pearson_mean"] + results_pearson.tolist()
+            row_pearson_std = [today, config, "pearson_std"] + std_pearson.tolist()
+            for row in [row_rmse_mean, row_rmse_std, row_pearson_mean, row_pearson_std]:
+                writer.writerow(row)
 
 
 def cross_val_filter(corpus_to_train_on):
@@ -222,8 +227,8 @@ if __name__=='__main__':
 
     args = parser.parse_args()
 
-    if args.experiment == "general" :
-        cross_val(args.corpus_exp)
+    if args.experiment == "config":
+        cross_val_config(args.corpus_exp)
 
     elif args.experiment == "filter":
         cross_val_filter(args.corpus_exp)
