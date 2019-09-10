@@ -29,7 +29,7 @@ from datetime import date
 
 
 
-n_epochs = 2
+n_epochs = 50
 loss_train = "both_90"
 patience = 5
 select_arti = True
@@ -43,7 +43,6 @@ train_a_bit_on_test = False
 output_dim = 18 #18 trajectories
 speakers = get_speakers_per_corpus("Haskins")
 config = "indep"
-
 
 
 
@@ -64,14 +63,16 @@ def cross_val_config(corpus_to_train_on):
         count = 0
         rmse_all, pearson_all = np.zeros((len(speakers), output_dim)), np.zeros((len(speakers), output_dim))
         for speaker in speakers :
+
             rmse, pearson = train_model(test_on=speaker, n_epochs=n_epochs, loss_train=loss_train,patience=patience,
                                         select_arti=select_arti, corpus_to_train_on=corpus_to_train_on,
                                         batch_norma=batch_norma, filter_type=filter_type, to_plot=to_plot,
                                         lr=lr, delta_test=delta_test, config=config)
+
             rmse_all[count, :] = rmse
             pearson_all[count, :] = pearson
             count += 1
-
+        print("kk")
         results_rmse = np.mean(rmse_all, axis=0)
         results_pearson = np.mean(pearson_all, axis=0)
         std_rmse = np.std(rmse_all, axis=0)

@@ -274,8 +274,10 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
 
     weight_apres = model.lowpass.weight.data[0, 0, :].cpu()
     plot_allure_filtre = False
-    if plot_allure_filtre :
+    if plot_allure_filtre:
         plot_filtre(weight_apres)
+
+    return rmse_per_arti_mean, pearson_per_arti_mean
 
 
 if __name__=='__main__':
