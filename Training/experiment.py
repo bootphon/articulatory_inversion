@@ -5,8 +5,8 @@ parentdir = os.path.dirname(currentdir)
 sys.path.insert(0,parentdir)
 
 from multiprocessing import Process
-from Apprentissage.train import train_model
-from Traitement.fonctions_utiles import get_speakers_per_corpus
+from Training.train import train_model
+from Preprocessing.tools_preprocessing import get_speakers_per_corpus
 import sys
 import argparse
 
