@@ -85,13 +85,14 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
     """
 
     corpus_to_train_on = corpus_to_train_on[1:-1].split(",")
+
     train_on = which_speakers_to_train_on(corpus_to_train_on, test_on, config)
 
     name_corpus_concat = ""
     for corpus in corpus_to_train_on:
         name_corpus_concat = name_corpus_concat + corpus + "_"
 
-    name_file = test_on+"_speaker_"+config+"_"+name_corpus_concat+"_loss_"+str(loss_train)+"_filter_"+str(filter_type)
+    name_file = test_on+"_speaker_"+config+"_"+name_corpus_concat+"loss_"+str(loss_train)+"_filter_"+str(filter_type)
     "_bn_"+str(batch_norma)
 
     previous_models = os.listdir("saved_models")

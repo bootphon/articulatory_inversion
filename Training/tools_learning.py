@@ -166,6 +166,7 @@ def which_speakers_to_train_on(corpus_to_train_on, test_on, config):
     elif config in ["indep", "dep"]:  # train on other corpuses
         speakers_to_train_on = []
         for corpus in corpus_to_train_on:
+            print("corpus",corpus)
             sp = get_speakers_per_corpus(corpus)
             speakers_to_train_on = speakers_to_train_on + sp
         if test_on in speakers_to_train_on:
