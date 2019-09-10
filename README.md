@@ -1,13 +1,13 @@
 # Inversion-articulatoire
 
-Inversion-articulatoire is a Python library for training/test neural network models of articulatory reconstruction.
-the task : based on the acoustic signal guess 18 articulatory trajectories. 
-It was created for learning the acoustic to articulatory mapping in a subject independant framework.
-For that we use data from 4 public datasets, that contains in all 19 speakers and more than 10 hours of acoustic and articulatory recordings.
+Inversion-articulatoire is a Python library for training/test neural network models of articulatory reconstruction.\
+the task : based on the acoustic signal guess 18 articulatory trajectories. \
+It was created for learning the acoustic to articulatory mapping in a subject independant framework.\
+For that we use data from 4 public datasets, that contains in all 19 speakers and more than 10 hours of acoustic and articulatory recordings.\
 
-It contains 2 main parts :  \\
-	- preprocessing that reads/cleans/preprocess/reorganize data \\
-	- Feed a neural network with our data. Training  on some speakers and testing on a speaker
+It contains 2 main parts :\ 
+	- preprocessing that reads/cleans/preprocess/reorganize data\
+	- Feed a neural network with our data. Training  on some speakers and testing on a speaker\
 
 The library enables evaluating the generalization capacity of a set of (or one) corpus.
  To do so we train the model in three different configurations. 
@@ -18,18 +18,18 @@ The library enables evaluating the generalization capacity of a set of (or one) 
  By analyzing how the scores decrease from configuration 1 to 3 we conclude on the generalization capacity.
 
 # Dependencies
-numpy
-tensorflow (not used but tensorboard can be used)
-pytorch
-scipy
-librosa
+numpy\
+tensorflow (not used but tensorboard can be used)\
+pytorch\
+scipy\
+librosa\
 
 # Requirements
-The data from the 4 corpuses have to be in the correct folders.
-mocha : http://data.cstr.ed.ac.uk/mocha/
-MNGU0 : http://www.mngu0.org/
-usc : https://sail.usc.edu/span/usc-timit/
-Haskins : https://yale.app.box.com/s/cfn8hj2puveo65fq54rp1ml2mk7moj3h/folder/30415804819
+The data from the 4 corpuses have to be in the correct folders.\
+mocha : http://data.cstr.ed.ac.uk/mocha/\
+MNGU0 : http://www.mngu0.org/\
+usc : https://sail.usc.edu/span/usc-timit/\
+Haskins : https://yale.app.box.com/s/cfn8hj2puveo65fq54rp1ml2mk7moj3h/folder/30415804819\
 
 
 
@@ -54,6 +54,7 @@ experiments : ...
 
 # Usage
 1) download the data and put them in the correct folders.
+
 
 2) Preprocessing : (for a test put 50)
 ```bash
