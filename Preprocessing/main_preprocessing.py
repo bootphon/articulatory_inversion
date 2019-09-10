@@ -45,9 +45,8 @@ if __name__ == '__main__':
     #TO MAKE N_MAX DEFAULT AT 0 ...parser.add_argument('--n_max', metavar='N_max', type=int,help='Nmax we want to preprocess, 0 for all' , default=0)
 
     args = parser.parse_args()
-    N_max = int(sys.argv[1])
     for co in corpus:
-        proc = Process(target=Preprocessing_general_per_corpus, args=(co,N_max))
+        proc = Process(target=Preprocessing_general_per_corpus, args=(co, args.N_max))
         procs.append(proc)
         proc.start()
 

@@ -25,7 +25,6 @@ from Preprocessing.tools_preprocessing import get_fileset_names, get_delta_featu
 from os.path import dirname
 import numpy as np
 import scipy.signal
-
 import scipy.interpolate
 import librosa
 from Preprocessing.tools_preprocessing import get_speakers_per_corpus
