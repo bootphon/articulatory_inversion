@@ -40,7 +40,6 @@ def get_delta_features(array, window=5):
     delta_features = np.sum(tempo,axis=0)/norm
     return delta_features
 
-
 def get_speakers_per_corpus(corpus):
     """
     :param corpus: name of the corpus
@@ -65,7 +64,7 @@ def get_fileset_names(speaker):
     split the files for the speaker in train/valid/test with a repartition 70% 10% 20%
     write 3 txt files (sp_train, sp_test, and sp_valid) containing the names of the files concerned.
     """
-    donnees_path = os.path.join(root_folder, "Donnees_pretraitees")
+    donnees_path = os.path.join(root_folder, "Preprocessed_data")
     files_path = os.path.join(donnees_path,speaker)
     EMA_files_names = [name[:-4] for name in os.listdir(os.path.join(files_path,"ema_final")) if name.endswith('.npy') ]
     N = len(EMA_files_names)
@@ -78,15 +77,15 @@ def get_fileset_names(speaker):
     test_files = EMA_files_names[n_train:n_train+n_test]
     valid_files = EMA_files_names[n_train+n_test:]
 
-    outF = open(os.path.join(root_folder,"Donnees_pretraitees","fileset",speaker+"_train.txt"), "w")
+    outF = open(os.path.join(root_folder,"Preprocessed_data","fileset",speaker+"_train.txt"), "w")
     outF.write('\n'.join(train_files) + '\n')
     outF.close()
 
-    outF = open(os.path.join(root_folder, "Donnees_pretraitees", "fileset", speaker + "_test.txt"), "w")
+    outF = open(os.path.join(root_folder, "Preprocessed_data", "fileset", speaker + "_test.txt"), "w")
     outF.write('\n'.join(test_files) + '\n')
     outF.close()
 
-    outF = open(os.path.join(root_folder, "Donnees_pretraitees", "fileset", speaker + "_valid.txt"), "w")
+    outF = open(os.path.join(root_folder, "Preprocessed_data", "fileset", speaker + "_valid.txt"), "w")
     outF.write('\n'.join(valid_files) + '\n')
     outF.close()
 
@@ -174,16 +173,16 @@ def split_sentences(speaker ,max_length = 300):
     Warning : when split the original file is removed
               ema files are split only in ema_final (those used for the training)
     """
-    donnees_pretraitees_path = os.path.join(root_folder, "Donnees_pretraitees")
-    file_names = os.listdir(os.path.join(donnees_pretraitees_path, speaker, "ema_final"))
+    Preprocessed_data_path = os.path.join(root_folder, "Preprocessed_data")
+    file_names = os.listdir(os.path.join(Preprocessed_data_path, speaker, "ema_final"))
     file_names = [f for f in file_names if 'split' not in f]
 
     N = len(file_names)
     file_names = file_names[0:N]
     Number_cut = 0
     for f in file_names :
-        mfcc = np.load(os.path.join(donnees_pretraitees_path,speaker,"mfcc",f))
-        ema_VT = np.load(os.path.join(donnees_pretraitees_path,speaker,"ema_final",f))
+        mfcc = np.load(os.path.join(Preprocessed_data_path,speaker,"mfcc",f))
+        ema_VT = np.load(os.path.join(Preprocessed_data_path,speaker,"ema_final",f))
         cut_in_N = int(len(mfcc)/max_length) +1
         if cut_in_N > 1 :
             Number_cut+=1
@@ -194,13 +193,13 @@ def split_sentences(speaker ,max_length = 300):
                 ema_k_vt = ema_VT[temp:temp+cut_size,:]
 
                 temp = temp + cut_size
-                np.save(os.path.join(donnees_pretraitees_path,speaker,"mfcc",f[:-4]+"_split_"+str(k)),mfcc_k)
-                np.save(os.path.join(donnees_pretraitees_path,speaker,"ema_final",f[:-4]+"_split_"+str(k)),ema_k_vt)
+                np.save(os.path.join(Preprocessed_data_path,speaker,"mfcc",f[:-4]+"_split_"+str(k)),mfcc_k)
+                np.save(os.path.join(Preprocessed_data_path,speaker,"ema_final",f[:-4]+"_split_"+str(k)),ema_k_vt)
 
             mfcc_last = mfcc[temp :]
             ema_last_vt = ema_VT[temp:, :]
-            np.save(os.path.join(donnees_pretraitees_path, speaker, "mfcc", f[:-4] + "_split_" + str(cut_in_N-1)), mfcc_last)
-            np.save(os.path.join(donnees_pretraitees_path, speaker, "ema_final", f[:-4] + "_split_" + str(cut_in_N-1)), ema_last_vt)
+            np.save(os.path.join(Preprocessed_data_path, speaker, "mfcc", f[:-4] + "_split_" + str(cut_in_N-1)), mfcc_last)
+            np.save(os.path.join(Preprocessed_data_path, speaker, "ema_final", f[:-4] + "_split_" + str(cut_in_N-1)), ema_last_vt)
 
-            os.remove(os.path.join(donnees_pretraitees_path,speaker,"mfcc",f))
-            os.remove(os.path.join(donnees_pretraitees_path,speaker,"ema_final",f))
+            os.remove(os.path.join(Preprocessed_data_path,speaker,"mfcc",f))
+            os.remove(os.path.join(Preprocessed_data_path,speaker,"ema_final",f))

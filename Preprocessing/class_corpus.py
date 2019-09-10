@@ -19,9 +19,6 @@ import scipy.interpolate
 from Preprocessing.tools_preprocessing import low_pass_filter_weight
 import csv
 
-
-
-
 root_folder = os.path.dirname(os.getcwd())
 
 class Speaker():
