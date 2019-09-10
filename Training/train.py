@@ -56,9 +56,8 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
     so usually we dont go through the n_epochs and the early stopping happends before the 30th epoch (1 epoch is when
     have trained over ALL the data in the training set)
 
-    :param loss_train: (str) either "rmse", "pearson", or "both_80" where 80 can be anything between 0 and 100. "both_alpha"
-    is the combinated loss alpha*rmse/1000+(1-alpha)*pearson.
-    Hence "rmse" and "both_0" are equivalent, same for "pearson" and "both_100" # (better to change it in the future)
+    :param loss_train: (int) alpha in the combined loss . can be anything between 0 and 100.
+    the loss is the combinated loss alpha*rmse/1000+(1-alpha)*pearson.
 
     :param patience: (int) the number successive epochs with a validation loss increasing before stopping the training.
     We usually set it to 5. The more data we have, the smaller it can be (i think)
@@ -96,7 +95,7 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
         for corpus in corpus_to_train_on:
             name_corpus_concat = name_corpus_concat + corpus + "_"
 
-    name_file = test_on+"_"+config+"_"+name_corpus_concat+"loss_"+str(loss_train[5:])+"_filter_"+\
+    name_file = test_on+"_"+config+"_"+name_corpus_concat+"loss_"+str(loss_train)+"_filter_"+\
                 str(filter_type)+"_bn_"+str(batch_norma)
 
     if not os.path.exists("saved_models"):
