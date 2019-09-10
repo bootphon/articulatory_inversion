@@ -148,13 +148,8 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
             model_dict.update(loaded_state)
             model.load_state_dict(model_dict)
 
-    if loss_train == "rmse":
-        lbd = 0
-    elif loss_train == "pearson" :
-        lbd = 100
-    elif loss_train[:4] == "both":
-        lbd = int(loss_train[5:])
-    criterion = criterion_both(lbd, cuda_avail, device)
+
+    criterion = criterion_both(loss_train, cuda_avail, device)
 
     files_per_categ, files_for_test = give_me_train_valid_test_filenames(train_on,test_on,config, batch_size)
 
@@ -294,8 +289,8 @@ if __name__=='__main__':
     parser.add_argument('--n_epochs', type=int, default=50,
                         help='max number of epochs to train the model')
 
-    parser.add_argument("--loss_train",type = str, default="both_90",
-                        help = " 'both_alpha' with alpha from 0 to 100, coeff of pearson is the combined loss")
+    parser.add_argument("--loss_train",type = int, default="90",
+                        help = "from 0 to 100, coeff of pearson is the combined loss")
 
     parser.add_argument("--patience",type=int, default=5,
                         help = "patience before early topping")
