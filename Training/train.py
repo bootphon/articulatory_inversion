@@ -9,11 +9,14 @@
     Learn category by category (in a category  all the speakers have the same arti traj available), the gradients are put
     at 0 for the unavailable arti traj so that it learns only on correct data.
     The model stops training by earlystopping if the validation score is several time consecutively increasing
-    The weights of the model are saved in Training/saved_models/name_file.txt
+    The weights of the model are saved in Training/saved_models/name_file.txt, with name file containing the info
+    about the training/testing set [and not about the model parameters].
+
     The results of the model are evaluated on the test set, and are the averaged rmse and pearson per articulator.
     Those results are added as 2 new lines in the file "model_results.csv" , with 1 column being the name of the model
     and the last column the number of epochs [future work : add 1 columns per argument to store ALL the info about
     the model]
+
 
 """
 import os, sys, inspect
@@ -89,11 +92,12 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
     train_on = which_speakers_to_train_on(corpus_to_train_on, test_on, config)
 
     name_corpus_concat = ""
-    for corpus in corpus_to_train_on:
-        name_corpus_concat = name_corpus_concat + corpus + "_"
+    if config != "spec" : # if spec DOESNT train on other speakers
+        for corpus in corpus_to_train_on:
+            name_corpus_concat = name_corpus_concat + corpus + "_"
 
-    name_file = test_on+"_speaker_"+config+"_"+name_corpus_concat+"loss_"+str(loss_train)+"_filter_"+str(filter_type)
-    "_bn_"+str(batch_norma)
+    name_file = test_on+"_"+config+"_"+name_corpus_concat+"loss_"+str(loss_train[5:])+"_filter_"+\
+                str(filter_type)+"_bn_"+str(batch_norma)
 
     if not os.path.exists("saved_models"):
         os.mkdir("saved_models")
