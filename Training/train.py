@@ -95,6 +95,9 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
     name_file = test_on+"_speaker_"+config+"_"+name_corpus_concat+"loss_"+str(loss_train)+"_filter_"+str(filter_type)
     "_bn_"+str(batch_norma)
 
+    if not os.path.exists("saved_models"):
+        os.mkdir("saved_models")
+
     previous_models = os.listdir("saved_models")
     previous_models_2 = [x[:len(name_file)] for x in previous_models if x.endswith(".txt")]
     n_previous_same = previous_models_2.count(name_file)  # how many times our model was trained
