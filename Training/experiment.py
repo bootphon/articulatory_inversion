@@ -30,7 +30,7 @@ from datetime import date
 
 
 n_epochs = 50
-loss_train = "both_90"
+loss_train = 90
 patience = 5
 select_arti = True
 batch_norma = False
@@ -185,9 +185,8 @@ def cross_val_for_alpha(corpus_to_train_on):
         the parameters (other than alpha) are defined above and can be modified
         the results of the experiment are printed
         """
-    for alpha in [0, 20, 40, 60, 80, 100]:
+    for loss_train in [0, 20, 40, 60, 80, 100]:
         count = 0
-        loss_train = "both_" + str(alpha)
         rmse_all, pearson_all = np.zeros((len(speakers), output_dim)), np.zeros((len(speakers), output_dim))
         for speaker in speakers:
             rmse, pearson = train_model(test_on=speaker, n_epochs=n_epochs, loss_train=loss_train, patience=patience,
@@ -210,10 +209,10 @@ def cross_val_for_alpha(corpus_to_train_on):
         today = date.today().strftime("%d/%m/%Y")
         with open('experiment_results_alpha.csv', 'a') as f:
             writer = csv.writer(f)
-            row_rmse_mean = [today, alpha, "rmse_mean"] + results_rmse.tolist()
-            row_rmse_std = [today, alpha, "rmse_std"] + std_rmse.tolist()
-            row_pearson_mean = [today, alpha, "pearson_mean"] + results_pearson.tolist()
-            row_pearson_std = [today, alpha, "pearson_std"] + std_pearson.tolist()
+            row_rmse_mean = [today, loss_train, "rmse_mean"] + results_rmse.tolist()
+            row_rmse_std = [today, loss_train, "rmse_std"] + std_rmse.tolist()
+            row_pearson_mean = [today, loss_train, "pearson_mean"] + results_pearson.tolist()
+            row_pearson_std = [today, loss_train, "pearson_std"] + std_pearson.tolist()
             for row in [row_rmse_mean, row_rmse_std, row_pearson_mean, row_pearson_std]:
                 writer.writerow(row)
 
