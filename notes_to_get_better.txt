@@ -23,3 +23,27 @@ pour décrire les process, mais dans un readme tu mets juste les actions qu'il f
 - Idéalement il faudrait aussi que tu fasses un script qui lance une batterie de test prouvant
 que le code fonctionne bien (pour valider l'installation d'un user par exemple, ou un petit changement de code)
 
+Retour du 10/09:
+- pour le readme (mais je pense que tu es en train de gérer ça): je pense qu'il y a des problèmes de retour à la ligne,
+pour la partie 'Usage' il faut que tu expliques à quoi servent les arguments que tu donnes en entrée de tes scripts
+
+-Il y a encore des messages (d'erreur ou de suivi d'avancement notamment) qui sont en français dans tes scripts
+-dans class_corpus.py, la fonction get_idx_to_ignore() n'est pas claire
+- tous les endroit où tu as marqué 'not used anymore', il faut que tu supprimes ce qui est 'not used anymore (notamment ds main_preprocessing.py)
+- dans main_preprocessing.py c'est quoi Nmax ? Ton explication dans le argparse n'est pas du tout claire
+- dans les prétaitements pour chaque corpus, notamment dans la fonctions read_ema_wav de preprocessing_haskins.py, il faut que tu expliques plus ce que tu fais, parce que la fonction est un peu illisible...
+- il y a encore quelques comments dans les fonctions en français
+- encore quelques import nom utilisés
+- toutes les fonctions 'preprocessing general speaker' il faut que tu détailles plus ce que tu fais, encore une fois ce n'est pas trop lisible
+- idem pour la fonction cut_all_files
+- il reste le preprocessing_zerospeech à rendre propre
+- tools_preprocessing, détaille ce que tu fais étape par étape dan ssplit_sentences
+- il reste un entrainement_old.py, tu en fais quoi ?
+- experiences_cross_val.y pas doc, idem pour experiences_cross
+- de façn générale j'ai l'impression que toutes les entêtes de la artie training ne sont pas faites
+- dans la classe my_ac2art_model il faut que tu expliques ce que c'est que ce modèle
+- toujours dans cette classe, il faut que tu donnes plus de description pour les fonctions: pour la fonction forward, le nom est explicite, donc ça va , mais plot_results par exemple ça plot quoi exactement ?
+- dans test.py il faut que tu expliques plus ce que fait la fonction de test: elle plot ? Elle enregistre ? Elle créer quoi exactement?
+- dans tools learning, c'est pareil, les noms de tes fonctions ne sont pas évidentes, il faut qu'en lisnt la description on ne se demande pas ce que ça fait
+
+
