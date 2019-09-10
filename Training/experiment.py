@@ -185,37 +185,37 @@ def cross_val_for_alpha(corpus_to_train_on):
         the parameters (other than alpha) are defined above and can be modified
         the results of the experiment are printed
         """
-    config = "spec"
-    for loss_train in [0, 20, 40, 60, 80, 100]:
-        count = 0
-        rmse_all, pearson_all = np.zeros((len(speakers), output_dim)), np.zeros((len(speakers), output_dim))
-        for speaker in speakers:
-            rmse, pearson = train_model(test_on=speaker, n_epochs=n_epochs, loss_train=loss_train, patience=patience,
-                                        select_arti=select_arti, corpus_to_train_on=corpus_to_train_on,
-                                        batch_norma=batch_norma, filter_type=filter_type, to_plot=to_plot,
-                                        lr=lr, delta_test=delta_test, config=config)
-            rmse_all[count, :] = rmse
-            pearson_all[count, :] = pearson
-            count += 1
+    for config in ["dep","indep"] :
+        for loss_train in [0, 20, 40, 60, 80, 100]:
+            count = 0
+            rmse_all, pearson_all = np.zeros((len(speakers), output_dim)), np.zeros((len(speakers), output_dim))
+            for speaker in speakers:
+                rmse, pearson = train_model(test_on=speaker, n_epochs=n_epochs, loss_train=loss_train, patience=patience,
+                                            select_arti=select_arti, corpus_to_train_on=corpus_to_train_on,
+                                            batch_norma=batch_norma, filter_type=filter_type, to_plot=to_plot,
+                                            lr=lr, delta_test=delta_test, config=config)
+                rmse_all[count, :] = rmse
+                pearson_all[count, :] = pearson
+                count += 1
 
-        results_rmse = np.mean(rmse_all, axis=0)
-        results_pearson = np.mean(pearson_all, axis=0)
-        std_rmse = np.std(rmse_all, axis=0)
-        std_pearson = np.std(pearson_all, axis=0)
-        print("for filter type {} results are".format(filter_type))
-        print("RMSE mean ", results_rmse)
-        print("RMSE std ", std_rmse)
-        print("PEARSON ", results_pearson)
-        print(" PEARSON STD", std_pearson)
-        today = date.today().strftime("%d/%m/%Y")
-        with open('experiment_results_alpha.csv', 'a') as f:
-            writer = csv.writer(f)
-            row_rmse_mean = [today, loss_train, "rmse_mean"] + results_rmse.tolist()
-            row_rmse_std = [today, loss_train, "rmse_std"] + std_rmse.tolist()
-            row_pearson_mean = [today, loss_train, "pearson_mean"] + results_pearson.tolist()
-            row_pearson_std = [today, loss_train, "pearson_std"] + std_pearson.tolist()
-            for row in [row_rmse_mean, row_rmse_std, row_pearson_mean, row_pearson_std]:
-                writer.writerow(row)
+            results_rmse = np.mean(rmse_all, axis=0)
+            results_pearson = np.mean(pearson_all, axis=0)
+            std_rmse = np.std(rmse_all, axis=0)
+            std_pearson = np.std(pearson_all, axis=0)
+            print("for filter type {} results are".format(filter_type))
+            print("RMSE mean ", results_rmse)
+            print("RMSE std ", std_rmse)
+            print("PEARSON ", results_pearson)
+            print(" PEARSON STD", std_pearson)
+            today = date.today().strftime("%d/%m/%Y")
+            with open('experiment_results_alpha.csv', 'a') as f:
+                writer = csv.writer(f)
+                row_rmse_mean = [today, loss_train, "rmse_mean"] + results_rmse.tolist()
+                row_rmse_std = [today, loss_train, "rmse_std"] + std_rmse.tolist()
+                row_pearson_mean = [today, loss_train, "pearson_mean"] + results_pearson.tolist()
+                row_pearson_std = [today, loss_train, "pearson_std"] + std_pearson.tolist()
+                for row in [row_rmse_mean, row_rmse_std, row_pearson_mean, row_pearson_std]:
+                    writer.writerow(row)
 
 if __name__=='__main__':
 
