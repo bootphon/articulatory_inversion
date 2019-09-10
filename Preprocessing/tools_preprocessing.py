@@ -1,40 +1,51 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+    Created august 2019
+    by Maud Parrot
+    Some useful functions for the preprocessing
+"""
+
+
+
 import os,sys,inspect
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0,parentdir)
 
-
-
-import os
-from os.path import dirname
 import numpy as np
-import numpy as np
-import random
 import os
-from os.path import dirname
 from random import shuffle
 import csv
 import json
 import scipy
 
+root_folder = os.path.dirname(os.getcwd())
+
 
 def get_delta_features(array, window=5):
-    #TODO
+    """
+    :param array: nparray (K,N) N features per frame, K frames.
+    :param window: size of the window to calculate the average speed of the features
+    :return: the speed of each feature wrt 5 future and 5 past frames
+    """
     all_diff = []
     for lag in range(1, window + 1):
         padding = np.ones((lag, array.shape[1]))
         past = np.concatenate([padding * array[0], array[:-lag]])
         future = np.concatenate([array[lag:], padding * array[-1]])
         all_diff.append(future - past)
-    tempo =np.array([ all_diff[lag] * lag for lag in range(window)])
+    tempo =np.array([all_diff[lag] * lag for lag in range(window)])
     norm = 2 * np.sum(i ** 2 for i in range(1, window + 1))
-
     delta_features = np.sum(tempo,axis=0)/norm
     return delta_features
 
 
 def get_speakers_per_corpus(corpus):
-    #TODO
+    """
+    :param corpus: name of the corpus
+    :return: list of the speakers in the corpus
+    """
     if corpus == "MNGU0":
         speakers = ["MNGU0"]
     elif corpus == "usc":
@@ -48,18 +59,14 @@ def get_speakers_per_corpus(corpus):
     return speakers
 
 
-root_folder = os.path.dirname(os.getcwd())
-donnees_path = os.path.join(root_folder, "Donnees_pretraitees")
-
 def get_fileset_names(speaker):
     """
-    #TODO: description de ce que tu fais et en ANGLAIS
-    :param speaker: un des speaker
-    :return: rien
-    Ecrit pour le speaker 3 fichiers txt sp_train, sp_test, sp_valid avec les noms des fichiers du train/test/validation set
+    :param speaker: name of a speaker
+    split the files for the speaker in train/valid/test with a repartition 70% 10% 20%
+    write 3 txt files (sp_train, sp_test, and sp_valid) containing the names of the files concerned.
     """
-
-    files_path =  os.path.join(donnees_path,speaker)
+    donnees_path = os.path.join(root_folder, "Donnees_pretraitees")
+    files_path = os.path.join(donnees_path,speaker)
     EMA_files_names = [name[:-4] for name in os.listdir(os.path.join(files_path,"ema_final")) if name.endswith('.npy') ]
     N = len(EMA_files_names)
     shuffle(EMA_files_names)
@@ -84,32 +91,14 @@ def get_fileset_names(speaker):
     outF.close()
 
 
-def get_fileset_names_per_corpus(corpus):
-    """
-    # TODO description
-    :param corpus: un des corpus "mocha","usc","MNGU0","Haskins"
-    :return:  rien, crée les fileset pour tous les speaker du corpus
-    """
-    speakers = get_speakers_per_corpus(corpus)
-    for sp in speakers :
-        try:
-            get_fileset_names(sp)
-        except :
-            print("Pbm pour creer le fileset de sp ,",sp)
-
-
-#get_fileset_names_per_corpus("MNGU0")
 def read_csv_arti_ok_per_speaker():
     """
-    # TODO description
-    :return:
-    dictionnaire avec en clé les différentes categories de speaker (categ de A à F pour le moment). Au sein
-    d'une catégorie les speakers ont les mêmes arti valides. Ces catégories sont tirées du fichier CSV qui est lu
-    et peut être modifié par l'utilisateur.
-    La valeur associée à une categorie est un autre dictionnaire donnant les speakers concernés par cette catégorie
-    et les articulateurs concernés, sous forme d'une liste de 18 0 et 1, avec un 1 pour les arti valides.
+    create a dictionnary , with different categories as keys (from A to F).
+    For a category the value is another dictionnary {"articulators" : list of 18 digit with 1 if arti is
+    available for this category,"speakers" : list of speakers in this category}
+    The dict is created based on the csv file "articulators_per_speaer"
     """
-    arti_per_speaker = os.path.join(root_folder,"Traitement", "articulators_per_speaker.csv")
+    arti_per_speaker = os.path.join(root_folder,"Preprocessing", "articulators_per_speaker.csv")
     csv.register_dialect('myDialect', delimiter=';')
     categ_of_speakers = dict()
     with open(arti_per_speaker, 'r') as csvFile:
@@ -131,12 +120,17 @@ def read_csv_arti_ok_per_speaker():
         print("categ ",cle)
         print(categ_of_speakers[cle])
 
-    with open(os.path.join(root_folder,"Apprentissage","categ_of_speakers.json"), 'w') as dico:
+    with open(os.path.join(root_folder,"Training","categ_of_speakers.json"), 'w') as dico:
         json.dump(categ_of_speakers, dico)
 
 
 def add_voicing(wav, sr):
-    # TODO
+    """
+    estimation of voicing using the short term energy threshold between 0 and 1
+    :param wav: wav file
+    :param sr:  sampling rate
+    :return:  an estimation of the voicing for each point in the wav
+    """
     hop_time = 10 / 1000  # en ms
     hop_length = int((hop_time * sr))
     N_frames = int(len(wav) / hop_length)
@@ -148,79 +142,65 @@ def add_voicing(wav, sr):
 
     #read_csv_arti_ok_per_speaker()
 
+
 def low_pass_filter_weight(cut_off,sampling_rate):
-    # TODO
+    """
+    :param cut_off:  cutoff of the filter
+    :param sampling_rate:  sampling rate of the data 
+    :return: the weights of the lowpass filter
+    """
     fc = cut_off/sampling_rate# Cutoff frequency as a fraction of the sampling rate (in (0, 0.5)).
     if fc > 0.5:
         raise Exception("La frequence de coupure doit etre au moins deux fois la frequence dechantillonnage")
     b = 0.08  # Transition band, as a fraction of the sampling rate (in (0, 0.5)).
-
-    N = int(np.ceil((4 / b))) #le window
+    N = int(np.ceil((4 / b))) # window
     if not N % 2:
         N += 1  # Make sure that N is odd.
-    n = np.arange(N) #int of [0,N]
+    n = np.arange(N)
     h = np.sinc(2 * fc * (n - (N - 1) / 2))  # Compute sinc filter.
     w = 0.5 * (1 - np.cos(2 * np.pi * n / (N-1))) # Compute hanning window.
     h = h * w  # Multiply sinc filter with window.
     h = h / np.sum(h)
     return h
 
-def split_sentences(speaker="MNGU0" ,max_length = 300,N="All"):
-    """
 
+def split_sentences(speaker ,max_length = 300):
+    """
     :param speaker:
-    :param max_length: nombre de points max qu'on veut par phrase (durée = max_lenghts*100 secondes)
-    :param N: ne s'occupe que des N premières phrases
+    :param max_length: max points we want in sentences features (duration = max_lenghts*100sec)
     :return: rien.
-    parcourt les fichiers dans "mfcc" et "ema_final". Si leur longueur est > max_length, alors il est divisé en K
-    de telle sorte que chaque bout soit de longueur < max_length.
-    - Attention les fichiers non splittées sont alors supprimées, et à la place K fichiers dans mfcc et dans ema_final.
-    Si la phrase 80 est trop grande et doit être coupée en deux on n'aura plus les fichiers "mfcc_80" ni "ema_80" mais à
-    la place on aura "mfcc_80_split_0", "mfcc_80_split_1" "ema_80_split_0" et "ema_80_split_1".
-    - Attention les fichiers ema ne sont splittés que dans ema_final (ce sont ceux qui sont à terme utilsés pour l'apprentissage).
+    run through all the treated acou and arti features, if lenght > max lenght divide in K slices so that each one has
+    less than max_lenght points.
+    Warning : when split the original file is removed
+              ema files are split only in ema_final (those used for the training)
     """
     donnees_pretraitees_path = os.path.join(root_folder, "Donnees_pretraitees")
     file_names = os.listdir(os.path.join(donnees_pretraitees_path, speaker, "ema_final"))
     file_names = [f for f in file_names if 'split' not in f]
-    if N == "All":
-        N = len(file_names)
-    file_names = file_names[0:N]
 
+    N = len(file_names)
+    file_names = file_names[0:N]
     Number_cut = 0
     for f in file_names :
-       # ema = np.load(os.path.join(donnees_pretraitees_path,sp,"ema",f))
         mfcc = np.load(os.path.join(donnees_pretraitees_path,speaker,"mfcc",f))
-        #ema_filtered = np.load(os.path.join(donnees_pretraitees_path,sp,"ema_filtered",f))
         ema_VT = np.load(os.path.join(donnees_pretraitees_path,speaker,"ema_final",f))
         cut_in_N = int(len(mfcc)/max_length) +1
         if cut_in_N > 1 :
-         #   print("cur in ",cut_in_N)
             Number_cut+=1
             temp = 0
             cut_size = int(len(mfcc)/cut_in_N)
             for k in range(cut_in_N-1) : # si k va jusqua 0 ca veut cut_in_N-1 vaut 1 cut_in_N vaut 2
-                #print("k ,",k)
                 mfcc_k = mfcc[temp : temp + cut_size]
-        #        ema_k = ema[temp : temp + cut_size,:]
-         #       ema_k_f = ema_filtered[temp : temp + cut_size,:]
                 ema_k_vt = ema_VT[temp:temp+cut_size,:]
 
                 temp = temp + cut_size
                 np.save(os.path.join(donnees_pretraitees_path,speaker,"mfcc",f[:-4]+"_split_"+str(k)),mfcc_k)
-             #   np.save(os.path.join(donnees_pretraitees_path,sp,"ema",f[:-4]+"_split_"+str(k)),ema_k)
-             #   np.save(os.path.join(donnees_pretraitees_path,sp,"ema_filtered",f[:-4]+"_split_"+str(k)),ema_k_f)
                 np.save(os.path.join(donnees_pretraitees_path,speaker,"ema_final",f[:-4]+"_split_"+str(k)),ema_k_vt)
 
             mfcc_last = mfcc[temp :]
-          #  ema_last = ema[temp : ,:]
-           # ema_last_f = ema_filtered[temp: , :]
             ema_last_vt = ema_VT[temp:, :]
             np.save(os.path.join(donnees_pretraitees_path, speaker, "mfcc", f[:-4] + "_split_" + str(cut_in_N-1)), mfcc_last)
-            #np.save(os.path.join(donnees_pretraitees_path, sp, "ema", f[:-4] + "_split_" + str(cut_in_N-1)), ema_last)
-            #np.save(os.path.join(donnees_pretraitees_path, sp, "ema_filtered", f[:-4] + "_split_" + str(k)), ema_last_f)
             np.save(os.path.join(donnees_pretraitees_path, speaker, "ema_final", f[:-4] + "_split_" + str(cut_in_N-1)), ema_last_vt)
 
             os.remove(os.path.join(donnees_pretraitees_path,speaker,"mfcc",f))
-            #os.remove(os.path.join(donnees_pretraitees_path,sp,"ema",f))
-            #os.remove(os.path.join(donnees_pretraitees_path,sp,"ema_filtered",f))
             os.remove(os.path.join(donnees_pretraitees_path,speaker,"ema_final",f))
