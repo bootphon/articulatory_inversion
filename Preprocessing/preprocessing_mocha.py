@@ -6,7 +6,7 @@
     script to read data from the mocha database.
     It's free and available here "http://data.cstr.ed.ac.uk/mocha", we used the following speakers :
     "fsew0", "msak0", "faet0", "ffes0", "maps0", "mjjn0", "falh0"
-    data for speaker X has to be in "Raw_files/X" and for each sentence have 2 files ( .ema, .wav) and .lab
+    data for speaker X has to be in "Raw_data/X" and for each sentence have 2 files ( .ema, .wav) and .lab
     if available.
 """
 import os,sys,inspect
@@ -47,7 +47,7 @@ class Speaker_mocha(Speaker):
 
         self.N_max = N_max
         self.path_files_treated = os.path.join(root_path, "Preprocessed_data", self.speaker)
-        self.path_files_brutes = os.path.join(root_path, "Raw_files", "mocha", self.speaker)
+        self.path_files_brutes = os.path.join(root_path, "Raw_data", "mocha", self.speaker)
 
         self.EMA_files = sorted([name for name in os.listdir(self.path_files_brutes) if "palate" not in name])
         self.EMA_files = sorted([name[:-4] for name in self.EMA_files if name.endswith('.ema')])

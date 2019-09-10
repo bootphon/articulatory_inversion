@@ -5,7 +5,7 @@
     by Maud Parrot
     script to read data from the usc database, 4 speakers
     It's free and available here "https://sail.usc.edu/span/usc-timit/"
-    data for speaker X has to be in "Raw_files/X"
+    data for speaker X has to be in "Raw_data/X"
     the format is special : 1 file for 18sec of recording, so several sentences per file,
     sometimes 1 sentence over 2 files ==> we use the trans file to have 1 file per sentence
 """
@@ -44,8 +44,8 @@ class Speaker_usc(Speaker):
 
         self.N_max = N_max
         self.path_files_treated = os.path.join(root_path, "Preprocessed_data", self.speaker)
-        self.path_files_brutes = os.path.join(root_path, "Raw_files", self.corpus, self.speaker)
-        self.path_files_annotation = os.path.join(root_path, "Raw_files", self.corpus, self.speaker, "trans")
+        self.path_files_brutes = os.path.join(root_path, "Raw_data", self.corpus, self.speaker)
+        self.path_files_annotation = os.path.join(root_path, "Raw_data", self.corpus, self.speaker, "trans")
         self.EMA_files = sorted([name[:-4] for name in os.listdir(
             os.path.join(self.path_files_brutes, "mat")) if name.endswith(".mat")])
         self.EMA_files_2 = None

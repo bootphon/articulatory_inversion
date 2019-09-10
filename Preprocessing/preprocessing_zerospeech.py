@@ -28,10 +28,10 @@ window=5
 Nmax = 20
 for time in ["1s"]:
     print("---time :",time)
-    path_files_treated = os.path.join(root_path, "Donnees_pretraitees", "donnees_challenge_2017",time)
+    path_files_treated = os.path.join(root_path, "Preprocessed_data", "donnees_challenge_2017",time)
     if not os.path.exists(path_files_treated):
         os.makedirs(path_files_treated)
-    path_wav_files = os.path.join(root_path, "Donnees_brutes","ZS2017",time)
+    path_wav_files = os.path.join(root_path, "Raw_data","ZS2017",time)
     print(path_wav_files,"path wav files")
     wav_files = sorted([name[:-4] for name in os.listdir(path_wav_files) if name.endswith('.wav')])
     print("numbr of wav files",len(wav_files))

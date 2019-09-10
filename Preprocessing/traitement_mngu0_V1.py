@@ -3,9 +3,9 @@
 """
     Created august 2019
     by Maud Parrot
-    script to read data from the MNGU0 database, only 1 speaker
+    script to read data from the MNGU0 database
     It's free and available here "http://www.mngu0.org"
-
+    There is 1 speaker
 """
 import os,sys,inspect
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
@@ -23,7 +23,7 @@ import scipy.signal
 import scipy.interpolate
 import librosa
 from Preprocessing.tools_preprocessing import get_speakers_per_corpus
-from Preprocessing.class_corpus import Speaker
+from Preprocessing.class_corpus import Speaker,Corpus
 import glob
 
 root_path = dirname(dirname(os.path.realpath(__file__)))
@@ -39,7 +39,7 @@ root_path = dirname(dirname(os.path.realpath(__file__)))
 
 class Speaker_MNGU0(Speaker):
     """
-    class for the speaker of MNGU0, child of the Speaker class (in class_corpus.py),
+    class for 1 speaker of Haskins, child of the Speaker class (in class_corpus.py),
     then inherits of some preprocessing scripts and attributes
     """
     def __init__(self, N_max=0 ):
@@ -83,10 +83,14 @@ class Speaker_MNGU0(Speaker):
 
 
     def read_ema_file(self,k):
+        # TODO
         """
-        read the ema file, first preprocessing,
-        :param i: utterance index (wrt EMA files)
-        :return: npy array (K,12) , K depends on the duration of the recording, 12 trajectories
+        :param i: index de l'uttérence (ie numero de phrase) dont les données EMA seront extraites
+        :return: les données EMA en format npy pour l'utterance i avec les premiers Preprocessings.
+        :Preprocessing : lecture du fichier .ema et recup des données, filtre sur les articulateurs qui nous intéressent ,
+        ajout du lip aperture, interpolation pour données manquantes
+        En sortie nparray de dimension (K,13), où K dépend de la longueur de la phrase
+         (fréquence d'échantillonnage de 200Hz donc K = 200*durée_en_sec)
         """
         path_ema_file = os.path.join(self.path_ema_files, self.EMA_files[k] + ".ema")
         with open(path_ema_file, 'rb') as ema_annotation:
@@ -104,7 +108,9 @@ class Speaker_MNGU0(Speaker):
             ema_data = np.fromfile(ema_annotation, "float32").reshape(n_frames, self.n_columns + 2)
             cols_index = [column_names.index(col) for col in self.articulators_init]
             ema_data = ema_data[:, cols_index]
-            ema_data = ema_data*100  #initial data in  10^-5m , we turn it to mm
+            ema_data = ema_data*100  #données initiales en 10^-5m on les met en millimètre
+
+            #dabord enlever les nan avant de lisser et sous echantillonner
             if np.isnan(ema_data).sum() != 0:
                 # Build a cubic spline out of non-NaN values.
                 spline = scipy.interpolate.splrep( np.argwhere(~np.isnan(ema_data).ravel()), ema_data[~np.isnan(ema_data)], k=3)
@@ -113,15 +119,19 @@ class Speaker_MNGU0(Speaker):
                     ema_data[j] = scipy.interpolate.splev(j, spline)
             return ema_data
 
-    def remove_silences(self,k, ema, mfcc):
+    def remove_silences(self,k, my_ema, my_mfcc):
+        # TODO
         """
-        :param k:  utterance index (wrt the list EMA_files)
-        :param ema: the ema list of traj
-        :param mfcc: the mfcc features
-        :return: the data (ema and mfcc) without the silence at the beginning and end of the recording
-        reads the annotation file to get (in sec) the extremity of the voice,
-        calculates the equivalence in # of ema points and # of mfcc frames
+        :param k:  index de l'uttérence (ie numero de phrase) pour laquelle on va traiter le fichier EMA et MFCC
+        :param my_ema: Données EMA en format .npy en sortie de la fonction first_step_ema_data(i)
+        :param my_mfcc: Données MFCC en format .npy en sortie de la fonction first_step_wav_data(i)
+        :return: les npy EMA et MFCC de taille (K,13) et (K,429) avec le même nombre de lignes
+        :Preprocessing lecture du fichier d'annotation .lab , on enlève les frames MFCC et EMA qui correspondent à du silence
+        On sous échantillone le nparray EMA pour avoir 1 donnée par frame MFCC.
+        On ajoute le 'contexte' aux données MFCC ie les 5 frames précédent et les 5 frames suivant chaque frame,
+        d'où la taille de mfcc 429 = 5*39 + 5*39 + 39
         """
+        # remove blanks at the beginning and the end, en sortie autant de lignes pour les deux
         marge = 0
         path_annotation = os.path.join(self.path_files_annotation, self.EMA_files[k] + '.lab')
         with open(path_annotation) as file:
@@ -133,43 +143,41 @@ class Speaker_MNGU0(Speaker):
         end_time = labels[-2][0] if labels[-1][1] == '#' else labels[-1][0]
         xtrm = [max(start_time-marge,0), end_time+marge]
 
+
         xtrm_temp_ema = [int(np.floor(xtrm[0] * self.sampling_rate_ema)),
-                         int(min(np.floor(xtrm[1] * self.sampling_rate_ema) + 1, len(ema)))]
+                         int(min(np.floor(xtrm[1] * self.sampling_rate_ema) + 1, len(my_ema)))]
 
         xtrm_temp_mfcc = [int(np.floor(xtrm[0] / self.hop_time)),
                           int(np.ceil(xtrm[1] / self.hop_time))]
 
-        mfcc = mfcc[xtrm_temp_mfcc[0]:xtrm_temp_mfcc[1]]
-        ema = ema[xtrm_temp_ema[0]:xtrm_temp_ema[1], :]
-        return ema, mfcc
+        my_mfcc = my_mfcc[xtrm_temp_mfcc[0]:xtrm_temp_mfcc[1]]
+        my_ema = my_ema[xtrm_temp_ema[0]:xtrm_temp_ema[1], :]
+        return my_ema, my_mfcc
 
-    def from_wav_to_mfcc(self,wav):
+    def from_wav_to_mfcc(self,my_wav): #reste à enlever les blancs et normaliser et ajouter trames passées et futures
+        # TODO
         """
-        :param wav: list of intensity points of the wav file
-        :return: the acoustic features( K,429); where K in the # of frames.
-        calculations of the mfcc with librosa , + Delta and DeltaDelta, + 10 context frames
-        # of acoustic features per frame: 13 ==> 13*3 = 39 ==> 39*11 = 429.
-        parameters for mfcc calculation are defined in class_corpus
-        """
-
-        mfcc = librosa.feature.mfcc(y=wav, sr=self.sampling_rate_wav, n_mfcc=self.n_coeff,
+           :param i: index de l'uttérence (ie numero de phrase) dont les données WAV seront extraites
+           :return: les MFCC en format npy pour l'utterance i avec les premiers Preprocessings.
+           :Preprocessing : lecture du fichier .wav, extraction des mfcc avec librosa, ajout des Delta et DeltaDelta
+           (features qui représentent les dérivées premières et secondes des mfcc)
+           On conserve les 13 plus grands MFCC pour chaque frame de 25ms.
+           En sortie nparray de dimension (K',13*3)=(K',39). Ou K' dépend de la longueur de la phrase
+           ( Un frame toutes les 10ms, donc K' ~ duree_en_sec/0.01 )
+           """
+        my_mfcc = librosa.feature.mfcc(y=my_wav, sr=self.sampling_rate_wav, n_mfcc=self.n_coeff,
                                     n_fft=self.frame_length, hop_length=self.hop_length
                                     ).T
-        dyna_features = get_delta_features(mfcc)
+        dyna_features = get_delta_features(my_mfcc)
         dyna_features_2 = get_delta_features(dyna_features)
-        mfcc = np.concatenate((mfcc, dyna_features, dyna_features_2), axis=1)
-        padding = np.zeros((self.window, mfcc.shape[1]))
-        frames = np.concatenate([padding, mfcc, padding])
+        my_mfcc = np.concatenate((my_mfcc, dyna_features, dyna_features_2), axis=1)
+        padding = np.zeros((self.window, my_mfcc.shape[1]))
+        frames = np.concatenate([padding, my_mfcc, padding])
         full_window = 1 + 2 * self.window
-        mfcc = np.concatenate([frames[i:i + len(mfcc)] for i in range(full_window)], axis=1)
-        return mfcc
+        my_mfcc = np.concatenate([frames[i:i + len(my_mfcc)] for i in range(full_window)], axis=1)
+        return my_mfcc
 
     def Preprocessing_general_speaker(self):
-        """
-        Go through each sentence doing the preprocessing + adding the trajectoires and mfcc to a list, in order to
-        calculate the norm values over all sentences of the speaker
-        """
-        self.create_missing_dir()
         N = len(self.EMA_files)
         if self.N_max != 0:
             N = self.N_max
@@ -195,6 +203,7 @@ class Speaker_MNGU0(Speaker):
                 os.path.join(root_path, "Preprocessed_data", self.speaker, "ema_final", self.EMA_files[i] + ".npy"))
             mfcc = np.load(os.path.join(root_path, "Preprocessed_data", self.speaker, "mfcc", self.EMA_files[i] + ".npy"))
             ema_VT_smooth_norma, mfcc = self.normalize_phrase(i, ema_VT_smooth, mfcc)
+            # ema_VT_smooth_norma = my_speaker_class.smooth_data(ema_VT_smooth_norma)
             np.save(os.path.join(root_path, "Preprocessed_data", self.speaker, "mfcc", self.EMA_files[i]), mfcc)
             np.save(os.path.join(root_path, "Preprocessed_data", self.speaker, "ema_final", self.EMA_files[i]),
                     ema_VT_smooth_norma)
@@ -202,7 +211,7 @@ class Speaker_MNGU0(Speaker):
         get_fileset_names(self.speaker)
 
 
-def Preprocessing_general_mngu0(N_max):
+def Preprocessing_general_MNGU0(N_max):
     """
     :param N_max: #max of files to treat (0 to treat all files), useful for tests
     """
@@ -211,4 +220,4 @@ def Preprocessing_general_mngu0(N_max):
     print("Done MNGU0 ")
 
 #Test :
-#Preprocessing_general_MNGU0(N_max=50)
+Preprocessing_general_MNGU0(N_max=50)

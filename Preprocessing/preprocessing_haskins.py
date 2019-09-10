@@ -5,12 +5,12 @@
     by Maud Parrot
     script to read data from the Haskins database
     It's free and available here "https://yale.app.box.com/s/cfn8hj2puveo65fq54rp1ml2mk7moj3h/folder/30415804819"
-    There are 8 speakers, the rawfiles for the speaker X need to be in "Raw_files/Haskins/X".
+    There are 8 speakers, the rawfiles for the speaker X need to be in "Raw_data/Haskins/X".
     For one sentence the acoustic & arti data are in a matlab file "data".
     The extraction&preprocessing are done for one speaker after the other.
     For one sentence of speaker X the script saves 3 files in "Preprocessed_data/X"  : mfcc (K,429), ema (K,18),
     ema_final (K,18) [same as ema but normalized]; where K depends on the duration of the recording
-    The script write a .wav file in "Raw_files/Haskins/X/wav".
+    The script write a .wav file in "Raw_data/Haskins/X/wav".
     The script also saves for each the "norm values" [see class_corpus, calculate_norm_values()]
 """
 import os,sys,inspect
@@ -61,7 +61,7 @@ class Speaker_Haskins(Speaker):
         """
         super().__init__(sp)  # gets the attributes of the Speaker class
         self.path_files_treated = os.path.join(root_path, "Preprocessed_data", self.speaker)
-        self.path_files_brutes = os.path.join(root_path, "Raw_files", self.corpus, self.speaker, "data")
+        self.path_files_brutes = os.path.join(root_path, "Raw_data", self.corpus, self.speaker, "data")
         self.EMA_files = sorted([name[:-4] for name in os.listdir(self.path_files_brutes) if "palate" not in name])
         self.N_max = N_max
 
@@ -76,13 +76,13 @@ class Speaker_Haskins(Speaker):
         if not os.path.exists(os.path.join(self.path_files_treated, "ema_final")):
             os.makedirs(os.path.join(self.path_files_treated, "ema_final"))
 
-        if not os.path.exists(os.path.join(root_path, "Raw_files", self.corpus, self.speaker, "wav")):
-            os.makedirs(os.path.join(root_path, "Raw_files", self.corpus, self.speaker, "wav"))
+        if not os.path.exists(os.path.join(root_path, "Raw_data", self.corpus, self.speaker, "wav")):
+            os.makedirs(os.path.join(root_path, "Raw_data", self.corpus, self.speaker, "wav"))
 
         files = glob.glob(os.path.join(self.path_files_treated, "ema", "*"))
         files += glob.glob(os.path.join(self.path_files_treated, "mfcc", "*"))
         files += glob.glob(os.path.join(self.path_files_treated, "ema_final", "*"))
-        files += glob.glob(os.path.join(root_path, "Raw_files", self.corpus, self.speaker, "wav", "*"))
+        files += glob.glob(os.path.join(root_path, "Raw_data", self.corpus, self.speaker, "wav", "*"))
         for f in files:
             os.remove(f)
 
@@ -111,11 +111,11 @@ class Speaker_Haskins(Speaker):
         ema = ema[:, new_order_arti]
 
         wav_data = data[0][2][:, 0]
-        librosa.output.write_wav(os.path.join(root_path, "Raw_files", self.corpus, self.speaker,
+        librosa.output.write_wav(os.path.join(root_path, "Raw_data", self.corpus, self.speaker,
                                               "wav", self.EMA_files[k] + ".wav"), wav_data, self.sampling_rate_wav)
-        wav, sr = librosa.load(os.path.join(root_path, "Raw_files", self.corpus, self.speaker, "wav",
+        wav, sr = librosa.load(os.path.join(root_path, "Raw_data", self.corpus, self.speaker, "wav",
                                             self.EMA_files[k] + ".wav"), sr=self.sampling_rate_wav_wanted)
-        # np.save(os.path.join(root_path, "Raw_files", corpus, speaker, "wav",
+        # np.save(os.path.join(root_path, "Raw_data", corpus, speaker, "wav",
         #                      EMA_files[k]), wav)
         wav = 0.5 * wav / np.max(wav)
         mfcc = librosa.feature.mfcc(y=wav, sr=self.sampling_rate_wav_wanted, n_mfcc=self.n_coeff,
