@@ -185,6 +185,7 @@ def cross_val_for_alpha(corpus_to_train_on):
         the parameters (other than alpha) are defined above and can be modified
         the results of the experiment are printed
         """
+    config = "spec"
     for loss_train in [0, 20, 40, 60, 80, 100]:
         count = 0
         rmse_all, pearson_all = np.zeros((len(speakers), output_dim)), np.zeros((len(speakers), output_dim))
