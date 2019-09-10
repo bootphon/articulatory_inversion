@@ -48,8 +48,8 @@ if __name__ == '__main__':
 
     root_folder = os.path.dirname(os.getcwd())
 
-    if not os.path.exists(root_folder,"Preprocessed_data","fileset"):
-        os.makedirs(root_folder,"Preprocessed_data","fileset")
+    if not os.path.exists(os.path.join(root_folder,"Preprocessed_data","fileset")):
+        os.makedirs(os.path.join(root_folder,"Preprocessed_data","fileset"))
 
     if not os.path.exists("norm_values"):
         os.makedirs("norm_values")
