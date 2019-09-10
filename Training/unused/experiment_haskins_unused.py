@@ -1,4 +1,12 @@
-# TODO
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+    Created august 2019
+    by Maud Parrot
+    ---
+"""
+
+
 import os,sys,inspect
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
