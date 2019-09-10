@@ -51,7 +51,6 @@ Several parameters are optional and have default values. The required parameters
 3) test.py : test the model (without any training) and saving some graph with the predicted & target articulatory trajectories.
 experiments : ...
 
-
 # Usage
 1) Download the data 
 Change some name folders to respect the following schema : in Inversion_articulatoire/Raw_data
@@ -62,7 +61,7 @@ Haskins : for each speaker in ["F01", "F02", "F03", "F04", "M01", "M02", "M03", 
 
 2) Preprocessing 
 The argument is for the max number of files you want to preprocess, to preprocess ALL files put 0. This argument is useful for test.
-To preprocess 50 files for each speaker type the following in the command line
+To preprocess 50 files for each speaker : be in the folder "Preprocessing" and type the following in the command line 
 ```bash
 python main_preprocessing.py 50 
 ```
@@ -73,22 +72,65 @@ The required parameters of the train function are those concerning the training/
 -  the corpus we want to train on  : the list the corpus that will be in training set
 - the configuration : see above the description of the 3 configuration "indep","dep" or "spec".
 The optional parameters are the parameters of the models itself.
-To train on all the speakers except F01 of the Haskins corpus with the default parameters  type the following in the commandline
+To train on all the speakers except F01 of the Haskins corpus with the default parameters : be in the folder "Training" and type the following in the commandline
 ```bash
 python train.py "F01" ["Haskins"] "indep"  
 ```
 
+The model name contains information about the training/testing set , and some parameters for which we did experiments 
+The model weights are saved in "Training/saved_models". The name of the above model would be "F01_spec_loss_90_filter_fix_bn_False_0"
+If we train twice with the same parameters, a new model will be created with an increment in the suffix of the namefile.
+An exception is when the last model didn't end training, in that case the training continue for the model [no increment in the suffix of the namefile].
+The results of the model (ie RMSE and PEARSON for the test set for each articulator) are saved adding a new row to a csv file "results_models". 
+
+
+4) Experiments
+Training only train excluding ONE speaker. For more significant results, one wants to average results obtained by cross validation excluding all the speakers one by one.
+The script Experiments enables to perform this cross_validation and save the result of the cross validation.
+Several experiments to evaluate influence of parameters (filter type, alpha, batch normalization) , and results are saved in a csv file "experiment_results_parameter".
+An experiment enables to evaluate the capacity of generalization of a set of corpuses, and results are saved in a csv file "experiment_results_config".
+To perform this last experiment : be in the folder "Training" and type in the command line :
+ 
+```bash
+python experiment.py ["Haskins"] "config"  
+```
+Haskins means that we learn on haskins , config means that we do this cross validation on each configuration of spec/dep/indep.
+In the results csv file there is one row per configuration.
+
+
+
+
+
 # Results 
+Some models already trained are in saved_models_examples.
+
+For example the following one  "fsew0_spec_loss_0_filter_fix_bn_False_0.txt", is a speaker specific model (train and test on fsew0), with loss rmse, 
+with a filter inside the NN with fixed weights, without batch normalization.
+
+To test this models be in the folder "Training" and type this in the command line :
+```bash
+python test.py "fsew0" "fsew0_spec_loss_0_filter_fix_bn_False_0"
+```
+"fsew0" indicates the test speaker.  fsew0_spec_loss_0_filter_fix_bn_False_0 is the name of the model that should be in "Training/saved_models" (be careful to change the name of saved_models_examples).
+The script will save in Training/images_prediction some graph. For one random test sentence it will plot and save the target and predicted trajectories for every articulators. 
+The script will print the rmse and pearson result  per articulator averaged over the test set. It also adds rows in the csv "results_models_test" with the rmse and pearson per articulator.
+
+
 To compare to the state of the art, speaker specific results on fsew0 and msak0 :
-[table with results]
+
+model , 
+the weights 
+| articulator |     tt_x    |     tt_y    |     td_x    |     td_y    |     tb_x    |     li_y    |     ll_x    |     ll_y    |     ttcl    |     v_x     |     v_y     |
+|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|
+|     rmse    |       0,74  |       0,86  |       1,75  |       0,43  |       1,74  |       1,67  |       0,74  |       1,03  |       0,05  |       1,71  |       1,53  |
+|   pearson   |       0,75  |       0,84  |       0,87  |       0,69  |       0,86  |       0,85  |       0,69  |       0,80  |       0,86  |       0,89  |       0,92  |
+
+
+
+Some plot of trajectories 
 
 First use of the corpus Haskins that provides better results, and very good on generalization 
 
-![Alt text](C:\Users\Maud Parrot\Documents\stages\STAGE LSCP\Images_rapport\spec_F04_lly.png "Real and prediction trajectory of lowerlip y of F04 when trained on F04")
-
-
-
-Some plot of trajectories
 
 
 
