@@ -20,8 +20,7 @@ def Preprocessing_general_per_corpus(corp, max):
     perform the preprocess for the asked corpus
      """
 
-    if not os.path.exists("norm_values"):
-        os.makedirs("norm_values")
+
 
     if corp == "MNGU0":
         Preprocessing_general_mngu0(max)
@@ -47,6 +46,9 @@ if __name__ == '__main__':
 
     #TO MAKE N_MAX DEFAULT AT 0 ...parser.add_argument('--n_max', metavar='N_max', type=int,help='Nmax we want to preprocess, 0 for all' , default=0)
 
+    if not os.path.exists("norm_values"):
+        os.makedirs("norm_values")
+    
     args = parser.parse_args()
     for co in corpus:
         proc = Process(target=Preprocessing_general_per_corpus, args=(co, args.N_max))
