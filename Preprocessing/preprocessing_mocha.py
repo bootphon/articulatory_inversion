@@ -6,7 +6,7 @@
     script to read data from the mocha database.
     It's free and available here "http://data.cstr.ed.ac.uk/mocha", we used the following speakers :
     "fsew0", "msak0", "faet0", "ffes0", "maps0", "mjjn0", "falh0"
-    data for speaker X has to be in "Donnees_brutes/X" and for each sentence have 2 files ( .ema, .wav) and .lab
+    data for speaker X has to be in "Raw_files/X" and for each sentence have 2 files ( .ema, .wav) and .lab
     if available.
 """
 import os,sys,inspect
@@ -46,8 +46,8 @@ class Speaker_mocha(Speaker):
         super().__init__(sp)  # gets the attributes of the Speaker class
 
         self.N_max = N_max
-        self.path_files_treated = os.path.join(root_path, "Donnees_pretraitees", self.speaker)
-        self.path_files_brutes = os.path.join(root_path, "Donnees_brutes", "mocha", self.speaker)
+        self.path_files_treated = os.path.join(root_path, "Preprocessed_data", self.speaker)
+        self.path_files_brutes = os.path.join(root_path, "Raw_files", "mocha", self.speaker)
 
         self.EMA_files = sorted([name for name in os.listdir(self.path_files_brutes) if "palate" not in name])
         self.EMA_files = sorted([name[:-4] for name in self.EMA_files if name.endswith('.ema')])
@@ -186,9 +186,9 @@ class Speaker_mocha(Speaker):
             ema_VT, rien = self.remove_silences(ema_VT, mfcc, i)
             ema_VT, rien = self.synchro_ema_mfcc(ema_VT, mfcc)
 
-            np.save(os.path.join(root_path, "Donnees_pretraitees", self.speaker, "ema", self.EMA_files[i]), ema_VT)
-            np.save(os.path.join(root_path, "Donnees_pretraitees", self.speaker, "mfcc", self.EMA_files[i]), mfcc)
-            np.save(os.path.join(root_path, "Donnees_pretraitees", self.speaker, "ema_final", self.EMA_files[i]), ema_VT_smooth)
+            np.save(os.path.join(root_path, "Preprocessed_data", self.speaker, "ema", self.EMA_files[i]), ema_VT)
+            np.save(os.path.join(root_path, "Preprocessed_data", self.speaker, "mfcc", self.EMA_files[i]), mfcc)
+            np.save(os.path.join(root_path, "Preprocessed_data", self.speaker, "ema_final", self.EMA_files[i]), ema_VT_smooth)
             self.list_EMA_traj.append(ema_VT_smooth)
             self.list_MFCC_frames.append(mfcc)
 
@@ -196,18 +196,18 @@ class Speaker_mocha(Speaker):
 
         for i in range(N):
             ema_pas_smooth = np.load(
-                os.path.join(root_path, "Donnees_pretraitees", self.speaker, "ema", self.EMA_files[i] + ".npy"))
+                os.path.join(root_path, "Preprocessed_data", self.speaker, "ema", self.EMA_files[i] + ".npy"))
             ema_VT_smooth = np.load(
-                os.path.join(root_path, "Donnees_pretraitees", self.speaker, "ema_final", self.EMA_files[i] + ".npy"))
-            mfcc = np.load(os.path.join(root_path, "Donnees_pretraitees", self.speaker, "mfcc", self.EMA_files[i] + ".npy"))
+                os.path.join(root_path, "Preprocessed_data", self.speaker, "ema_final", self.EMA_files[i] + ".npy"))
+            mfcc = np.load(os.path.join(root_path, "Preprocessed_data", self.speaker, "mfcc", self.EMA_files[i] + ".npy"))
             ema_VT_smooth_norma, mfcc = self.normalize_phrase(i, ema_VT_smooth, mfcc)
             ema_pas_smooth_norma, rien = self.normalize_phrase(i, ema_pas_smooth, mfcc)
             new_sr = 1 / self.hop_time  # on a rééchantillonner pour avoir autant de points que dans mfcc : 1 points toutes les 10ms : 100 points par sec
 
             ema_VT_smooth_norma = self.smooth_data(ema_VT_smooth_norma, new_sr)
-            np.save(os.path.join(root_path, "Donnees_pretraitees", self.speaker, "ema", self.EMA_files[i]), ema_pas_smooth_norma)
-            np.save(os.path.join(root_path, "Donnees_pretraitees", self.speaker, "mfcc", self.EMA_files[i]), mfcc)
-            np.save(os.path.join(root_path, "Donnees_pretraitees", self.speaker, "ema_final", self.EMA_files[i]),
+            np.save(os.path.join(root_path, "Preprocessed_data", self.speaker, "ema", self.EMA_files[i]), ema_pas_smooth_norma)
+            np.save(os.path.join(root_path, "Preprocessed_data", self.speaker, "mfcc", self.EMA_files[i]), mfcc)
+            np.save(os.path.join(root_path, "Preprocessed_data", self.speaker, "ema_final", self.EMA_files[i]),
                     ema_VT_smooth_norma)
 
         #  split_sentences(speaker)

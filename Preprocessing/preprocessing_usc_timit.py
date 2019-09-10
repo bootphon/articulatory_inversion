@@ -5,7 +5,7 @@
     by Maud Parrot
     script to read data from the usc database, 4 speakers
     It's free and available here "https://sail.usc.edu/span/usc-timit/"
-    data for speaker X has to be in "Donnees_brutes/X"
+    data for speaker X has to be in "Raw_files/X"
     the format is special : 1 file for 18sec of recording, so several sentences per file,
     sometimes 1 sentence over 2 files ==> we use the trans file to have 1 file per sentence
 """
@@ -43,9 +43,9 @@ class Speaker_usc(Speaker):
         super().__init__(sp)  # gets the attributes of the Speaker class
 
         self.N_max = N_max
-        self.path_files_treated = os.path.join(root_path, "Donnees_pretraitees", self.speaker)
-        self.path_files_brutes = os.path.join(root_path, "Donnees_brutes", self.corpus, self.speaker)
-        self.path_files_annotation = os.path.join(root_path, "Donnees_brutes", self.corpus, self.speaker, "trans")
+        self.path_files_treated = os.path.join(root_path, "Preprocessed_data", self.speaker)
+        self.path_files_brutes = os.path.join(root_path, "Raw_files", self.corpus, self.speaker)
+        self.path_files_annotation = os.path.join(root_path, "Raw_files", self.corpus, self.speaker, "trans")
         self.EMA_files = sorted([name[:-4] for name in os.listdir(
             os.path.join(self.path_files_brutes, "mat")) if name.endswith(".mat")])
         self.EMA_files_2 = None
@@ -225,9 +225,9 @@ class Speaker_usc(Speaker):
             mfcc = self.from_wav_to_mfcc(i)
             ema_VT_smooth, mfcc = self.remove_silences(i, ema_VT_smooth, mfcc)
             ema_VT_smooth, mfcc = self.synchro_ema_mfcc(ema_VT_smooth, mfcc)
-            np.save(os.path.join(root_path, "Donnees_pretraitees", self.speaker, "ema", self.EMA_files_2[i]), ema_VT)
-            np.save(os.path.join(root_path, "Donnees_pretraitees", self.speaker, "mfcc", self.EMA_files_2[i]), mfcc)
-            np.save(os.path.join(root_path, "Donnees_pretraitees", self.speaker, "ema_final",
+            np.save(os.path.join(root_path, "Preprocessed_data", self.speaker, "ema", self.EMA_files_2[i]), ema_VT)
+            np.save(os.path.join(root_path, "Preprocessed_data", self.speaker, "mfcc", self.EMA_files_2[i]), mfcc)
+            np.save(os.path.join(root_path, "Preprocessed_data", self.speaker, "ema_final",
                                  self.EMA_files_2[i]), ema_VT_smooth)
             self.list_EMA_traj.append(ema_VT_smooth)
             self.list_MFCC_frames.append(mfcc)
@@ -235,14 +235,14 @@ class Speaker_usc(Speaker):
 
         for i in range(N_2):
             ema_VT_smooth = np.load(
-                os.path.join(root_path, "Donnees_pretraitees", self.speaker, "ema_final", self.EMA_files_2[i] + ".npy"))
-            mfcc = np.load(os.path.join(root_path, "Donnees_pretraitees", self.speaker, "mfcc",
+                os.path.join(root_path, "Preprocessed_data", self.speaker, "ema_final", self.EMA_files_2[i] + ".npy"))
+            mfcc = np.load(os.path.join(root_path, "Preprocessed_data", self.speaker, "mfcc",
                                         self.EMA_files_2[i] + ".npy"))
             ema_VT_smooth_norma, mfcc = self.normalize_phrase(i, ema_VT_smooth, mfcc)
             new_sr = 1 / self.hop_time
             ema_VT_smooth_norma = self.smooth_data(ema_VT_smooth_norma, new_sr)
-            np.save(os.path.join(root_path, "Donnees_pretraitees", self.speaker, "mfcc", self.EMA_files_2[i]), mfcc)
-            np.save(os.path.join(root_path, "Donnees_pretraitees", self.speaker, "ema_final", self.EMA_files_2[i]),
+            np.save(os.path.join(root_path, "Preprocessed_data", self.speaker, "mfcc", self.EMA_files_2[i]), mfcc)
+            np.save(os.path.join(root_path, "Preprocessed_data", self.speaker, "ema_final", self.EMA_files_2[i]),
                     ema_VT_smooth_norma)
 
       #  split_sentences(self.speaker)

@@ -13,7 +13,7 @@ import argparse
 from multiprocessing import Process
 
 
-def Preprocessing_general_per_corpus(corp,max):
+def Preprocessing_general_per_corpus(corp, max):
     """
     :param corp: corpus we want to do the preprocess
     :param max:  max of files to preprocess (useful for test), 0 to treat all files

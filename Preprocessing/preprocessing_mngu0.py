@@ -48,12 +48,12 @@ class Speaker_MNGU0(Speaker):
         :param N_max:  # max of files we want to preprocess (0 is for All files), variable useful for test
         """
         super().__init__("MNGU0")  # gets the attributes of the Speaker class
-        self.path_files_annotation = os.path.join(root_path, "Donnees_brutes", self.speaker, "phone_labels")
-        self.path_ema_files = os.path.join(root_path, "Donnees_brutes", self.speaker, "ema")
+        self.path_files_annotation = os.path.join(root_path, "Raw_files", self.speaker, "phone_labels")
+        self.path_ema_files = os.path.join(root_path, "Raw_files", self.speaker, "ema")
         self.EMA_files = sorted([name[:-4] for name in os.listdir(self.path_ema_files) if name.endswith('.ema')])
-        self.path_files_treated = os.path.join(root_path, "Donnees_pretraitees", self.speaker)
-        self.path_files_brutes = os.path.join(root_path, "Donnees_brutes", self.speaker)
-        self.path_wav_files = os.path.join(root_path, "Donnees_brutes", self.speaker, "wav")
+        self.path_files_treated = os.path.join(root_path, "Preprocessed_data", self.speaker)
+        self.path_files_brutes = os.path.join(root_path, "Raw_files", self.speaker)
+        self.path_wav_files = os.path.join(root_path, "Raw_files", self.speaker, "wav")
 
         self.N_max = N_max
         self.articulators_init = [
@@ -183,20 +183,20 @@ class Speaker_MNGU0(Speaker):
             mfcc = self.from_wav_to_mfcc(wav)
             ema_VT_smooth, mfcc = self.remove_silences(i, ema_VT_smooth, mfcc)
             ema_VT_smooth, mfcc = self.synchro_ema_mfcc(ema_VT_smooth, mfcc)
-            np.save(os.path.join(root_path, "Donnees_pretraitees", self.speaker, "ema", self.EMA_files[i]), ema_VT)
-            np.save(os.path.join(root_path, "Donnees_pretraitees", self.speaker, "mfcc", self.EMA_files[i]), mfcc)
-            np.save(os.path.join(root_path, "Donnees_pretraitees", self.speaker, "ema_final", self.EMA_files[i]), ema_VT_smooth)
+            np.save(os.path.join(root_path, "Preprocessed_data", self.speaker, "ema", self.EMA_files[i]), ema_VT)
+            np.save(os.path.join(root_path, "Preprocessed_data", self.speaker, "mfcc", self.EMA_files[i]), mfcc)
+            np.save(os.path.join(root_path, "Preprocessed_data", self.speaker, "ema_final", self.EMA_files[i]), ema_VT_smooth)
             self.list_EMA_traj.append(ema_VT_smooth)
             self.list_MFCC_frames.append(mfcc)
         self.calculate_norm_values()
 
         for i in range(N):
             ema_VT_smooth = np.load(
-                os.path.join(root_path, "Donnees_pretraitees", self.speaker, "ema_final", self.EMA_files[i] + ".npy"))
-            mfcc = np.load(os.path.join(root_path, "Donnees_pretraitees", self.speaker, "mfcc", self.EMA_files[i] + ".npy"))
+                os.path.join(root_path, "Preprocessed_data", self.speaker, "ema_final", self.EMA_files[i] + ".npy"))
+            mfcc = np.load(os.path.join(root_path, "Preprocessed_data", self.speaker, "mfcc", self.EMA_files[i] + ".npy"))
             ema_VT_smooth_norma, mfcc = self.normalize_phrase(i, ema_VT_smooth, mfcc)
-            np.save(os.path.join(root_path, "Donnees_pretraitees", self.speaker, "mfcc", self.EMA_files[i]), mfcc)
-            np.save(os.path.join(root_path, "Donnees_pretraitees", self.speaker, "ema_final", self.EMA_files[i]),
+            np.save(os.path.join(root_path, "Preprocessed_data", self.speaker, "mfcc", self.EMA_files[i]), mfcc)
+            np.save(os.path.join(root_path, "Preprocessed_data", self.speaker, "ema_final", self.EMA_files[i]),
                     ema_VT_smooth_norma)
         #  split_sentences(speaker)
         get_fileset_names(self.speaker)
