@@ -185,6 +185,10 @@ def cross_val_for_alpha(corpus_to_train_on):
         the parameters (other than alpha) are defined above and can be modified
         the results of the experiment are printed
         """
+    speakers = []
+    for co in str(corpus_to_train_on[1:-1]).split(","):
+        speakers = speakers + get_speakers_per_corpus(co)
+        
     for config in ["dep","indep"] :
         for loss_train in [0, 20, 40, 60, 80, 100]:
             count = 0
