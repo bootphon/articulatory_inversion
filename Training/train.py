@@ -3,227 +3,45 @@
 """
     Created august 2019
     by Maud Parrot
+    Script to train the model for the articulatory inversion.
+    Some parameters concern the model itself, others concern the data used.
+    Creates a model with the class myac2artmodel for the asked parameters.
+    Learn category by category (in a category  all the speakers have the same arti traj available), the gradients are put
+    at 0 for the unavailable arti traj so that it learns only on correct data.
+    The model stops training by earlystopping if the validation score is several time consecutively increasing
+    The weights of the model are saved in Training/saved_models/name_file.txt
+    The results of the model are evaluated on the test set, and are the averaged rmse and pearson per articulator.
+    Those results are added as 2 new lines in the file "model_results.csv" , with 1 column being the name of the model
+    and the last column the number of epochs [future work : add 1 columns per argument to store ALL the info about
+    the model]
 
 """
-import os,sys,inspect
+import os, sys, inspect
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 
-ncpu="10"
+ncpu="10" # number of cpu available
 import os
-os.environ["OMP_NUM_THREADS"] = ncpu # export OMP_NUM_THREADS=4
-os.environ["OPENBLAS_NUM_THREADS"] = ncpu # export OPENBLAS_NUM_THREADS=4
-os.environ["MKL_NUM_THREADS"] = ncpu # export MKL_NUM_THREADS=4
-os.environ["VECLIB_MAXIMUM_THREADS"] = ncpu # export VECLIB_MAXIMUM_THREADS=4
-os.environ["NUMEXPR_NUM_THREADS"] = ncpu # export NUMEXPR_NUM_THREADS=4
+os.environ["OMP_NUM_THREADS"] = ncpu  # export OMP_NUM_THREADS=4
+os.environ["OPENBLAS_NUM_THREADS"] = ncpu  # export OPENBLAS_NUM_THREADS=4
+os.environ["MKL_NUM_THREADS"] = ncpu  # export MKL_NUM_THREADS=4
+os.environ["VECLIB_MAXIMUM_THREADS"] = ncpu  # export VECLIB_MAXIMUM_THREADS=4
+os.environ["NUMEXPR_NUM_THREADS"] = ncpu  # export NUMEXPR_NUM_THREADS=4
 import numpy as np
 import argparse
-import gc
-import psutil
 from Training.model import my_ac2art_model
 import torch
 import os
 import csv
-import sys
-from Training.tools_learning import load_filenames_deter, load_data
 from Training.pytorchtools import EarlyStopping
 import random
-from scipy import signal
-import matplotlib.pyplot as plt
-from Preprocessing.tools_preprocessing import get_speakers_per_corpus
+from Training.tools_learning import which_speakers_to_train_on, give_me_train_valid_test_filenames, \
+    cpuStats, memReport, criterion_both, load_data, plot_filtre
 import json
 from Training.logger import Logger
 
 root_folder = os.path.dirname(os.getcwd())
-
-
-def memReport(all=False):
-    """
-    :param all: show size of each obj
-    use if memory errors
-    """
-    nb_object = 0
-    for obj in gc.get_objects():
-        if torch.is_tensor(obj):
-            if all:
-                print(type(obj), obj.size())
-            nb_object += 1
-    print('nb objects tensor', nb_object)
-
-
-def cpuStats():
-    """
-    use in case of memory errors
-    """
-    print(sys.version)
-    print(psutil.cpu_percent())
-    print(psutil.virtual_memory())  # physical memory usage
-    pid = os.getpid()
-    py = psutil.Process(pid)
-    memoryUse = py.memory_info()[0] / 2. ** 30  # memory use in GB...I think
-    print('memory GB:', memoryUse)
-
-
-def criterion_pearson(y, y_pred, cuda_avail, device):
-    """
-    :param y: nparray (B,K,18) target trajectories of the batch (size B) , padded (K = maxlenght)
-    :param y_pred: nparray (B,K,18) predicted trajectories of the batch (size B), padded (K = maxlenght
-    :param cuda_avail: bool whether gpu is available
-    :param device: the device
-    :return: loss function for this prediction for loss = pearson correlation
-    for each pair of trajectories (target & predicted) we calculate the pearson correlation between the two
-    we sum all the pearson correlation to obtain the loss function
-    // Idea : integrate the range of the traj here, making the loss for each sentence as the weighted average of the
-    losses with weight proportional to the range of the traj (?)
-    """
-    y_1 = y - torch.mean(y, dim=1, keepdim=True)
-    y_pred_1 = y_pred - torch.mean(y_pred,dim=1, keepdim=True)
-    nume = torch.sum(y_1 * y_pred_1, dim=1, keepdim=True)  # (B,1,18)
-    deno = torch.sqrt(torch.sum(y_1 ** 2, dim=1, keepdim=True)) * \
-        torch.sqrt(torch.sum(y_pred_1 ** 2, dim=1, keepdim=True))  # (B,1,18)
-
-    minim = torch.tensor(0.01,dtype=torch.float64)  # avoid division by 0
-    if cuda_avail:
-        minim = minim.to(device=device)
-        deno = deno.to(device=device)
-        nume = nume.to(device=device)
-    deno = torch.max(deno, minim)  # replace 0 by minimum
-    my_loss = torch.div(nume, deno)  # (B,1,18)
-    my_loss = torch.sum(my_loss)
-    return -my_loss
-
-
-def criterion_both(L, cuda_avail, device):
-    """
-    :param L: parameter in the combined loss of rmse and pearson (loss = (1-L)*rmse + L*pearson ) between 0 and 100
-    :param cuda_avail: bool if gpu is available
-    :param device: device
-    :return: the function that calculates the combined loss of 1 prediction. This function will be used as a criterion
-    """
-    L = L/100
-
-    def criterion_both_lbd(my_y, my_ypred):
-        """
-        :param my_y: target
-        :param my_ypred: perdiction
-        :return: the loss for the combined loss
-        """
-        a = L * criterion_pearson(my_y, my_ypred, cuda_avail, device)
-        b = (1 - L) * torch.nn.MSELoss(reduction='sum')(my_y, my_ypred) / 1000
-        new_loss = a + b
-        return new_loss
-    return criterion_both_lbd
-
-
-def plot_filtre(weights):
-    """
-    :param weights: weights of the low pass filter
-    plot the impulse response of the filter, with gain in GB
-    """
-    print("GAIN", sum(weights))
-    freqs, h = signal.freqz(weights)
-    freqs = freqs * 100 / (2 * np.pi)  # freq in hz
-    plt.plot(freqs, 20 * np.log10(abs(h)), 'r')
-    plt.title("Allure filtre passe bas à la fin de l'Training pour filtre en dur")
-    plt.ylabel('Amplitude [dB]')
-    plt.xlabel("real frequency")
-    plt.show()
-
-
-def give_me_train_on(corpus_to_train_on, test_on, config):
-    """
-    :param corpus_to_train_on: list of all the corpus name to train on
-    :param test_on: the speaker test name
-    :param config:  either specific/dependant/independant
-    :return: name_corpus_concat : concatenation of the corpus name, used only for the name of the modele
-            train_on : list of the speakers to train_on (except the test speaker)
-    """
-    name_corpus_concat = ""
-
-    if config == "spec":  # speaker specific
-        train_on = [""]  # only train on the test speaker
-
-    elif config in ["indep", "dep"]:  # train on other corpuses
-        train_on = []
-        corpus_to_train_on = corpus_to_train_on[1:-1].split(",")
-        for corpus in corpus_to_train_on:
-            sp = get_speakers_per_corpus(corpus)
-            train_on = train_on + sp
-            name_corpus_concat = name_corpus_concat + corpus + "_"
-        if test_on in train_on:
-            train_on.remove(test_on)
-
-    return name_corpus_concat, train_on
-
-
-def give_me_train_valid_test(train_on, test_on, config, batch_size):
-    """
-    :param train_on: list of corpus to train on
-    :param test_on: the speaker test
-    :param config: either spec/dep/indep
-    :param batch_size
-    :return: files_per_categ :  dictionnary where keys are the categories present in the training set. For each category
-    we have a dictionnary with 2 keys (train, valid), and the values is a list of the namefiles for this categ and this
-    part (train/valid)
-            files_for_test : list of the files of the test set
-    3 configurations that impacts the train/valid/test set (if we train a bit on test speaker, we have to be sure that
-    the don't test on files that were in the train set)
-    - spec : for speaker specific, learning and testing only on the speaker test
-    - dep : for speaker dependant, learning on speakers in train_on and a part of the speaker test
-    - indep : for speaker independant, learnong on other speakers.
-    """
-    if config == "spec":
-        files_for_train = load_filenames_deter([test_on], part=["train"])
-        files_for_valid = load_filenames_deter([test_on], part=["valid"])
-        files_for_test = load_filenames_deter([test_on], part=["test"])
-
-    elif config == "dep":
-        files_for_train = load_filenames_deter(train_on, part=["train", "test"]) + \
-                          load_filenames_deter([test_on], part=["train"])
-        files_for_valid = load_filenames_deter(train_on, part=["valid"]) + \
-                          load_filenames_deter([test_on], part=["valid"])
-        files_for_test = load_filenames_deter([test_on], part=["test"])
-
-    elif config == "indep":
-        files_for_train = load_filenames_deter(train_on, part=["train", "test"])
-        files_for_valid = load_filenames_deter(train_on, part=["valid"])
-        files_for_test = load_filenames_deter([test_on], part=["train", "valid", "test"])
-
-    with open('categ_of_speakers.json', 'r') as fp:
-        categ_of_speakers = json.load(fp)  # dictionnary { categ : dict_2} where
-                                            # dict_2 :{  speakers : [sp_1,..], arti  : [0,1,1...]  }
-    files_per_categ = dict()
-
-    for categ in categ_of_speakers.keys():
-        sp_in_categ = categ_of_speakers[categ]["sp"]
-
-        files_train_this_categ = [[f for f in files_for_train if sp.lower() in f.lower()]
-                                  for sp in sp_in_categ]  # the speaker name is always in the namefile
-        files_train_this_categ = [item for sublist in files_train_this_categ
-                                  for item in sublist]  # flatten the list of list
-
-        files_valid_this_categ = [[f for f in files_for_valid if sp.lower() in f.lower()] for sp in sp_in_categ]
-        files_valid_this_categ = [item for sublist in files_valid_this_categ for item in sublist]
-
-        if len(files_train_this_categ) > 0:  # meaning we have at least one file in this categ
-            files_per_categ[categ] = dict()
-
-            N_iter_categ = int(len(files_train_this_categ)/batch_size)+1
-            n_a_ajouter = batch_size*N_iter_categ - len(files_train_this_categ)
-            files_train_this_categ = files_train_this_categ +\
-                                    files_train_this_categ[:n_a_ajouter]  #so that lenght is a multiple of batchsize
-            random.shuffle(files_train_this_categ)
-            files_per_categ[categ]["train"] = files_train_this_categ
-
-            N_iter_categ = int(len( files_valid_this_categ) / batch_size) + 1
-            n_a_ajouter = batch_size * N_iter_categ - len(files_valid_this_categ)
-            files_valid_this_categ = files_valid_this_categ + files_valid_this_categ[:n_a_ajouter]
-            random.shuffle(files_valid_this_categ)
-            files_per_categ[categ]["valid"] = files_valid_this_categ
-
-    return files_per_categ, files_for_test
-
 
 def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_train_on, batch_norma, filter_type,
                 to_plot, lr, delta_test, config):
@@ -266,14 +84,19 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
     :return: [rmse, pearson] . rmse the is the list of the 18 rmse (1 per articulator), same for pearson.
     """
 
-    name_corpus_concat, train_on = give_me_train_on(corpus_to_train_on, test_on,config)
+    corpus_to_train_on = corpus_to_train_on[1:-1].split(",")
+    train_on = which_speakers_to_train_on(corpus_to_train_on, test_on, config)
 
-    name_file = test_on+"_speaker_"+config+name_corpus_concat+"_loss_"+str(loss_train)+"_filter_"+str(filter_type)
+    name_corpus_concat = ""
+    for corpus in corpus_to_train_on:
+        name_corpus_concat = name_corpus_concat + corpus + "_"
+
+    name_file = test_on+"_speaker_"+config+"_"+name_corpus_concat+"_loss_"+str(loss_train)+"_filter_"+str(filter_type)
     "_bn_"+str(batch_norma)
 
     previous_models = os.listdir("saved_models")
     previous_models_2 = [x[:len(name_file)] for x in previous_models if x.endswith(".txt")]
-    n_previous_same = previous_models_2.count(name_file)  #how many times our model was trained
+    n_previous_same = previous_models_2.count(name_file)  # how many times our model was trained
 
     if n_previous_same > 0:
         print("this models has alread be trained {} times".format(n_previous_same))
@@ -297,18 +120,17 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
     output_dim = 18
     early_stopping = EarlyStopping(name_file, patience=patience, verbose=True)
     model = my_ac2art_model(hidden_dim=hidden_dim, input_dim=input_dim, name_file=name_file, output_dim=output_dim,
-                             batch_size=batch_size, cuda_avail=cuda_avail,
-                             filter_type=filter_type, batch_norma=batch_norma)
+                            batch_size=batch_size, cuda_avail=cuda_avail,
+                            filter_type=filter_type, batch_norma=batch_norma)
     model = model.double()
-
     file_weights = os.path.join("saved_models", name_file +".pt")
     if cuda_avail:
-        model = model.to(device = device)
+        model = model.to(device=device)
     load_old_model = True
     if load_old_model:
-        if os.path.exists(file_weights): # veut dire qu'on sest entraîné avant d'avoir le txt final
-            print("modèle précédent pas fini")
-            loaded_state = torch.load(file_weights,map_location = device)
+        if os.path.exists(file_weights):
+            print("previous model did not finish learning")
+            loaded_state = torch.load(file_weights,map_location=device)
             model.load_state_dict(loaded_state)
             model_dict = model.state_dict()
             loaded_state = {k: v for k, v in loaded_state.items() if
@@ -326,13 +148,13 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
         lbd = int(loss_train[5:])
     criterion = criterion_both(lbd, cuda_avail, device)
 
-    files_per_categ, files_for_test = give_me_train_valid_test(train_on,test_on,config, batch_size)
+    files_per_categ, files_for_test = give_me_train_valid_test_filenames(train_on,test_on,config, batch_size)
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr )
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
     categs_to_consider = files_per_categ.keys()
     with open('categ_of_speakers.json', 'r') as fp:
-        categ_of_speakers = json.load(fp)  # dictionnaire en clé la categorie en valeur un dictionnaire
+        categ_of_speakers = json.load(fp)  # dict that gives for each category the speakers in it and the available arti
     plot_filtre_chaque_epochs = False
 
     for epoch in range(n_epochs):
@@ -342,12 +164,10 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
         n_this_epoch = 0
         random.shuffle(list(categs_to_consider))
         loss_train_this_epoch = 0
-        for categ in categs_to_consider:  # de A à F pour le momen
-
-            files_this_categ_courant = files_per_categ[categ]["train"]  #on na pas encore apprit dessus au cours de cette epoch
+        for categ in categs_to_consider:
+            files_this_categ_courant = files_per_categ[categ]["train"]
             random.shuffle(files_this_categ_courant)
-
-            while len(files_this_categ_courant) > 0:
+            while len(files_this_categ_courant) > 0: # go through all  the files batch by batch
                 n_this_epoch+=1
                 x, y = load_data(files_this_categ_courant[:batch_size])
 
@@ -441,7 +261,7 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
     print("training done for : ",name_file)
 
     # write result in csv
-    with open('resultats_modeles.csv', 'a') as f:
+    with open('model_results.csv', 'a') as f:
         writer = csv.writer(f)
         row_rmse = [name_file]+rmse_per_arti_mean.tolist()+[model.epoch_ref]
         row_pearson = [name_file]+pearson_per_arti_mean.tolist() + [model.epoch_ref]

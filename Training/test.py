@@ -1,4 +1,12 @@
-# TODO
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+    Created august 2019
+    by Maud Parrot
+    Function to evaluate a model that was already trained : on data the model never saw, calculate the rmse and
+    pearson for the prediction made by this model.
+"""
+
 
 import os,sys,inspect
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
@@ -22,19 +30,23 @@ from Training.tools_learning import load_data, load_filenames_deter
 import random
 from scipy import signal
 import matplotlib.pyplot as plt
-
+from Training.model import my_ac2art_model
 
 root_folder = os.path.dirname(os.getcwd())
-fileset_path = os.path.join(root_folder, "Donnees_pretraitees", "fileset")
+fileset_path = os.path.join(root_folder, "Preprocessed_data", "fileset")
 
 print(sys.argv)
-
 
 def test_model(test_on ,model_name):
     """
     :param test_on:  the speaker test
     :param model_name: the name of the model (of the .txt file, without the ".txt")
-    :return:
+    Need to have to weights of the models saved in a txt file located in Training/saved_models/
+    for example F01_speaker_indep_Haskins__loss_both_90_filter_fix_0.txt
+    The test speaker has to be precised (in fact readable in the begining of the filename ==> future work)
+    Depending on the configuration (read in the filename) it tests on parts of the test-speaker the model was not
+    trained on.
+    It also saves the graphs for one sentence of the predicted and true arti trajectories
     """
 
     batch_norma = False
@@ -52,7 +64,7 @@ def test_model(test_on ,model_name):
     batch_size = 10
     output_dim = 18
 
-    model = my_ac2art_modele(hidden_dim=hidden_dim, input_dim=input_dim, output_dim=output_dim,
+    model = my_ac2art_model(hidden_dim=hidden_dim, input_dim=input_dim, output_dim=output_dim,
                              batch_size=batch_size, cuda_avail=cuda_avail, name_file=model_name,
                              filter_type=filter_type, batch_norma=batch_norma)
     model = model.double()

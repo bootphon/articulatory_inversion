@@ -1,4 +1,13 @@
-#TODO
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+    Created august 2019
+    by Maud Parrot
+    Model for the articulatory inversion task : a neural network.
+    Implementation with pytorch.
+
+"""
+
 
 import torch
 import os,sys,inspect
@@ -234,6 +243,7 @@ class my_ac2art_model(torch.nn.Module):
         :param to_cons:  articulations available to consider (list of 0/1)
         save the graph of each available trajectory predicted and true.
         If y_pred is given, also plot the non smoothed pred
+        [future work : change filename and title of the graph]
         """
         print("you chose to plot")
         plt.figure()
