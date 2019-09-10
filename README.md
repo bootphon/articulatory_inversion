@@ -9,6 +9,13 @@ It contains 2 main parts :  \\
 	- preprocessing that reads/cleans/preprocess/reorganize data \\
 	- Feed a neural network with our data. Training  on some speakers and testing on a speaker
 
+The library enables evaluating the generalization capacity of a set of (or one) corpus.
+ To do so we train the model in three different configurations. 
+ For each configuration we evaluate the model through cross validation, considering successively the speakers as the test speaker, and averaging the results.
+ 1) "speaker specific", we train and test on the same speaker. This configuration gives a topline of the results, and learn some characteristics of the speaker
+ 2) "speaker dependent", we train on all speakers (including the test speaker). 
+ 3) "speaker independant", we train on all speakers EXCEPT the test-speaker. We discover the test-speaker at the evaluation of the model. 
+ By analyzing how the scores decrease from configuration 1 to 3 we conclude on the generalization capacity.
 
 # Dependencies
 numpy
@@ -19,30 +26,56 @@ librosa
 
 # Requirements
 The data from the 4 corpuses have to be in the correct folders.
-[ put the URL Links and explain quickly]
+mocha : http://data.cstr.ed.ac.uk/mocha/
+MNGU0 : http://www.mngu0.org/
+usc : https://sail.usc.edu/span/usc-timit/
+Haskins : https://yale.app.box.com/s/cfn8hj2puveo65fq54rp1ml2mk7moj3h/folder/30415804819
+
+
 
 # Contents
 
-## Preprocessing : 
-main_preprocessing.py : launches the preprocessing for each of the corpuses (scripts preprocessing_namecorpus.py)
-class_corpus.py : a speaker class useful that contains common attributes to all/some speakers and preprocessing functions that are shared as well.
-preprocessing_namecorpus.py : contains function to preprocess all the speaker's data of the corpus.
-tools_preprocessing.py : functions that are used in the preprecessing. S
+## Preprocessing :
+1) main_preprocessing.py : launches the preprocessing for each of the corpuses (scripts preprocessing_namecorpus.py)
+2) class_corpus.py : a speaker class useful that contains common attributes to all/some speakers and preprocessing functions that are shared as well.
+3)preprocessing_namecorpus.py : contains function to preprocess all the speaker's data of the corpus.
+4)tools_preprocessing.py : functions that are used in the preprocessing. 
 
-## Training :
+## Training 
 1) modele.py : the pytorch model, neural network bi-LSTM. Define the layers of the network, implementation of the smoothing convolutional layer, can evaluate on test set the model
+
 2) train.py : the training process of our project. We can modulate some parameters of the learning. Especially we can chose on which corpus(es) we train our model, and the dependancy level to the test speaker.
-3 main configurations : speaker specific, speaker dependant, speaker independant.  
+3 main configurations : speaker specific, speaker dependent, speaker independent.  
 Several parameters are optional and have default values. The required parameters are test_on, corpus_to_train_on, and config.
+
 3) test.py : test the model (without any training) and saving some graph with the predicted & target articulatory trajectories.
 experiments : ...
 
+
 # Usage
 1) download the data and put them in the correct folders.
+
 2) Preprocessing : (for a test put 50)
-```console
+```bash
 python main_preprocessing.py 0 
 ```
-3) Training : python train.py "F01" ["Haskins"] "indep"    [ this is to train on all the speakers except F01 of the Haskins corpus with the default parameters ]
+
+3) Training :   [ this is to train on all the speakers except F01 of the Haskins corpus with the default parameters ]
+```bash
+python train.py "F01" ["Haskins"] "indep"  
+```
+
+# Results 
+To compare to the state of the art, speaker specific results on fsew0 and msak0 :
+[table with results]
+
+First use of the corpus Haskins that provides better results, and very good on generalization 
+
+![Alt text](C:\Users\Maud Parrot\Documents\stages\STAGE LSCP\Images_rapport\spec_F04_lly.png "Real and prediction trajectory of lowerlip y of F04 when trained on F04")
+
+
+
+Some plot of trajectories
+
 
 
