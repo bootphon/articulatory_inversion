@@ -3,7 +3,7 @@
 """
     Created 29 august 2019
     by Maud Parrot
-    TODO : mettre cette entête sur toutes tes pages de code, avec un dexcriptif de ce que ça fait (j'ai mis une date random, tu peux mettre 'summer 2019)
+    TODO : mettre cette entête sur toutes tes pages de code, avec un dexcriptif de ce que ça fait (j'ai mis une date random, tu peux mettre 'summer 2019')
 """
 import os,sys,inspect
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
