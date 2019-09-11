@@ -84,10 +84,10 @@ def cross_val_config(corpus_to_train_on):
         today = date.today().strftime("%d/%m/%Y")
         with open('experiment_results_config.csv', 'a') as f:
             writer = csv.writer(f)
-            row_rmse_mean = [today, config, "rmse_mean"] + results_rmse.tolist()
-            row_rmse_std = [today, config,"rmse_std"] + std_rmse.tolist()
-            row_pearson_mean = [today, config, "pearson_mean"] + results_pearson.tolist()
-            row_pearson_std = [today, config, "pearson_std"] + std_pearson.tolist()
+            row_rmse_mean = [today,corpus_to_train_on, config, "rmse_mean"] + results_rmse.tolist()
+            row_rmse_std = [today, corpus_to_train_on,config,"rmse_std"] + std_rmse.tolist()
+            row_pearson_mean = [today,corpus_to_train_on, config, "pearson_mean"] + results_pearson.tolist()
+            row_pearson_std = [today, corpus_to_train_on,config, "pearson_std"] + std_pearson.tolist()
             for row in [row_rmse_mean, row_rmse_std, row_pearson_mean, row_pearson_std]:
                 writer.writerow(row)
 
@@ -127,10 +127,10 @@ def cross_val_filter(corpus_to_train_on):
         today = date.today().strftime("%d/%m/%Y")
         with open('experiment_results_filter.csv', 'a') as f:
             writer = csv.writer(f)
-            row_rmse_mean = [today, filter_type, "rmse_mean"] + results_rmse.tolist()
-            row_rmse_std = [today, filter_type,"rmse_std"] + std_rmse.tolist()
-            row_pearson_mean = [today, filter_type, "pearson_mean"] + results_pearson.tolist()
-            row_pearson_std = [today, filter_type, "pearson_std"] + std_pearson.tolist()
+            row_rmse_mean = [today, corpus_to_train_on,filter_type, "rmse_mean"] + results_rmse.tolist()
+            row_rmse_std = [today,corpus_to_train_on, filter_type,"rmse_std"] + std_rmse.tolist()
+            row_pearson_mean = [today, corpus_to_train_on,filter_type, "pearson_mean"] + results_pearson.tolist()
+            row_pearson_std = [today, corpus_to_train_on,filter_type, "pearson_std"] + std_pearson.tolist()
             for row in [row_rmse_mean, row_rmse_std, row_pearson_mean, row_pearson_std]:
                 writer.writerow(row)
 
@@ -168,10 +168,10 @@ def cross_val_bath_norma(corpus_to_train_on):
         today = date.today().strftime("%d/%m/%Y")
         with open('experiment_results_batchnorma.csv', 'a') as f:
             writer = csv.writer(f)
-            row_rmse_mean = [today, batch_norma, "rmse_mean"] + results_rmse.tolist()
-            row_rmse_std = [today, batch_norma, "rmse_std"] + std_rmse.tolist()
-            row_pearson_mean = [today, batch_norma, "pearson_mean"] + results_pearson.tolist()
-            row_pearson_std = [today, batch_norma, "pearson_mean"] + std_pearson.tolist()
+            row_rmse_mean = [today, corpus_to_train_on,batch_norma, "rmse_mean"] + results_rmse.tolist()
+            row_rmse_std = [today,corpus_to_train_on, batch_norma, "rmse_std"] + std_rmse.tolist()
+            row_pearson_mean = [today,corpus_to_train_on, batch_norma, "pearson_mean"] + results_pearson.tolist()
+            row_pearson_std = [today, corpus_to_train_on,batch_norma, "pearson_mean"] + std_pearson.tolist()
             for row in [row_rmse_mean, row_rmse_std, row_pearson_mean, row_pearson_std]:
                 writer.writerow(row)
 
@@ -190,7 +190,6 @@ def cross_val_for_alpha(corpus_to_train_on):
     speakers = ["F01","M01"] #CHAAAANGE
 
     loss_range = [0, 20, 40, 60, 80, 100]
-    loss_range = [80, 100]  #CHAAAANGE
     for loss_train in loss_range:
         count = 0
         rmse_all, pearson_all = np.zeros((len(speakers), output_dim)), np.zeros((len(speakers), output_dim))
@@ -215,10 +214,10 @@ def cross_val_for_alpha(corpus_to_train_on):
         today = date.today().strftime("%d/%m/%Y")
         with open('experiment_results_alpha.csv', 'a') as f:
             writer = csv.writer(f)
-            row_rmse_mean = [today,corpus_to_train_on, loss_train, "rmse_mean"] + results_rmse.tolist()
-            row_rmse_std = [today, loss_train, "rmse_std"] + std_rmse.tolist()
-            row_pearson_mean = [today, loss_train, "pearson_mean"] + results_pearson.tolist()
-            row_pearson_std = [today, loss_train, "pearson_std"] + std_pearson.tolist()
+            row_rmse_mean = [today, corpus_to_train_on, loss_train, "rmse_mean"] + results_rmse.tolist()
+            row_rmse_std = [today,corpus_to_train_on, loss_train, "rmse_std"] + std_rmse.tolist()
+            row_pearson_mean = [today, corpus_to_train_on,loss_train, "pearson_mean"] + results_pearson.tolist()
+            row_pearson_std = [today,corpus_to_train_on, loss_train, "pearson_std"] + std_pearson.tolist()
             for row in [row_rmse_mean, row_rmse_std, row_pearson_mean, row_pearson_std]:
                 writer.writerow(row)
 
