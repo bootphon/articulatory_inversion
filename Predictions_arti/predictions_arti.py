@@ -1,4 +1,25 @@
 
+"""
+    Created august 2019
+    by Maud Parrot
+    Preprocessing and Articulatory predictions corresponding to some wav files put by the user
+
+    Read all the wav files in "my_wav_files_for_inversion" and preprocess them the extract their acoustic features,
+    so that it can be used as input of the my_ac2art model.
+    Save the mfcc in "my_mfcc_files_for_inversion" , with the same filename as the corresponding wav.
+    Warning : the acoustic features are usually normalized at the speaker level when enough data is available for
+    the speaker.
+    We let future users modify the code to apply this normalization (coeff = (coeff-meancoeff)/stdcoeff  )
+
+    with the weights of the choiced model, this script perform articulatory predictions corresponding to the wav files
+    it takes as input the mfcc features already calculated
+    the arti predictions are saved my "my_articulatory_prediction" as np array (K,18)
+
+
+"""
+
+
+
 import sys
 import torch
 import os
