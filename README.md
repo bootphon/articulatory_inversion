@@ -1,20 +1,20 @@
 # Inversion-articulatoire
 
 Inversion-articulatoire is a Python library for training/testing neural network models for articulatory reconstruction.\
-The task is  the following : based on the acoustic signal of a speech, predict 18 articulatory trajectories of the speaker. \
+The task is  the following : based on the acoustic signal of a speech, predict 18 articulatory trajectories of the speaker.\
 
 
 It was created for learning the acoustic to articulatory mapping in a subject independant framework.\
 For that we use data from 4 public datasets, that contains in all 19 speakers and more than 10 hours of acoustic and articulatory recordings.
 
 It contains 3 main parts :<br/>
-	- preprocessing that reads/cleans/preprocess/reorganize data<br/>
-	- Feed a neural network with our data. Training  on some speakers and testing on a speaker<br/>
-	- Perform articulatory predictions based on a wav file and a model (already trained)<br/>
+	- preprocessing that reads/cleans/preprocess/reorganize data\
+	- Feed a neural network with our data. Training  on some speakers and testing on a speaker\
+	- Perform articulatory predictions based on a wav file and a model (already trained)\
 
 The library enables evaluating the generalization capacity of a set of (or one) corpus.
  To do so we train the model in three different configurations. 
- For each configuration we evaluate the model through cross validation, considering successively the speakers as the test speaker, and averaging the results.
+ For each configuration we evaluate the model through cross validation, considering successively the speakers as the test speaker, and averaging the results. The three configurations are the following ones:\
  1) "speaker specific", we train and test on the same speaker. This configuration gives a topline of the results, and learn some characteristics of the speaker
  2) "speaker dependent", we train on all speakers (including the test speaker). 
  3) "speaker independant", we train on all speakers EXCEPT the test-speaker. We discover the test-speaker at the evaluation of the model. 
@@ -29,30 +29,32 @@ librosa
 
 # Requirements
 The data from the 4 corpuses have to be in the correct folders.\
-mocha : http://data.cstr.ed.ac.uk/mocha/\
-MNGU0 : http://www.mngu0.org/\
-usc : https://sail.usc.edu/span/usc-timit/\
-Haskins : https://yale.app.box.com/s/cfn8hj2puveo65fq54rp1ml2mk7moj3h/folder/30415804819
+mocha : http://data.cstr.ed.ac.uk/mocha/ <br/>
+MNGU0 : http://www.mngu0.org/\ <br/>
+usc : https://sail.usc.edu/span/usc-timit/\<br/>
+Haskins : https://yale.app.box.com/s/cfn8hj2puveo65fq54rp1ml2mk7moj3h/folder/30415804819<br/>
 
 
 
 # Contents
 
 ## Preprocessing :
-1) main_preprocessing.py : launches the preprocessing for each of the corpuses (scripts preprocessing_namecorpus.py)
-2) class_corpus.py : a speaker class useful that contains common attributes to all/some speakers and preprocessing functions that are shared as well.
-3)preprocessing_namecorpus.py : contains function to preprocess all the speaker's data of the corpus.
-4)tools_preprocessing.py : functions that are used in the preprocessing. 
+- main_preprocessing.py : launches the preprocessing for each of the corpuses (scripts preprocessing_namecorpus.py)\
+- class_corpus.py : a speaker class useful that contains common attributes to all/some speakers and preprocessing functions that are shared as well\
+- preprocessing_namecorpus.py : contains function to preprocess all the speaker's data of the corpus\
+- tools_preprocessing.py : functions that are used in the preprocessing.\ 
+
 
 ## Training 
-1) modele.py : the pytorch model, neural network bi-LSTM. Define the layers of the network, implementation of the smoothing convolutional layer, can evaluate on test set the model
+- modele.py : the pytorch model, neural network bi-LSTM. Define the layers of the network, implementation of the smoothing convolutional layer, can evaluate on test set the model\
 
-2) train.py : the training process of our project. We can modulate some parameters of the learning. Especially we can chose on which corpus(es) we train our model, and the dependancy level to the test speaker.
-3 main configurations : speaker specific, speaker dependent, speaker independent.  
-Several parameters are optional and have default values. The required parameters are test_on, corpus_to_train_on, and config.
+- train.py : the training process of our project. We can modulate some parameters of the learning. Especially we can chose on which corpus(es) 
+we train our model, and the dependancy level to the test speaker (ie one of the configurations : speaker specific, speaker dependent, speaker independent).
+Several parameters are optional and have default values. The required parameters are test_on, corpus_to_train_on, and config.\
 
-3) test.py : test the model (without any training) and saving some graph with the predicted & target articulatory trajectories.
-experiments : ...
+-test.py : tests a model (already trained) and saves some graph with the predicted & target articulatory trajectories. Also saves results in a csv files.\
+- experiments.py :  can perform different experiments by cross validation. The user chose the training set composed of n_speakers. 
+Then for each set of parameters n_speakers models are trained : each time one speaker is left out from the training set to be test on. The results are averaged and saved.\
 
 # Usage
 1) Download the data 
