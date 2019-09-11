@@ -5,8 +5,8 @@ the task : based on the acoustic signal guess 18 articulatory trajectories. \
 It was created for learning the acoustic to articulatory mapping in a subject independant framework.\
 For that we use data from 4 public datasets, that contains in all 19 speakers and more than 10 hours of acoustic and articulatory recordings.
 
-It contains 2 main parts :\ 
-	- preprocessing that reads/cleans/preprocess/reorganize data\
+It contains 2 main parts :
+	- preprocessing that reads/cleans/preprocess/reorganize data
 	- Feed a neural network with our data. Training  on some speakers and testing on a speaker
 
 The library enables evaluating the generalization capacity of a set of (or one) corpus.
@@ -86,7 +86,7 @@ An exception is when the last model didn't end training, in that case the traini
 The results of the model (ie RMSE and PEARSON for the test set for each articulator) are saved adding a new row to a csv file "results_models". 
 
 
-4) Experiments
+or 3) Experiments
 Training only train excluding ONE speaker. For more significant results, one wants to average results obtained by cross validation excluding all the speakers one by one.
 The script Experiments enables to perform this cross_validation and save the result of the cross validation.
 Several experiments to evaluate influence of parameters (filter type, alpha, batch normalization) , and results are saved in a csv file "experiment_results_parameter".
@@ -99,8 +99,28 @@ python experiment.py ["Haskins"] "config"
 Haskins means that we learn on haskins , config means that we do this cross validation on each configuration of spec/dep/indep.
 In the results csv file there is one row per configuration.
 
+4) Perform inversion
+Supposed you have acoustic data (.wav) and you want to get the articulatory trajectories. 
+Chose on model that was already trained.
 
-
+# Perform articulatory predictions
+If you have wav files and want to predict the associated articulatory predictions : 
+Put the wav files in "Predictions_arti/my_wav_files_for_inversion".
+be in the folder "Predictions_arti" and type in the command line : 
+```bash
+python predictions_arti.py  F01_spec_loss_0_filter_fix_bn_False_0
+```
+```bash
+python predictions_arti.py  F01_spec_loss_0_filter_fix_bn_False_0 --already_prepro True
+```
+If you  already did the preprocessing and want to test with another model :
+ 
+The first argument is the  name of the model you want to use for the prediction
+The second argument --already_prepro is a boolean that is by default False, set it to true if you dont want to do the preprocess again.
+The preprocessing will calculate the mfcc features corresponding to the wav files and save it in "Predictions_arti/my_mfcc_files_for_inversion"
+The predictions of the articulatory trajectories are as nparray in "Predictions_arti/my_articulatory_prediction" with the same name as the wav (and mfcc) files.
+Warning : if you perform several predictions wuth different models the previous predictions will be overwritten, so save it elsewhere.
+Warning : usually the mfcc features are normalized at a speaker level when enough data for this speaker is available. The preprocessing doesn't normalize the mfcc coeff.
 
 
 # Results 
