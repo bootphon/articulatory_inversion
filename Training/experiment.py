@@ -57,6 +57,8 @@ def cross_val_config(corpus_to_train_on):
     speakers = []
     for co in str(corpus_to_train_on[1:-1]).split(","):
         speakers = speakers + get_speakers_per_corpus(co)
+        
+    speakers = ["F01","M01"] #CHAAAANGE
 
     for config in ["spec","indep","dep"]:
         count = 0
@@ -102,6 +104,7 @@ def cross_val_filter(corpus_to_train_on):
     speakers = []
     for co in str(corpus_to_train_on[1:-1]).split(","):
         speakers = speakers + get_speakers_per_corpus(co)
+    speakers = ["F01","M01"] #CHAAAANGE
 
     for filter_type in ["fix","unfix","out"]:
         count = 0
@@ -145,6 +148,8 @@ def cross_val_bath_norma(corpus_to_train_on):
     for co in str(corpus_to_train_on[1:-1]).split(","):
         speakers = speakers + get_speakers_per_corpus(co)
     corpus_to_train_on = str(corpus)
+    speakers = ["F01","M01"] #CHAAAANGE
+
     for batch_norma in ["True", "False"]:
         count = 0
         rmse_all, pearson_all = np.zeros((len(speakers), output_dim)), np.zeros((len(speakers), output_dim))
