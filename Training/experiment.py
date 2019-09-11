@@ -57,10 +57,10 @@ def cross_val_config(corpus_to_train_on):
     speakers = []
     for co in str(corpus_to_train_on[1:-1]).split(","):
         speakers = speakers + get_speakers_per_corpus(co)
-        
+
     speakers = ["F01","M01"] #CHAAAANGE
 
-    for config in ["spec","indep","dep"]:
+    for config in ["indep","dep"]:
         count = 0
         rmse_all, pearson_all = np.zeros((len(speakers), output_dim)), np.zeros((len(speakers), output_dim))
         for speaker in speakers :
@@ -189,7 +189,7 @@ def cross_val_for_alpha(corpus_to_train_on):
         the results of the experiment are printed
         """
     speakers = []
-    config = "dep"
+    config = "indep"
     for co in str(corpus_to_train_on[1:-1]).split(","):
         speakers = speakers + get_speakers_per_corpus(co)
     speakers = ["F01","M01"] #CHAAAANGE
