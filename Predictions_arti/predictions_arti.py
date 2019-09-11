@@ -90,9 +90,6 @@ def predictions_arti(model_name):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Articulatory predictions for some wav files')
 
-    parser.add_argument('--model', type=str, default = "F01_spec_loss_0_filter_fix_bn_False_0",
-                        help='name of the model we want to use (without .txt)')
-
     parser.add_argument('--already_prepro', type=bool, default=False,
                         help='put to True if preprocessin already done for the wav files')
 
@@ -103,8 +100,4 @@ if __name__ == '__main__':
     predictions_arti(args.model)
 
 
-
-
-
-
-
+#example name model "F01_spec_loss_0_filter_fix_bn_False_0"
