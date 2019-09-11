@@ -40,7 +40,7 @@ import csv
 from Training.pytorchtools import EarlyStopping
 import random
 from Training.tools_learning import which_speakers_to_train_on, give_me_train_valid_test_filenames, \
-    cpuStats, memReport, criterion_both, load_data, plot_filtre
+    cpuStats, memReport, criterion_both, load_np_ema_and_mfcc, plot_filtre
 import json
 from Training.logger import Logger
 
@@ -171,7 +171,7 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
             random.shuffle(files_this_categ_courant)
             while len(files_this_categ_courant) > 0: # go through all  the files batch by batch
                 n_this_epoch+=1
-                x, y = load_data(files_this_categ_courant[:batch_size])
+                x, y = load_np_ema_and_mfcc(files_this_categ_courant[:batch_size])
 
                 files_this_categ_courant = files_this_categ_courant[batch_size:] #we a re going to train on this 10 files
                 x, y = model.prepare_batch(x, y)
@@ -204,7 +204,7 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
                 files_this_categ_courant = files_per_categ[categ]["valid"]  # on na pas encore apprit dessus au cours de cette epoch
                 while len(files_this_categ_courant) >0 :
                     n_valid +=1
-                    x, y = load_data(files_this_categ_courant[:batch_size])
+                    x, y = load_np_ema_and_mfcc(files_this_categ_courant[:batch_size])
                     files_this_categ_courant = files_this_categ_courant[batch_size:]  # on a appris sur ces 10 phrases
                     x, y = model.prepare_batch(x, y)
                     y_pred = model(x).double()
@@ -245,7 +245,7 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
         model.load_state_dict(torch.load(os.path.join("saved_models",name_file+'.pt')))
         torch.save(model.state_dict(), os.path.join( "saved_models",name_file+".txt")) #lorsque .txt ==> training terminé !
     random.shuffle(files_for_test)
-    x, y = load_data(files_for_test)
+    x, y = load_np_ema_and_mfcc(files_for_test)
     print("evaluation on speaker {}".format(test_on))
     std_speaker = np.load(os.path.join(root_folder,"Preprocessing","norm_values","std_ema_"+test_on+".npy"))
     arti_per_speaker = os.path.join(root_folder, "Preprocessing", "articulators_per_speaker.csv")

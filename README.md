@@ -52,9 +52,14 @@ Once downloaded and unzipped, all the folders should be in "Raw_data", and some 
 ## Training 
 - modele.py : the pytorch model, neural network bi-LSTM. Define the layers of the network, implementation of the smoothing convolutional layer, can evaluate on test set the model
 
-- train.py : the training process of our project. We can modulate some parameters of the learning. Especially we can chose on which corpus(es) 
+- train.py : the training process of our project. We can modulate some parameters of the learning. Especially we can chose on which corpus(es). 
 we train our model, and the dependancy level to the test speaker (ie one of the configurations : speaker specific, speaker dependent, speaker independent).
+The loss is a combination of pearson and rmse : loss = (1-a)*rmse+a*(pearson).
 Several parameters are optional and have default values. The required parameters are test_on, corpus_to_train_on, and config.
+The optional parameters are : n_epochs, loss_train (a in the loss above, between 0 and 100), patience (before early stopping), 
+select_arti (always yes, put gradients to 0 if arti is not available for this speaker) , batch_norma (whether to do a batch normalization),
+ filter_type (inside the nn, outside with fix or not fixed weights), to_plot (whether to save some graphs of predicted and target traj), 
+ lr (learning rate), delta_test (how often do we evaluate on validation set).
 
 - test.py : tests a model (already trained) and saves some graph with the predicted & target articulatory trajectories. Also saves results in a csv files.
 - experiments.py :  can perform different experiments by cross validation. The user chose the training set composed of n_speakers. 
@@ -96,7 +101,11 @@ To train on all the speakers except F01 of the Haskins corpus with the default p
 python train.py "F01" ["Haskins"] "indep"  
 ```
 
-The model name contains information about the training/testing set , and some parameters for which we did experiments\
+The model name contains information about the training/testing set , and some parameters for which we did experiments\.
+The model name is constructed as follow\  
+   speaker_test+"_"+config+"_"+name_corpus_concat+"loss_"+str(loss_train)+"_filter_"+str(filter_type)+"_bn_"+str(batch_norma)\
+   with config either "indep","dep",or "spec", name corpus concat the list of the corpus to train on.
+   loss train the a in the loss function described above, filter type either "out","fix" or "unfix", batch norma is a boolean\
 The model weights are saved in "Training/saved_models". The name of the above model would be "F01_spec_loss_90_filter_fix_bn_False_0"\
 If we train twice with the same parameters, a new model will be created with an increment in the suffix of the namefile.\
 An exception is when the last model didn't end training, in that case the training continue for the model [no increment in the suffix of the namefile].\

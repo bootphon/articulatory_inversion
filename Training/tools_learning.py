@@ -22,12 +22,13 @@ from scipy import signal
 
 
 
-def load_filenames_deter(speakers, part=["train"]):
+def load_filenames(speakers, part=["train"]):
     """
     :param speakers: list of speakers we want the filesets
     :param part: list ["train","valid","test"] (or less) of part of fileset we want from the speakers
     :return: a list of the filenames corresponding to the asked part for asked speakers
     based on the fileset files already
+
     """
     path_files = os.path.join(os.path.dirname(os.getcwd()),"Preprocessed_data","fileset")
     filenames = []
@@ -38,11 +39,12 @@ def load_filenames_deter(speakers, part=["train"]):
     return filenames
 
 
-def load_data(filenames):
+def load_np_ema_and_mfcc(filenames):
     """
     :param filenames: list of files we want to load the ema and mfcc data
     :return: x : the list of mfcc features,
             y : the list of ema traj
+    Load the numpy arrays correspondign the ema and mfcc of the files in the list filenames
     """
     folder = os.path.join(os.path.dirname(os.getcwd()), "Preprocessed_data")
     x = []
@@ -191,21 +193,21 @@ def give_me_train_valid_test_filenames(train_on, test_on, config, batch_size):
     - indep : for speaker independant, learnong on other speakers.
     """
     if config == "spec":
-        files_for_train = load_filenames_deter([test_on], part=["train"])
-        files_for_valid = load_filenames_deter([test_on], part=["valid"])
-        files_for_test = load_filenames_deter([test_on], part=["test"])
+        files_for_train = load_filenames([test_on], part=["train"])
+        files_for_valid = load_filenames([test_on], part=["valid"])
+        files_for_test = load_filenames([test_on], part=["test"])
 
     elif config == "dep":
-        files_for_train = load_filenames_deter(train_on, part=["train", "test"]) + \
-                          load_filenames_deter([test_on], part=["train"])
-        files_for_valid = load_filenames_deter(train_on, part=["valid"]) + \
-                          load_filenames_deter([test_on], part=["valid"])
-        files_for_test = load_filenames_deter([test_on], part=["test"])
+        files_for_train = load_filenames(train_on, part=["train", "test"]) + \
+                          load_filenames([test_on], part=["train"])
+        files_for_valid = load_filenames(train_on, part=["valid"]) + \
+                          load_filenames([test_on], part=["valid"])
+        files_for_test = load_filenames([test_on], part=["test"])
 
     elif config == "indep":
-        files_for_train = load_filenames_deter(train_on, part=["train", "test"])
-        files_for_valid = load_filenames_deter(train_on, part=["valid"])
-        files_for_test = load_filenames_deter([test_on], part=["train", "valid", "test"])
+        files_for_train = load_filenames(train_on, part=["train", "test"])
+        files_for_valid = load_filenames(train_on, part=["valid"])
+        files_for_test = load_filenames([test_on], part=["train", "valid", "test"])
 
     with open('categ_of_speakers.json', 'r') as fp:
         categ_of_speakers = json.load(fp)  # dictionnary { categ : dict_2} where

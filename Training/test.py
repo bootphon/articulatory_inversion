@@ -26,7 +26,7 @@ import torch
 import os
 import csv
 import sys
-from Training.tools_learning import load_data, load_filenames_deter
+from Training.tools_learning import load_np_ema_and_mfcc, load_filenames
 import random
 from scipy import signal
 import matplotlib.pyplot as plt
@@ -79,15 +79,15 @@ def test_model(test_on ,model_name):
     model.load_state_dict(loaded_state)
 
     if "indep" in model_name:  # the model was not trained on the test speaker
-        files_for_test = load_filenames_deter([test_on], part=["train", "valid", "test"])
+        files_for_test = load_filenames([test_on], part=["train", "valid", "test"])
 
     else:  # specific or dependant learning
-        files_for_test = load_filenames_deter([test_on], part=["test"])
+        files_for_test = load_filenames([test_on], part=["test"])
 
     plot_filtre_chaque_epochs = False
 
     random.shuffle(files_for_test)
-    x, y = load_data(files_for_test)
+    x, y = load_np_ema_and_mfcc(files_for_test)
     print("evaluation on speaker {}".format(test_on))
     std_speaker = np.load(os.path.join(root_folder, "Preprocessing", "norm_values", "std_ema_"+test_on+".npy"))
     arti_per_speaker = os.path.join(root_folder, "Preprocessing", "articulators_per_speaker.csv")
