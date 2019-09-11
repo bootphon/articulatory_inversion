@@ -21,10 +21,10 @@ The library enables evaluating the generalization capacity of a set of (or one) 
  By analyzing how the scores decrease from configuration 1 to 3 we conclude on the generalization capacity.
 
 # Dependencies
-- numpy\
-- tensorflow (not used but tensorboard can be used)\
-- pytorch\
-- scipy\
+- numpy
+- tensorflow (not used but tensorboard can be used)
+- pytorch
+- scipy
 - librosa
 
 # Requirements
@@ -39,8 +39,11 @@ The data from the 4 corpuses have to be in the correct folders.
 
 ## Preprocessing :
 - main_preprocessing.py : launches the preprocessing for each of the corpuses (scripts preprocessing_namecorpus.py)
+
 - class_corpus.py : a speaker class useful that contains common attributes to all/some speakers and preprocessing functions that are shared as well
+
 - preprocessing_namecorpus.py : contains function to preprocess all the speaker's data of the corpus
+
 - tools_preprocessing.py : functions that are used in the preprocessing. 
 
 
@@ -56,7 +59,7 @@ Several parameters are optional and have default values. The required parameters
 Then for each set of parameters n_speakers models are trained : each time one speaker is left out from the training set to be test on. The results are averaged and saved.
 
 # Usage
-1) Data collect 
+1) Data collect \
 After the corpus data are downlaoed. In Inversion_articulatoire/Raw_data change some name folders to respect the following schema : 
 - mocha :  for each speaker in ["fsew0", "msak0", "faet0", "ffes0", "maps0", "mjjn0", "falh0"] all the files are in Raw_data/mocha/speaker 
 (same filename for same sentence, the extension indicates if its EMA, WAV, TRANS)
@@ -64,7 +67,7 @@ After the corpus data are downlaoed. In Inversion_articulatoire/Raw_data change 
 - usc : for each speaker in ["F1","F5","M1","M3"] a folder  Raw_data/usc/speaker, then 3 folders : wav, mat, trans
 - Haskins : for each speaker in ["F01", "F02", "F03", "F04", "M01", "M02", "M03", "M04"] a folder Raw_data/usc/speaker, then 3 folders : data, TextGrids, wav 
 
-2) Preprocessing 
+2) Preprocessing \
 To preprocess 50 files for each speaker and for all the corpuses: be in the folder "Preprocessing" and type the following in the command line 
 ```bash
 python main_preprocessing.py  -N_max 50 
@@ -77,7 +80,7 @@ The argument N_max is optional and has to be precised if you want to preprocess 
 The argument corpus is optional , and default is the list of all corpus. Has to be precised if you want to preprocess only some corpuses.\
 The preprocessing of all the data takes about 6 hours.
 
-3) Training 
+3) Training \
 The script Train.py perform the training. The required parameters of the train function are those concerning the training/test set :\
 - the test-speaker : the speaker on which the model will be evaluated),
 - the corpus we want to train on  : the list the corpus that will be in training set,
@@ -94,7 +97,7 @@ If we train twice with the same parameters, a new model will be created with an 
 An exception is when the last model didn't end training, in that case the training continue for the model [no increment in the suffix of the namefile].\
 The results of the model (ie RMSE and PEARSON for the test set for each articulator) are saved adding a new row to a csv file "results_models".\ 
 
-or 3) Experiments
+or 3) Experiments \
 The function train.py only trains a model excluding ONE speaker and testing on it.\
  For more significant results, one wants to average results obtained by cross validation excluding all the speakers one by one.\
 The script Experiments enables to perform this cross_validation and save the result of the cross validation.\
@@ -108,7 +111,7 @@ python experiment.py ["Haskins"] "config"
 Haskins means that we learn on haskins , config means that we do this cross validation on each configuration of spec/dep/indep.
 In the results csv file there is one row per configuration.
 
-4) Perform inversion
+4) Perform inversion \
 Supposed you have acoustic data (.wav) and you want to get the articulatory trajectories. \
 To do so : put the wav files in "Predictions_arti/my_wav_files_for_inversion". \
 To launch both preprocessing and articulatory predictions, be in the folder "Predictions_arti" and type in the command line : 
@@ -140,15 +143,16 @@ To test this models be in the folder "Training" and type this in the command lin
 ```bash
 python test.py "fsew0" "fsew0_spec_loss_0_filter_fix_bn_False_0"
 ```
-"fsew0" indicates the test speaker.  fsew0_spec_loss_0_filter_fix_bn_False_0 is the name of the model that should be in "Training/saved_models" (be careful to change the name of saved_models_examples).
-The script will save in Training/images_prediction some graph. For one random test sentence it will plot and save the target and predicted trajectories for every articulators. 
+"fsew0" indicates the test speaker.  fsew0_spec_loss_0_filter_fix_bn_False_0 is the name of the model that should be in "Training/saved_models" (so change the name of saved_models_examples).\
+
+The script will save in Training/images_prediction some graph. For one random test sentence it will plot and save the target and predicted trajectories for every articulators.\
+ 
 The script will print the rmse and pearson result  per articulator averaged over the test set. It also adds rows in the csv "results_models_test" with the rmse and pearson per articulator.
 
 
 To compare to the state of the art, speaker specific results on fsew0 and msak0 :
 
-model , 
-the weights 
+
 
 
 | articulator |     tt_x    |     tt_y    |     td_x    |     td_y    |     tb_x    |     li_y    |     ll_x    |     ll_y    |     ttcl    |     v_x     |     v_y     |
@@ -160,8 +164,4 @@ the weights
 
 Some plot of trajectories 
 
-First use of the corpus Haskins that provides better results, and very good on generalization 
-
-
-
-
+HASKINS SAME THING + OTHER CONFIG
