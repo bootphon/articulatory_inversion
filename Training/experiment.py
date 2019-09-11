@@ -47,7 +47,6 @@ config = "indep"
 
 
 
-
 def cross_val_config(corpus_to_train_on):
     """
     performs the cross validation on Haskins corpus for 3 types of filter in order to evaluate the impact of the filter
@@ -185,6 +184,7 @@ def cross_val_for_alpha(corpus_to_train_on):
         the results of the experiment are printed
         """
     speakers = []
+    config = "dep"
     for co in str(corpus_to_train_on[1:-1]).split(","):
         speakers = speakers + get_speakers_per_corpus(co)
     speakers = ["F01","M01"] #CHAAAANGE
@@ -215,7 +215,7 @@ def cross_val_for_alpha(corpus_to_train_on):
         today = date.today().strftime("%d/%m/%Y")
         with open('experiment_results_alpha.csv', 'a') as f:
             writer = csv.writer(f)
-            row_rmse_mean = [today, loss_train, "rmse_mean"] + results_rmse.tolist()
+            row_rmse_mean = [today,corpus_to_train_on, loss_train, "rmse_mean"] + results_rmse.tolist()
             row_rmse_std = [today, loss_train, "rmse_std"] + std_rmse.tolist()
             row_pearson_mean = [today, loss_train, "pearson_mean"] + results_pearson.tolist()
             row_pearson_std = [today, loss_train, "pearson_std"] + std_pearson.tolist()
