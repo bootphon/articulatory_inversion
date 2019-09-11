@@ -19,9 +19,6 @@ def Preprocessing_general_per_corpus(corp, max):
     :param max:  max of files to preprocess (useful for test), 0 to treat all files
     perform the preprocess for the asked corpus
      """
-
-
-
     if corp == "MNGU0":
         Preprocessing_general_mngu0(max)
     elif corp == "usc":
@@ -37,14 +34,13 @@ if __name__ == '__main__':
     from the cmd to launch preprocess for all the corpuses,
     parallel computing, 1 processor per corpus 
     """
-    corpus = ["MNGU0","mocha","usc","Haskins"]
     procs = []
 
     parser = argparse.ArgumentParser(description='preprocessing of all the corpuses with parallelization')
-    parser.add_argument('N_max', metavar='N_max', type=int,
-                        help='Nmax we want to preprocess, 0 for all')
-
-    #TO MAKE N_MAX DEFAULT AT 0 ...parser.add_argument('--n_max', metavar='N_max', type=int,help='Nmax we want to preprocess, 0 for all' , default=0)
+    parser.add_argument('--N_max',  type=int, default=0,
+                        help='by default ')
+    parser.add_argument('--corpus',  type=str, default=["MNGU0","mocha","usc","Haskins"],
+                        help='corpus to preprocess')
 
     root_folder = os.path.dirname(os.getcwd())
 
@@ -55,6 +51,10 @@ if __name__ == '__main__':
         os.makedirs("norm_values")
 
     args = parser.parse_args()
+    if type(args.corpus) is str:
+        corpus = args.corpus[1:-1].split(",")
+    else:
+        corpus = args.corpus
     for co in corpus:
         proc = Process(target=Preprocessing_general_per_corpus, args=(co, args.N_max))
         procs.append(proc)
@@ -63,28 +63,3 @@ if __name__ == '__main__':
     for proc in procs:
         proc.join()
 
-
-
-#not used anymore
-def main_Preprocessing(corpus_to_treat=["mocha", "usc", "MNGU0", "Haskins"], max=0):
-    """
-    :param corpus_to_treat: corpus we want to do the preprocess
-    :param max:  # max of files to preprocess (useful for test), if 0 all files
-    to preprocessing of each corpus one after the other calling the "Preprocessing_general_&corpus" fonction
-    """
-    root_path = dirname(dirname(os.path.realpath(__file__)))
-
-    if not os.path.exists(os.path.join(os.path.join(root_path, "Preprocessing", "norm_values"))):
-        os.makedirs(os.path.join(os.path.join(root_path, "Preprocessing", "norm_values")))
-
-    if "mocha" in corpus_to_treat:
-        Preprocessing_general_mocha(max)
-
-    if "MNGU0" in corpus_to_treat:
-        Preprocessing_general_mngu0(max)
-
-    if "usc" in corpus_to_treat:
-        Preprocessing_general_usc(max)
-
-    if "Haskins" in corpus_to_treat:
-        Preprocessing_general_haskins(max)
