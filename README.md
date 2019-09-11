@@ -21,19 +21,20 @@ The library enables evaluating the generalization capacity of a set of (or one) 
  By analyzing how the scores decrease from configuration 1 to 3 we conclude on the generalization capacity.
 
 # Dependencies
-- numpy
-- tensorflow (not used but tensorboard can be used)
-- pytorch
-- scipy
-- librosa
+- numpy 1.16.3
+- tensorflow 1.13.1 (not used but tensorboard can be used)
+- pytorch 1.1.0
+- scipy 1.2.1
+- librosa 0.6.3
 
 # Requirements
-The data from the 4 corpuses have to be in the correct folders.
-- mocha : http://data.cstr.ed.ac.uk/mocha/ <br/>
+The data from the 4 corpus have to be in the correct folders.
+- mocha : http://data.cstr.ed.ac.uk/mocha/ <br/> , download data for the speakers : "fsew0", "msak0", "faet0", "ffes0", "maps0", "mjjn0", "falh0".
+ for some speakers it is in the "unchecked folder"
 - MNGU0 : http://www.mngu0.org/ <br/>
 - usc : https://sail.usc.edu/span/usc-timit/<br/>
 - Haskins : https://yale.app.box.com/s/cfn8hj2puveo65fq54rp1ml2mk7moj3h/folder/30415804819<br/>
-
+Once downloaded and unzipped, all the folders should be in "Raw_data", and some folder names should be changed. More details are given in the part "usage".
 
 # Contents
 
@@ -60,14 +61,19 @@ Then for each set of parameters n_speakers models are trained : each time one sp
 
 # Usage
 1) Data collect \
-After the corpus data are downlaoed. In Inversion_articulatoire/Raw_data change some name folders to respect the following schema : 
+After the corpus data are downloaded, put them in inversion_articulatoire/Raw_data and change some name folders to respect the following schema : 
 - mocha :  for each speaker in ["fsew0", "msak0", "faet0", "ffes0", "maps0", "mjjn0", "falh0"] all the files are in Raw_data/mocha/speaker 
 (same filename for same sentence, the extension indicates if its EMA, WAV, TRANS)
 - MNGU0 : 3 folders in Raw_data/MNGU0 : ema, phone_labels and wav. In each folder all the sentences
 - usc : for each speaker in ["F1","F5","M1","M3"] a folder  Raw_data/usc/speaker, then 3 folders : wav, mat, trans
 - Haskins : for each speaker in ["F01", "F02", "F03", "F04", "M01", "M02", "M03", "M04"] a folder Raw_data/usc/speaker, then 3 folders : data, TextGrids, wav 
 
+For the speaker falh0 (mocha database), we deleted files from 466 to 470 since there was an issue in the recording.
+
 2) Preprocessing \
+The script main_preprocessing takes 2 optional arguments : corpus and N_max. N_max is max number of files to preprocess per speaker, N_max=0 means we want to preprocess all files (it is the default value)
+Corpus is the list of corpus for which we want to do the preprocessing, default value is all the corpuses : ["mocha","Haskins","usc","MNGU0"].
+
 To preprocess 50 files for each speaker and for all the corpuses: be in the folder "Preprocessing" and type the following in the command line 
 ```bash
 python main_preprocessing.py  -N_max 50 
@@ -76,8 +82,6 @@ If you want to preprocess only the corpus "mocha" and "Haskins" , and preprocess
 ```bash
 python main_preprocessing.py --corpus ["mocha","Haskins"] 
 ```
-The argument N_max is optional and has to be precised if you want to preprocess N_max files per corpus only , this is useful for test.\
-The argument corpus is optional , and default is the list of all corpus. Has to be precised if you want to preprocess only some corpuses.\
 The preprocessing of all the data takes about 6 hours.
 
 3) Training \
@@ -95,26 +99,20 @@ The model name contains information about the training/testing set , and some pa
 The model weights are saved in "Training/saved_models". The name of the above model would be "F01_spec_loss_90_filter_fix_bn_False_0"\
 If we train twice with the same parameters, a new model will be created with an increment in the suffix of the namefile.\
 An exception is when the last model didn't end training, in that case the training continue for the model [no increment in the suffix of the namefile].\
-The results of the model (ie RMSE and PEARSON for the test set for each articulator) are saved adding a new row to a csv file "results_models".\ 
+At the end of the training (either by early stopping or n_epochs hit), the model is evaluated.
+ It calculates the pearson and rmse mean per articulator, and add 2 rows in the csv files "results_models" (one for rmse, one for pearson) with the results.
+ It also prints the results.
 
-or 3) Experiments \
-The function train.py only trains a model excluding ONE speaker and testing on it.\
- For more significant results, one wants to average results obtained by cross validation excluding all the speakers one by one.\
-The script Experiments enables to perform this cross_validation and save the result of the cross validation.\
-Several experiments to evaluate influence of parameters (filter type, alpha, batch normalization) , and results are saved in a csv file "experiment_results_parameter".\
-An experiment enables to evaluate the capacity of generalization of a set of corpuses, and results are saved in a csv file "experiment_results_config".\
-To perform this last experiment : be in the folder "Training" and type in the command line :
- 
-```bash
-python experiment.py ["Haskins"] "config"  
-```
-Haskins means that we learn on haskins , config means that we do this cross validation on each configuration of spec/dep/indep.
-In the results csv file there is one row per configuration.
 
 4) Perform inversion \
 Supposed you have acoustic data (.wav) and you want to get the articulatory trajectories. \
-To do so : put the wav files in "Predictions_arti/my_wav_files_for_inversion". \
-To launch both preprocessing and articulatory predictions, be in the folder "Predictions_arti" and type in the command line : 
+The script predictions_arti takes 1 required argument : model_name, and 1 optional argument  : already_prepro.\
+model_name is the  name of the model you want to use for the prediction. Be sure that it is in "Training\saved_models" as a .txt file.
+The second argument --already_prepro is a boolean that is by default False, set it to true if you don't want to do the preprocess again.\
+
+To perform the inversion : put the wav files in "Predictions_arti/my_wav_files_for_inversion". \
+To launch both preprocessing and articulatory predictions with the model "F01_spec_loss_0_filter_fix_bn_False_0.txt",
+ be in the folder "Predictions_arti" and type in the command line : 
 ```bash
 python predictions_arti.py  F01_spec_loss_0_filter_fix_bn_False_0
 ```
@@ -125,12 +123,36 @@ If you  already did the preprocessing and want to test with another model :
 python predictions_arti.py  F01_spec_loss_0_filter_fix_bn_False_0 --already_prepro True
 ```
  
-The first argument is the  name of the model you want to use for the prediction\
-The second argument --already_prepro is a boolean that is by default False, set it to true if you dont want to do the preprocess again.\
 The preprocessing will calculate the mfcc features corresponding to the wav files and save it in "Predictions_arti/my_mfcc_files_for_inversion"\
-The predictions of the articulatory trajectories are as nparray in "Predictions_arti/my_articulatory_prediction" with the same name as the wav (and mfcc) files.\
-Warning : if you perform several predictions wuth different models the previous predictions will be overwritten, so save it elsewhere.\
+The predictions of the articulatory trajectories are as nparray in "Predictions_arti/name_model/my_articulatory_prediction" with the same name as the wav (and mfcc) files.\
 Warning : usually the mfcc features are normalized at a speaker level when enough data for this speaker is available. The preprocessing doesn't normalize the mfcc coeff.
+
+#  Experiments \
+The function train.py only trains a model excluding ONE speaker and testing on it.\
+For more significant results, one wants to average results obtained by cross validation excluding all the speakers one by one.\
+The script Experiments enables to perform this cross_validation and save the result of the cross validation.\
+For the moment the experiments that you can run are on the following parameters :\
+- config : speaker specific, dependant or independant (3 possibilities).
+- alpha : the coefficient before pearson in the combined loss (6 possibilities). 
+- filter : filter outside the model, inside with fixe weights or inside with updating weights (3 possibilities).
+- bn : whether or not to add batch normalization after the LSTM layers (2 possibilities).
+For instance if we run the experiment "filter", for each possibility (there are 3) : 
+	- One by one the speakers will be considered as the test speaker,  and then we'll have has many models as speakers.\
+	- Once we have n_speakers results, there are averaged.
+	- The results for this possibility (rmse and pearson) are printed and added as 2 rows in the file "experiment_results_filter.csv".
+ At the end of the experiment we can see in the csv file the result of each possibility and can compare those easily.
+
+
+The script experiment.py takes 2 arguments : corpus and experiment_type.
+corpus is the list of the corpus we want to do the experiment on, for instance ["Haskins"] or ["mocha","usc"].
+experiment_type is one of "config","filter","alpha", or "bn".
+We found that the most interesting experiment are on the "config" of the corpus Haskins since it illustrates the capacity of the corpus to generalize well.
+
+To perform this experiment : be in the folder "Training" and type in the command line :
+
+```bash
+python experiment.py ["Haskins"] "config"  
+```
 
 
 # Results 

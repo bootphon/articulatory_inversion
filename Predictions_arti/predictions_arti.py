@@ -15,7 +15,6 @@
     it takes as input the mfcc features already calculated
     the arti predictions are saved my "my_articulatory_prediction" as np array (K,18)
 
-
 """
 
 
@@ -36,7 +35,7 @@ import argparse
 root_folder = os.path.dirname(os.getcwd())
 
 
-def preprocess_my_wav_files():
+def preprocess_my_wav_files(wav_folder, mfcc_folder, Nmax=0):
     """
     Read all the wav files in "my_wav_files_for_inversion" and preprocess them the extract their acoustic features,
     so that it can be used as input of the my_ac2art model.
@@ -45,9 +44,9 @@ def preprocess_my_wav_files():
     the speaker.
     We let future users modify the code to apply this normalization (coeff = (coeff-meancoeff)/stdcoeff  )
     """
-    path_wav = os.path.join(root_folder, "Predictions_arti", "my_wav_files_for_inversion")
-    if not os.path.exists(os.path.join(root_folder,"Predictions_arti","my_mfcc_files_for_inversion")):
-        os.mkdir(os.path.join(root_folder,"Predictions_arti","my_mfcc_files_for_inversion"))
+    path_wav = os.path.join(root_folder, "Predictions_arti", wav_folder)
+    if not os.path.exists(os.path.join(root_folder,"Predictions_arti",mfcc_folder)):
+        os.mkdir(os.path.join(root_folder,"Predictions_arti",mfcc_folder))
     frame_time = 25 / 1000
     hop_time = 10 / 1000
     sampling_rate_wav_wanted = 16000
@@ -56,6 +55,8 @@ def preprocess_my_wav_files():
     window = 5
     n_coeff = 13
     wav_files = os.listdir(path_wav)
+    if Nmax > 0:
+        wav_files = wav_files[:Nmax]
     for filename in wav_files:
         filename = filename[:-4]  #remove extension
         wav, sr = librosa.load(os.path.join(path_wav,filename+".wav"), sr=sampling_rate_wav_wanted)  # chargement de données
@@ -68,11 +69,11 @@ def preprocess_my_wav_files():
         frames = np.concatenate([padding, mfcc, padding])
         full_window = 1 + 2 * window
         mfcc = np.concatenate([frames[j:j + len(mfcc)] for j in range(full_window)], axis=1)  # add context
-        np.save(os.path.join(root_folder, "Predictions_arti","my_mfcc_files_for_inversion", filename), mfcc)
+        np.save(os.path.join(root_folder, "Predictions_arti",mfcc_folder, filename), mfcc)
 
 
-
-def predictions_arti(model_name):
+def predictions_arti(model_name,mfcc_folder="my_mfcc_files_for_inversion",
+                     ema_folder="my_articulatory_prediction"):
     """
     :param model_name: name of model we want to use for the articulatory predictions
     with the weights in model_name, this script perform articulatory predictions corresponding to the wav files
@@ -80,8 +81,8 @@ def predictions_arti(model_name):
     the arti predictions are saved my "my_articulatory_prediction" as np array (K,18)
     """
 
-    if not os.path.exists(os.path.join(root_folder,"Predictions_arti","my_articulatory_prediction")):
-        os.mkdir(os.path.join(root_folder,"Predictions_arti","my_articulatory_prediction"))
+    if not os.path.exists(os.path.join(root_folder,"Predictions_arti",ema_folder,model_name)):
+        os.mkdir(os.path.join(root_folder,"Predictions_arti",ema_folder,model_name))
 
     hidden_dim = 300
     input_dim = 429
@@ -98,14 +99,14 @@ def predictions_arti(model_name):
     loaded_state = torch.load(file_weights, map_location="cpu")
     model.load_state_dict(loaded_state)
 
-    all_my_mfcc_files = os.listdir(os.path.join(root_folder,"Predictions_arti","my_mfcc_files_for_inversion"))
+    all_my_mfcc_files = os.listdir(os.path.join(root_folder,"Predictions_arti",mfcc_folder))
 
     for mfcc_file in all_my_mfcc_files :
-        mfcc = np.load(os.path.join(root_folder,"Predictions_arti","my_mfcc_files_for_inversion",mfcc_file))
+        mfcc = np.load(os.path.join(root_folder,"Predictions_arti",mfcc_folder,mfcc_file))
         mfcc_torch = torch.from_numpy(mfcc).view(1, -1, input_dim)
         ema_torch = model(mfcc_torch)
         ema = ema_torch.detach().numpy().reshape((-1,18))
-        np.save(os.path.join(root_folder,"Predictions_arti","my_articulatory_prediction",mfcc_file),ema)
+        np.save(os.path.join(root_folder,"Predictions_arti",ema_folder,model_name,mfcc_file),ema)
 
 
 if __name__ == '__main__':

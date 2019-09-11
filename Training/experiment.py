@@ -135,7 +135,6 @@ def cross_val_filter(corpus_to_train_on):
             for row in [row_rmse_mean, row_rmse_std, row_pearson_mean, row_pearson_std]:
                 writer.writerow(row)
 
-
 def cross_val_bath_norma(corpus_to_train_on):
     """
     performs the cross validation on corpus_to_train_on corpus with and without batch normalization
@@ -227,21 +226,21 @@ if __name__=='__main__':
     parser.add_argument('corpus_exp', type=str,
                         help='list of corpus on which perform the experiment')
 
-    parser.add_argument('experiment', type=str,
+    parser.add_argument('experiment_type', type=str,
                         help='type of experiment (filter alpha or bn)')
 
     args = parser.parse_args()
 
-    if args.experiment == "config":
+    if args.experiment_type == "config":
         cross_val_config(args.corpus_exp)
 
-    elif args.experiment == "filter":
+    elif args.experiment_type == "filter":
         cross_val_filter(args.corpus_exp)
 
-    elif args.experiment == "alpha":
+    elif args.experiment_type == "alpha":
         cross_val_for_alpha(args.corpus_exp)
 
-    elif args.experiment == "bn":
+    elif args.experiment_type == "bn":
         cross_val_bath_norma(args.corpus_exp)
 
 
