@@ -1,13 +1,16 @@
 # Inversion-articulatoire
 
-Inversion-articulatoire is a Python library for training/test neural network models of articulatory reconstruction.\
-the task : based on the acoustic signal guess 18 articulatory trajectories. \
+Inversion-articulatoire is a Python library for training/testing neural network models for articulatory reconstruction.\
+The task is  the following : based on the acoustic signal of a speech, predict 18 articulatory trajectories of the speaker. \
+
+
 It was created for learning the acoustic to articulatory mapping in a subject independant framework.\
 For that we use data from 4 public datasets, that contains in all 19 speakers and more than 10 hours of acoustic and articulatory recordings.
 
-It contains 2 main parts :
-	- preprocessing that reads/cleans/preprocess/reorganize data
-	- Feed a neural network with our data. Training  on some speakers and testing on a speaker
+It contains 3 main parts :<br/>
+	- preprocessing that reads/cleans/preprocess/reorganize data<br/>
+	- Feed a neural network with our data. Training  on some speakers and testing on a speaker<br/>
+	- Perform articulatory predictions based on a wav file and a model (already trained)<br/>
 
 The library enables evaluating the generalization capacity of a set of (or one) corpus.
  To do so we train the model in three different configurations. 
