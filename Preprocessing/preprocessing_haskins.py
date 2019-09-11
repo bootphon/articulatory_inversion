@@ -145,19 +145,26 @@ class Speaker_Haskins(Speaker):
 
     def Preprocessing_general_speaker(self):
         """
-        Go through each sentence doing the preprocessing + adding the trajectoires and mfcc to a list, in order to
-        calculate the norm values over all sentences of the speaker
-        :return:
+        Go through the sentences one by one.
+            - reads ema data and turn it to a (K,18) array where arti are in a precise order, interploate missing values,
+        smooth the trajectories, remove silences at the beginning and the end, undersample to have 1 position per
+        frame mfcc, add it to the list of EMA traj for this speaker
+            - reads the wav file, calculate the associated acoustic features (mfcc+delta+ deltadelta+contextframes) ,
+        add it to the list of the MFCC FEATURES for this speaker.
+        Then calculate the normvalues based on the list of ema/mfcc data for this speaker
+        Finally : normalization and last smoothing of the trajectories.
+        Final data are in Preprocessed_data/speaker/ema_final.npy and  mfcc.npy
         """
+
         self.create_missing_dir()
         N = len(self.EMA_files)
         if self.N_max != 0:
-            N = int(self.N_max)  # on coupe N fichiers
+            N = int(self.N_max)
 
         for i in range(N):
             ema, mfcc = self.read_ema_and_wav(i)
             ema_VT = self.add_vocal_tract(ema)
-            ema_VT_smooth = self.smooth_data(ema_VT)  # filtrage pour meilleur calcul des norm_values
+            ema_VT_smooth = self.smooth_data(ema_VT)
             np.save(os.path.join(root_path, "Preprocessed_data", self.speaker, "ema", self.EMA_files[i]), ema_VT)
             np.save(os.path.join(root_path, "Preprocessed_data", self.speaker, "mfcc", self.EMA_files[i]), mfcc)
             np.save(os.path.join(root_path, "Preprocessed_data", self.speaker, "ema_final",
@@ -171,7 +178,7 @@ class Speaker_Haskins(Speaker):
                 root_path, "Preprocessed_data", self.speaker, "ema_final", self.EMA_files[i] + ".npy"))
             mfcc = np.load(os.path.join(
                 root_path, "Preprocessed_data", self.speaker, "mfcc", self.EMA_files[i] + ".npy"))
-            ema_VT_smooth_norma, mfcc = self.normalize_phrase(i, ema_VT_smooth, mfcc)
+            ema_VT_smooth_norma, mfcc = self.normalize_sentence(i, ema_VT_smooth, mfcc)
             new_sr = 1 / self.hop_time
             ema_VT_smooth_norma = self.smooth_data(ema_VT_smooth_norma, new_sr)
 

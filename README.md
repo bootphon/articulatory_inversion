@@ -1,10 +1,10 @@
 # Inversion-articulatoire
 
 Inversion-articulatoire is a Python library for training/testing neural network models for articulatory reconstruction.\
-The task is  the following : based on the acoustic signal of a speech, predict 18 articulatory trajectories of the speaker.
+The task is the following : based on the acoustic signal of a speech, predict 18 articulatory trajectories of the speaker.
 
 It was created for learning the acoustic to articulatory mapping in a subject independant framework.\
-For that we use data from 4 public datasets, that contains in all 19 speakers and more than 10 hours of acoustic and articulatory recordings.
+For that we use data from 4 public datasets, that contain in all 19 speakers and more than 10 hours of acoustic and articulatory recordings.
 
 It contains 3 main parts :<br/>
 	- preprocessing that reads/cleans/preprocess/reorganize data\
@@ -17,7 +17,7 @@ The library enables evaluating the generalization capacity of a set of (or one) 
  The three configurations are the following ones:
  1) "speaker specific", we train and test on the same speaker. This configuration gives a topline of the results, and learn some characteristics of the speaker
  2) "speaker dependent", we train on all speakers (including the test speaker). 
- 3) "speaker independant", we train on all speakers EXCEPT the test-speaker. We discover the test-speaker at the evaluation of the model. 
+ 3) "speaker independent", we train on all speakers EXCEPT the test-speaker. We discover the test-speaker at the evaluation of the model. 
  By analyzing how the scores decrease from configuration 1 to 3 we conclude on the generalization capacity.
 
 # Dependencies
@@ -34,12 +34,13 @@ The data from the 4 corpus have to be in the correct folders.
 - MNGU0 : http://www.mngu0.org/ <br/>
 - usc : https://sail.usc.edu/span/usc-timit/<br/>
 - Haskins : https://yale.app.box.com/s/cfn8hj2puveo65fq54rp1ml2mk7moj3h/folder/30415804819<br/>
+
 Once downloaded and unzipped, all the folders should be in "Raw_data", and some folder names should be changed. More details are given in the part "usage".
 
 # Contents
 
 ## Preprocessing :
-- main_preprocessing.py : launches the preprocessing for each of the corpuses (scripts preprocessing_namecorpus.py)
+- main_preprocessing.py : launches the preprocessing for each of the corpus (scripts preprocessing_namecorpus.py)
 
 - class_corpus.py : a speaker class useful that contains common attributes to all/some speakers and preprocessing functions that are shared as well
 
@@ -82,7 +83,7 @@ If you want to preprocess only the corpus "mocha" and "Haskins" , and preprocess
 ```bash
 python main_preprocessing.py --corpus ["mocha","Haskins"] 
 ```
-The preprocessing of all the data takes about 6 hours.
+The preprocessing of all the data takes about 6 hours. with a parallelization on 4 CPU
 
 3) Training \
 The script Train.py perform the training. The required parameters of the train function are those concerning the training/test set :\

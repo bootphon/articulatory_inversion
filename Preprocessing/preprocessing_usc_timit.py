@@ -74,37 +74,47 @@ class Speaker_usc(Speaker):
         for f in files:
             os.remove(f)
 
-    def cut_all_files(self):
+    def get_data_per_sentence(self):
         """
-        use the tanscription file to get 1 wav file and 1 ema file per sentence.
-        when 1 sentence over 2 files more complicated => load the 2 wav parts to get intensity points, concatenate them,
-        and save the whole as a wav file.
-        the files are renamed and saved in "wav_cut" and "mat_cut"
+        Initially 1 file for several sentences pronounced successively (with silence between them).
+        The scripts reads the transcription file and generates new files to have 1 EMA and 1 WAV per sentence.
+
+        For the sentence with id 7 the names of the files will be "usctimit_ema_sp_7". Sometimes one sentence is
+        pronounced over 2 files. If we want to save a file with a name already in our directory it means that we are
+        in that case. So we just concatenate the 2 ema and the 2 MFCC files.
+
+        After this function in ema_cut and in wav_cut we have 1 file per sentence, just as in other corpus
+
         """
         N = len(self.EMA_files)
         if self.N_max != 0:
-            N = min(int(self.N_max / 3), N)  # on coupe N fichiers
+            N = min(int(self.N_max / 3), N)
         marge = 0
-        for j in range(N):
-
+        for j in range(N):    # run through the files
             path_wav = os.path.join(self.path_files_brutes, "wav", self.EMA_files[j] + '.wav')
-            wav, sr = librosa.load(path_wav, sr=self.sampling_rate_wav_wanted)  # chargement de données
+            wav, sr = librosa.load(path_wav, sr=self.sampling_rate_wav_wanted)    # 1 wav containing several sentences
             wav = 0.5 * wav / np.max(wav)
 
-            ema = sio.loadmat(os.path.join(self.path_files_brutes, "mat", self.EMA_files[j] + ".mat"))
-            ema = ema[self.EMA_files[j]][0]  # dict where the key is the filename
+            ema = sio.loadmat(os.path.join(self.path_files_brutes, "mat",
+                                           self.EMA_files[j] + ".mat"))  # 1 ema containing several sentnces
+
+            # two lines of code to obtain the ema traj as a np array
+            ema = ema[self.EMA_files[j]][0]
             ema = np.concatenate([ema[arti][2][:, [0, 1]] for arti in range(1, 7)], axis=1)
 
             with open(os.path.join(self.path_files_annotation, self.EMA_files[j] + ".trans")) as file:
                 labels = np.array([row.strip("\n").split(",") for row in file])
-                phone_details = labels[:, [0, 1, -1]]
-                id_phrase = set(phone_details[:, 2])
-                id_phrase.remove("")
-                id_phrase = sorted([int(id) for id in id_phrase])
+                phone_details = labels[:, [0, 1, -1]]    # all the info about bebginning/end of sentences if here
 
-                for k in id_phrase:
-                    temp = phone_details[phone_details[:, 2] == str(k)]
-                    xtrm = [max(float(temp[:, 0][0]) - marge, 0), float(temp[:, 1][-1]) + marge]
+                # 3 lines of code to get the id of the sentences of this file
+                id_sentence = set(phone_details[:, 2])
+                id_sentence.remove("")
+                id_sentence = sorted([int(id) for id in id_sentence])
+
+                for k in id_sentence:
+                    temp = phone_details[phone_details[:, 2] == str(k)]     # we focus on one sentence
+                    xtrm = [max(float(temp[:, 0][0]) - marge, 0),
+                            float(temp[:, 1][-1]) + marge]               # beginning and end of the sentences in second
 
                     xtrm_temp_ema = [int(np.floor(xtrm[0] * self.sampling_rate_ema)), int(
                         min(np.floor(xtrm[1] * self.sampling_rate_ema) + 1, len(ema)))]
@@ -114,21 +124,29 @@ class Speaker_usc(Speaker):
                     ema_temp = ema[xtrm_temp_ema[0]:xtrm_temp_ema[1], :]
                     wav_temp = wav[xtrm_temp_wav[0]:xtrm_temp_wav[1]]
 
-                    if os.path.exists(os.path.join(self.path_files_brutes, "mat_cut", self.EMA_files[j][:-7] + str(k) + ".npy")):
-                        premiere_partie_ema = np.load(
-                            os.path.join(self.path_files_brutes, "mat_cut", self.EMA_files[j][:-7] + str(k) + ".npy"))
-                        ema_temp = np.concatenate((ema_temp, premiere_partie_ema), axis=0)
 
-                        premiere_partie_wav, sr = librosa.load(
-                            os.path.join(self.path_files_brutes, "wav_cut", self.EMA_files[j][:-7] + str(k) + ".wav"),
-                            sr=self.sampling_rate_wav_wanted)
-                        wav_temp = np.concatenate((wav_temp, premiere_partie_wav), axis=0)
+                    # if we already have a file for id k it means that the sentence was pronounced over the 2 files
+                    # we have to concatenante the previous and current data.
+                    if os.path.exists(os.path.join(self.path_files_brutes, "mat_cut",
+                                                   self.EMA_files[j][:-7] + str(k) + ".npy")):
 
-                    np.save(os.path.join(self.path_files_brutes, "mat_cut", self.EMA_files[j][:-7] + str(k)), ema_temp)
+                        premiere_partie_ema = np.load(os.path.join(self.path_files_brutes,"mat_cut",
+                                                                   self.EMA_files[j][:-7] + str(k) + ".npy"))
+
+                        ema_concatenated = np.concatenate((ema_temp, premiere_partie_ema), axis=0) # Final ema for id k
+
+                        premiere_partie_wav, sr = librosa.load(os.path.join(self.path_files_brutes, "wav_cut",
+                                                                            self.EMA_files[j][:-7] + str(k) + ".wav"),
+                                                               sr=self.sampling_rate_wav_wanted)
+
+                        wav_concatenated = np.concatenate((wav_temp, premiere_partie_wav), axis=0)  # Final wav for id k
+
+                    np.save(os.path.join(self.path_files_brutes, "mat_cut", self.EMA_files[j][:-7] + str(k)),
+                            ema_concatenated)
 
                     librosa.output.write_wav(
                         os.path.join(self.path_files_brutes, "wav_cut", self.EMA_files[j][:-7] + str(k) + ".wav"),
-                        wav_temp, self.sampling_rate_wav_wanted)
+                        wav_concatenated, self.sampling_rate_wav_wanted)
 
     def read_ema_file(self,m):
         """
@@ -200,18 +218,26 @@ class Speaker_usc(Speaker):
 
     def Preprocessing_general_speaker(self):
         """
-        Go through each sentence doing the preprocessing + adding the trajectoires and mfcc to a list, in order to
-        calculate the norm values over all sentences of the speaker
+        Go through the sentences one by one.
+            - reads ema data and turn it to a (K,18) array where arti are in a precise order, interploate missing values,
+        smooth the trajectories, remove silences at the beginning and the end, undersample to have 1 position per
+        frame mfcc, add it to the list of EMA traj for this speaker
+            - reads the wav file, calculate the associated acoustic features (mfcc+delta+ deltadelta+contextframes) ,
+        add it to the list of the MFCC FEATURES for this speaker.
+        Then calculate the normvalues based on the list of ema/mfcc data for this speaker
+        Finally : normalization and last smoothing of the trajectories.
+        Final data are in Preprocessed_data/speaker/ema_final.npy and  mfcc.npy
         """
+
         self.create_missing_dir()
         EMA_files = sorted(
             [name[:-4] for name in os.listdir(os.path.join(self.path_files_brutes, "mat")) if name.endswith(".mat")])
 
         N = len(EMA_files)
         if self.N_max != 0:
-            N = min(int(self.N_max / 3), N)  # on coupe N fichiers
+            N = min(int(self.N_max / 3), N)  # majoration:if we want to preprocess N_max sentences, about N_max/6 files
 
-        self.cut_all_files()
+        self.get_data_per_sentence()   # one file contains several sentences, this create one file per sentence
         self.EMA_files_2 = sorted(
             [name[:-4] for name in os.listdir(os.path.join(self.path_files_brutes, "wav_cut")) if name.endswith(".wav")])
         N_2 = len(self.EMA_files_2)
@@ -221,7 +247,7 @@ class Speaker_usc(Speaker):
         for i in range(N_2):
             ema = self.read_ema_file(i)
             ema_VT = self.add_vocal_tract(ema)
-            ema_VT_smooth = self.smooth_data(ema_VT)  # filtrage pour meilleur calcul des norm_values
+            ema_VT_smooth = self.smooth_data(ema_VT)  # smooth for better calculation of norm values
             mfcc = self.from_wav_to_mfcc(i)
             ema_VT_smooth, mfcc = self.remove_silences(i, ema_VT_smooth, mfcc)
             ema_VT_smooth, mfcc = self.synchro_ema_mfcc(ema_VT_smooth, mfcc)
@@ -238,7 +264,7 @@ class Speaker_usc(Speaker):
                 os.path.join(root_path, "Preprocessed_data", self.speaker, "ema_final", self.EMA_files_2[i] + ".npy"))
             mfcc = np.load(os.path.join(root_path, "Preprocessed_data", self.speaker, "mfcc",
                                         self.EMA_files_2[i] + ".npy"))
-            ema_VT_smooth_norma, mfcc = self.normalize_phrase(i, ema_VT_smooth, mfcc)
+            ema_VT_smooth_norma, mfcc = self.normalize_sentence(i, ema_VT_smooth, mfcc)
             new_sr = 1 / self.hop_time
             ema_VT_smooth_norma = self.smooth_data(ema_VT_smooth_norma, new_sr)
             np.save(os.path.join(root_path, "Preprocessed_data", self.speaker, "mfcc", self.EMA_files_2[i]), mfcc)
@@ -256,12 +282,12 @@ def Preprocessing_general_usc(N_max):
     """
     corpus = 'usc'
     speakers_usc = get_speakers_per_corpus(corpus)
-    speakers_usc = ["F5"]
     for sp in speakers_usc :
         print("In progress usc ",sp)
         speaker = Speaker_usc(sp,N_max)
         speaker.Preprocessing_general_speaker()
         print("Done usc ",sp)
+
 
 #Test :
 #Preprocessing_general_usc(N_max=50)

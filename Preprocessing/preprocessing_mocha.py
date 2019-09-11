@@ -163,8 +163,15 @@ class Speaker_mocha(Speaker):
 
     def Preprocessing_general_speaker(self):
         """
-        Go through each sentence doing the preprocessing + adding the trajectoires and mfcc to a list, in order to
-        calculate the norm values over all sentences of the speaker
+        Go through the sentences one by one.
+            - reads ema data and turn it to a (K,18) array where arti are in a precise order, interploate missing values,
+        smooth the trajectories, remove silences at the beginning and the end, undersample to have 1 position per
+        frame mfcc, add it to the list of EMA traj for this speaker
+            - reads the wav file, calculate the associated acoustic features (mfcc+delta+ deltadelta+contextframes) ,
+        add it to the list of the MFCC FEATURES for this speaker.
+        Then calculate the normvalues based on the list of ema/mfcc data for this speaker
+        Finally : normalization and last smoothing of the trajectories.
+        Final data are in Preprocessed_data/speaker/ema_final.npy and  mfcc.npy
         """
         self.create_missing_dir()
 
@@ -172,12 +179,12 @@ class Speaker_mocha(Speaker):
         if self.N_max != 0:
             N = self.N_max
 
-        for i in range(N):  # parcourt les phrases une à une
+        for i in range(N):
             ema = self.read_ema_file(i)
-            ema_VT = self.add_vocal_tract(ema)  #
+            ema_VT = self.add_vocal_tract(ema)
             ema_VT_smooth = self.smooth_data(ema_VT)  # smooth for a better calculation of norm values
             path_wav = os.path.join(self.path_files_brutes, self.wav_files[i] + '.wav')
-            wav, sr = librosa.load(path_wav, sr=None)  # chargement de données
+            wav, sr = librosa.load(path_wav, sr=None)
             wav = 0.5 * wav / np.max(wav)
             mfcc = self.from_wav_to_mfcc(wav)
             ema_VT_smooth, mfcc = self.remove_silences(ema_VT_smooth, mfcc, i)
@@ -200,17 +207,17 @@ class Speaker_mocha(Speaker):
             ema_VT_smooth = np.load(
                 os.path.join(root_path, "Preprocessed_data", self.speaker, "ema_final", self.EMA_files[i] + ".npy"))
             mfcc = np.load(os.path.join(root_path, "Preprocessed_data", self.speaker, "mfcc", self.EMA_files[i] + ".npy"))
-            ema_VT_smooth_norma, mfcc = self.normalize_phrase(i, ema_VT_smooth, mfcc)
-            ema_pas_smooth_norma, rien = self.normalize_phrase(i, ema_pas_smooth, mfcc)
-            new_sr = 1 / self.hop_time  # on a rééchantillonner pour avoir autant de points que dans mfcc : 1 points toutes les 10ms : 100 points par sec
-
+            ema_VT_smooth_norma, mfcc = self.normalize_sentence(i, ema_VT_smooth, mfcc)
+            ema_pas_smooth_norma, rien = self.normalize_sentence(i, ema_pas_smooth, mfcc)
+            new_sr = 1 / self.hop_time   # we did undersampling of ema traj for 1 point per frame mfcc
+                                        # so about 1 point every hoptime sec.
             ema_VT_smooth_norma = self.smooth_data(ema_VT_smooth_norma, new_sr)
             np.save(os.path.join(root_path, "Preprocessed_data", self.speaker, "ema", self.EMA_files[i]), ema_pas_smooth_norma)
             np.save(os.path.join(root_path, "Preprocessed_data", self.speaker, "mfcc", self.EMA_files[i]), mfcc)
             np.save(os.path.join(root_path, "Preprocessed_data", self.speaker, "ema_final", self.EMA_files[i]),
                     ema_VT_smooth_norma)
 
-        #  split_sentences(speaker)
+        #  split_sentences(speaker)   #possibility to cut to long sentences
         get_fileset_names(self.speaker)
 
 

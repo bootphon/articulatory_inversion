@@ -245,7 +245,7 @@ class Speaker():
         my_ema[:, idx_to_ignore] = 0
         return my_ema
 
-    def normalize_phrase(self,i,my_ema_filtered,my_mfcc):
+    def normalize_sentence(self,i,my_ema_filtered,my_mfcc):
         """
         :param i: index of the ema traj (to get the moving average)
         :param my_ema_filtered: the ema smoothed ema traj
