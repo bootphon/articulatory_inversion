@@ -3,8 +3,17 @@
 """
     Created august 2019
     by Maud Parrot
-    Model for the articulatory inversion task : a neural network.
     Implementation with pytorch.
+    Architecture : 2 dense layers, 2 bilstm layers (300 units), 1 dense layer (18 units), 1 conv layer
+    Convolutional layer with weights so that it smooth the data at a cutoff frequency of 10Hz.
+    Posibility to let the weights of the conv be updated during the training.
+    Posibility to add batch normalization layer after the lstm layers
+    [ future work : maybe batch norma after dense layers instead ?]
+    Input of the nn : acoustic features for one sentence (K,429), K frames mfcc, 429 features per frame mfcc
+    Ouput of the nn : articulatory trajectory for one sentence (K,18), one articulatory position per frame mfcc.
+    Evaluation of the model with unseen sentences.
+    Calculate the pearson and rmse between true and predicted traj for each sentence and average over sentences
+    of the test set.
 
 """
 
@@ -235,7 +244,7 @@ class my_ac2art_model(torch.nn.Module):
             y_smoothed[:, :, i] = traj_arti_smoothed
         return y_smoothed
 
-    def plot_results(self, y, y_pred_smoothed=None, y_pred_not_smoothed= None, to_cons=[]):
+    def plot_results(self, y_target = None, y_pred_smoothed=None, y_pred_not_smoothed= None, to_cons=[]):
         """
         :param y: one TRUE arti trajectory
         :param y_pred_not_smoothed: one predicted arti trajectory not smoothed (forward with filtered=False)
@@ -247,21 +256,23 @@ class my_ac2art_model(torch.nn.Module):
         """
         print("you chose to plot")
         plt.figure()
+        articulators = ['tt_x', 'tt_y', 'td_x', 'td_y', 'tb_x', 'tb_y', 'li_x', 'li_y',
+         'ul_x', 'ul_y', 'll_x', 'll_y', 'la','lp','ttcl','tbcl','v_x', 'v_y']
         idx_to_cons = [k for k in range(len(to_cons)) if to_cons[k]]
         for j in idx_to_cons:
             plt.figure()
-            if y_pred_not_smoothed is not None :
-                plt.plot(y_pred_not_smoothed[:, j],alpha=0.6)
-            plt.plot(y_pred_smoothed[:, j])
-            plt.plot(y[:, j])
-            plt.title("prediction_test_{0}_arti_{1}.png".format(self.name_file,str(j)))
 
+            plt.plot(y_target[:, j])
+            plt.plot(y_pred_smoothed[:, j])
             if y_pred_not_smoothed is not None:
-                plt.legend(["prediction", "target", "pred smoothed"])
+                plt.plot(y_pred_not_smoothed[:, j], alpha=0.6)
+            plt.title("{0}_{1}.png".format(self.name_file, articulators[j]))
+            if y_pred_not_smoothed is not None:
+                plt.legend(["target", "pred smoothed", "pred not smoothed"])
             else:
-                plt.legend(["prediction", "target"])
+                plt.legend(["target", "pred smoothed"])
             save_pics_path = os.path.join(
-                "images_predictions\\{0}_arti_{1}.png".format(self.name_file, str(j)))
+                "images_predictions\\{0}_{1}.png".format(self.name_file, articulators[j]))
             plt.savefig(save_pics_path)
             plt.close('all')
 
@@ -290,10 +301,11 @@ class my_ac2art_model(torch.nn.Module):
                     y_pred_not_smoothed = y_pred_not_smoothed.cpu()
                     y_pred_smoothed = y_pred_smoothed.cpu()
                 y_pred_not_smoothed = y_pred_not_smoothed.detach().numpy().reshape((L, self.output_dim))  # y_pred (L,13)
-                y_pred_smoothed= y_pred_smoothed.detach().numpy().reshape((L, self.output_dim))  # y_pred (L,13)
+                y_pred_smoothed = y_pred_smoothed.detach().numpy().reshape((L, self.output_dim))  # y_pred (L,13)
                 if to_plot:
                     if i in indices_to_plot:
-                        self.plot_results(y, y_pred_smoothed = y_pred_smoothed, y_pred_not_smoothed=y_pred_not_smoothed, to_cons = to_consider)
+                        self.plot_results(y_target = y, y_pred_smoothed = y_pred_smoothed,
+                                          y_pred_not_smoothed = y_pred_not_smoothed, to_cons = to_consider)
                 rmse = np.sqrt(np.mean(np.square(y - y_pred_smoothed), axis=0))  # calculate rmse
                 rmse = np.reshape(rmse, (1, self.output_dim))
                 rmse = rmse*std_speaker  # unormalize

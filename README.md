@@ -53,10 +53,11 @@ experiments : ...
 
 # Usage
 1) Download the data 
-Change some name folders to respect the following schema : in Inversion_articulatoire/Raw_data
-mocha :  for each speaker in ["fsew0", "msak0", "faet0", "ffes0", "maps0", "mjjn0", "falh0"] all the files are in Raw_data/mocha/speaker (same filename for same sentence, the extension indicates if its EMA, WAV, TRANS)
-MNGU0 : 3 folders in Raw_data/MNGU0 : ema, phone_labels and wav. In each folder all the sentences 
-usc : for each speaker in ["F1","F5","M1","M3"] a folder  Raw_data/usc/speaker, then 3 folders : wav, mat, trans  
+Change some name folders to respect the following schema : in Inversion_articulatoire/Raw_data\
+mocha :  for each speaker in ["fsew0", "msak0", "faet0", "ffes0", "maps0", "mjjn0", "falh0"] all the files are in Raw_data/mocha/speaker 
+(same filename for same sentence, the extension indicates if its EMA, WAV, TRANS)\
+MNGU0 : 3 folders in Raw_data/MNGU0 : ema, phone_labels and wav. In each folder all the sentences\
+usc : for each speaker in ["F1","F5","M1","M3"] a folder  Raw_data/usc/speaker, then 3 folders : wav, mat, trans\
 Haskins : for each speaker in ["F01", "F02", "F03", "F04", "M01", "M02", "M03", "M04"] a folder Raw_data/usc/speaker, then 3 folders : data, TextGrids, wav 
 
 2) Preprocessing 
@@ -65,6 +66,7 @@ To preprocess 50 files for each speaker : be in the folder "Preprocessing" and t
 ```bash
 python main_preprocessing.py 50 
 ```
+The preprocessing of all the data takes about 6 hours.
 
 3) Training 
 The required parameters of the train function are those concerning the training/test set :\
@@ -120,6 +122,8 @@ To compare to the state of the art, speaker specific results on fsew0 and msak0 
 
 model , 
 the weights 
+
+
 | articulator |     tt_x    |     tt_y    |     td_x    |     td_y    |     tb_x    |     li_y    |     ll_x    |     ll_y    |     ttcl    |     v_x     |     v_y     |
 |:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|
 |     rmse    |       0,74  |       0,86  |       1,75  |       0,43  |       1,74  |       1,67  |       0,74  |       1,03  |       0,05  |       1,71  |       1,53  |

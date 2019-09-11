@@ -115,9 +115,18 @@ def test_model(test_on ,model_name):
         plt.xlabel("real frequency")
         plt.show()
 
+    with open('model_results_test.csv', 'a',newline="") as f:
+        writer = csv.writer(f, delimiter=",")
+        row_rmse = [model_name,"rmse"] + rmse_per_arti_mean.tolist() + [model.epoch_ref]
+        writer.writerow(row_rmse)
+        row_pearson = [model_name, "pearson"] + pearson_per_arti_mean.tolist() + [model.epoch_ref]
+        print(row_rmse)
+        writer.writerow(row_pearson)
+
     return rmse_per_arti_mean, pearson_per_arti_mean
 
-if __name__=='__main__':
+
+if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Train and save a model.')
 
