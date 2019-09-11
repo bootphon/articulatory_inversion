@@ -28,6 +28,7 @@ def get_delta_features(array, window=5):
     :param array: nparray (K,N) N features per frame, K frames.
     :param window: size of the window to calculate the average speed of the features
     :return: the speed of each feature wrt 5 future and 5 past frames
+
     """
     all_diff = []
     for lag in range(1, window + 1):
@@ -44,6 +45,7 @@ def get_speakers_per_corpus(corpus):
     """
     :param corpus: name of the corpus
     :return: list of the speakers in the corpus
+    return the list of the speakers names corresponding to the corpus
     """
     if corpus == "MNGU0":
         speakers = ["MNGU0"]
@@ -61,8 +63,10 @@ def get_speakers_per_corpus(corpus):
 def get_fileset_names(speaker):
     """
     :param speaker: name of a speaker
-    split the files for the speaker in train/valid/test with a repartition 70% 10% 20%
+    once the data are preprocessed, this function split the dataset for a speaker into train/valid/test.
+    The repartition is 70% 10% 20%, and the split is random.
     write 3 txt files (sp_train, sp_test, and sp_valid) containing the names of the files concerned.
+    These txt files
     """
     donnees_path = os.path.join(root_folder, "Preprocessed_data")
     files_path = os.path.join(donnees_path,speaker)
@@ -76,7 +80,6 @@ def get_fileset_names(speaker):
     train_files = EMA_files_names[:n_train]
     test_files = EMA_files_names[n_train:n_train+n_test]
     valid_files = EMA_files_names[n_train+n_test:]
-
 
     outF = open(os.path.join(root_folder,"Preprocessed_data","fileset",speaker+"_train.txt"), "w")
     outF.write('\n'.join(train_files) + '\n')
@@ -126,7 +129,8 @@ def read_csv_arti_ok_per_speaker():
 
 def add_voicing(wav, sr):
     """
-    estimation of voicing using the short term energy threshold between 0 and 1
+    estimation of voicing using the short term energy threshold between 0 and 1. This function is not used
+    for the moment but voicing could be added to the articulatory representation
     :param wav: wav file
     :param sr:  sampling rate
     :return:  an estimation of the voicing for each point in the wav
@@ -136,11 +140,9 @@ def add_voicing(wav, sr):
     N_frames = int(len(wav) / hop_length)
     window = scipy.signal.get_window("hanning", N_frames)
     ste = scipy.signal.convolve(wav ** 2, window ** 2, mode="same")
-  #  ste = scipy.signal.resample(ste, num=len(ema))
     ste = [np.max(min(x, 1), 0) for x in ste]
     return ste
 
-    #read_csv_arti_ok_per_speaker()
 
 
 def low_pass_filter_weight(cut_off,sampling_rate):
@@ -148,8 +150,10 @@ def low_pass_filter_weight(cut_off,sampling_rate):
     :param cut_off:  cutoff of the filter
     :param sampling_rate:  sampling rate of the data 
     :return: the weights of the lowpass filter
+    implementation of the weights of a low pass filter windowed with a hanning winow.
+    The filter is normalized (gain 1)
     """
-    fc = cut_off/sampling_rate# Cutoff frequency as a fraction of the sampling rate (in (0, 0.5)).
+    fc = cut_off/sampling_rate # Cutoff frequency as a fraction of the sampling rate (in (0, 0.5)).
     if fc > 0.5:
         raise Exception("La frequence de coupure doit etre au moins deux fois la frequence dechantillonnage")
     b = 0.08  # Transition band, as a fraction of the sampling rate (in (0, 0.5)).
@@ -189,7 +193,7 @@ def split_sentences(speaker ,max_length = 300):
             Number_cut+=1
             temp = 0
             cut_size = int(len(mfcc)/cut_in_N)
-            for k in range(cut_in_N-1) : # si k va jusqua 0 ca veut cut_in_N-1 vaut 1 cut_in_N vaut 2
+            for k in range(cut_in_N-1) :
                 mfcc_k = mfcc[temp : temp + cut_size]
                 ema_k_vt = ema_VT[temp:temp+cut_size,:]
 
