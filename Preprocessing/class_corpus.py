@@ -208,8 +208,9 @@ class Speaker():
             TBCL = ema[:, ind_1] / np.sqrt(ema[:, ind_1] ** 2 + ema[:, ind_2] ** 2)  # upperlip_y - lowerlip_y
             return TBCL
 
-        def get_idx_to_ignore():
+        def arti_not_available():
             """
+            reads a csv that contains for each speaker a list of 18 0/1 , element i is 1 if the arti i is available.
             :return: index of articulations that are not available for this speaker. Based on the local csv file
             """
             arti_per_speaker = os.path.join(root_folder, "Preprocessing", "articulators_per_speaker.csv")
@@ -218,10 +219,10 @@ class Speaker():
                 reader = csv.reader(csvFile, dialect="myDialect")
                 next(reader)
                 for row in reader:
-                    if row[0] == self.speaker:
-                        arti_to_consider = row[1:19]
-            idx_to_ignore = [k for k, n in enumerate(arti_to_consider) if n == "0"]
-            return idx_to_ignore
+                    if row[0] == self.speaker: # we look for our speaker
+                        arti_to_consider = row[1:19]  # 1 if available
+            arti_not_avail = [k for k, n in enumerate(arti_to_consider) if n == "0"] # 1 of NOT available
+            return arti_not_avail
 
         lip_aperture = add_lip_aperture(my_ema)
         lip_protrusion = add_lip_protrusion(my_ema)
@@ -240,7 +241,7 @@ class Speaker():
         my_ema[:, 13] = lip_protrusion
         my_ema[:, 14] = TTCL
         my_ema[:, 15] = TBCL
-        idx_to_ignore = get_idx_to_ignore()
+        idx_to_ignore = arti_not_available()
         my_ema[:, idx_to_ignore] = 0
         return my_ema
 
