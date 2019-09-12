@@ -143,7 +143,9 @@ def cross_val_bath_norma(corpus_to_train_on):
     the results of the experiment are printed
     (future work : maybe batch norma after dense layers and not after lstm )
     """
+
     speakers = []
+    config = "indep"
     for co in str(corpus_to_train_on[1:-1]).split(","):
         speakers = speakers + get_speakers_per_corpus(co)
     corpus_to_train_on = str(corpus)
