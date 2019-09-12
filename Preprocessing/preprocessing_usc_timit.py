@@ -35,17 +35,17 @@ class Speaker_usc(Speaker):
     class for the speaker of usc, child of the Speaker class (in class_corpus.py),
     then inherits of some preprocessing scripts and attributes
     """
-    def __init__(self, sp, N_max=0 ):
+    def __init__(self, sp, path_to_raw ,N_max=0 ):
         """
         :param sp:  name of the speaker
         :param N_max:  # max of files we want to preprocess (0 is for All files), variable useful for test
         """
         super().__init__(sp)  # gets the attributes of the Speaker class
-
+        self.root_path = path_to_raw
         self.N_max = N_max
         self.path_files_treated = os.path.join(root_path, "Preprocessed_data", self.speaker)
-        self.path_files_brutes = os.path.join(root_path, "Raw_data", self.corpus, self.speaker)
-        self.path_files_annotation = os.path.join(root_path, "Raw_data", self.corpus, self.speaker, "trans")
+        self.path_files_brutes = os.path.join(self.root_path, "Raw_data", self.corpus, self.speaker)
+        self.path_files_annotation = os.path.join(self.root_path, "Raw_data", self.corpus, self.speaker, "trans")
         self.EMA_files = sorted([name[:-4] for name in os.listdir(
             os.path.join(self.path_files_brutes, "mat")) if name.endswith(".mat")])
         self.EMA_files_2 = None
@@ -273,7 +273,7 @@ class Speaker_usc(Speaker):
         get_fileset_names(self.speaker)
 
 
-def Preprocessing_general_usc(N_max):
+def Preprocessing_general_usc(N_max, path_to_raw):
     """
     :param N_max: #max of files to treat (0 to treat all files), useful for test
     go through all the speakers of Haskins
@@ -282,7 +282,7 @@ def Preprocessing_general_usc(N_max):
     speakers_usc = get_speakers_per_corpus(corpus)
     for sp in speakers_usc :
         print("In progress usc ",sp)
-        speaker = Speaker_usc(sp,N_max)
+        speaker = Speaker_usc(sp,path_to_raw=path_to_raw, N_max=N_max)
         speaker.Preprocessing_general_speaker()
         print("Done usc ",sp)
 

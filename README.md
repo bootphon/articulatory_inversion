@@ -68,7 +68,7 @@ Then for each set of parameters n_speakers models are trained : each time one sp
 
 # Usage
 1) Data collect \
-After the corpus data are downloaded, put them in inversion_articulatoire/Raw_data and change some name folders to respect the following schema : 
+After the corpus data are downloaded, put them in a folder Raw_data and change some name folders to respect the following schema : 
 - mocha :  for each speaker in ["fsew0", "msak0", "faet0", "ffes0", "maps0", "mjjn0", "falh0"] all the files are in Raw_data/mocha/speaker 
 (same filename for same sentence, the extension indicates if its EMA, WAV, TRANS)
 - MNGU0 : 3 folders in Raw_data/MNGU0 : ema, phone_labels and wav. In each folder all the sentences
@@ -78,12 +78,12 @@ After the corpus data are downloaded, put them in inversion_articulatoire/Raw_da
 For the speaker falh0 (mocha database), we deleted files from 466 to 470 since there was an issue in the recording.
 
 2) Preprocessing \
-The script main_preprocessing takes 2 optional arguments : corpus and N_max. N_max is max number of files to preprocess per speaker, N_max=0 means we want to preprocess all files (it is the default value)
+The script main_preprocessing takes 1 mandatory argument (the path to the raw data folder) and 2 optional arguments : corpus and N_max. N_max is max number of files to preprocess per speaker, N_max=0 means we want to preprocess all files (it is the default value)
 Corpus is the list of corpus for which we want to do the preprocessing, default value is all the corpuses : ["mocha","Haskins","usc","MNGU0"].
 
 To preprocess 50 files for each speaker and for all the corpuses: be in the folder "Preprocessing" and type the following in the command line 
 ```bash
-python main_preprocessing.py  -N_max 50 
+python main_preprocessing.py  -path_to_raw path/to/parent/directory/of/Raw_data/ -N_max 50 
 ```
 If you want to preprocess only the corpus "mocha" and "Haskins" , and preprocess all their data , then type 
 ```bash

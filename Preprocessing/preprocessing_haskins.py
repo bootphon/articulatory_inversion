@@ -54,16 +54,18 @@ class Speaker_Haskins(Speaker):
     class for 1 speaker of Haskins, child of the Speaker class (in class_corpus.py),
     then inherits of some preprocessing scripts and attributes
     """
-    def __init__(self, sp, N_max=0 ):
+    def __init__(self, sp, path_to_raw, N_max=0):
         """
         :param sp:  name of the speaker
         :param N_max:  # max of files we want to preprocess (0 is for All files), variable useful for test
         """
         super().__init__(sp)  # gets the attributes of the Speaker class
+        self.root_path = path_to_raw
         self.path_files_treated = os.path.join(root_path, "Preprocessed_data", self.speaker)
-        self.path_files_brutes = os.path.join(root_path, "Raw_data", self.corpus, self.speaker, "data")
+        self.path_files_brutes = os.path.join(self.root_path, "Raw_data", self.corpus, self.speaker, "data")
         self.EMA_files = sorted([name[:-4] for name in os.listdir(self.path_files_brutes) if "palate" not in name])
         self.N_max = N_max
+
 
     def create_missing_dir(self):
         """
@@ -76,13 +78,14 @@ class Speaker_Haskins(Speaker):
         if not os.path.exists(os.path.join(self.path_files_treated, "ema_final")):
             os.makedirs(os.path.join(self.path_files_treated, "ema_final"))
 
-        if not os.path.exists(os.path.join(root_path, "Raw_data", self.corpus, self.speaker, "wav")):
-            os.makedirs(os.path.join(root_path, "Raw_data", self.corpus, self.speaker, "wav"))
+        # We are going tp create the wav files form the matlab format files given for haskins
+        if not os.path.exists(os.path.join(self.root_path, "Raw_data", self.corpus, self.speaker, "wav")):
+            os.makedirs(os.path.join(self.root_path, "Raw_data", self.corpus, self.speaker, "wav"))
 
         files = glob.glob(os.path.join(self.path_files_treated, "ema", "*"))
         files += glob.glob(os.path.join(self.path_files_treated, "mfcc", "*"))
         files += glob.glob(os.path.join(self.path_files_treated, "ema_final", "*"))
-        files += glob.glob(os.path.join(root_path, "Raw_data", self.corpus, self.speaker, "wav", "*"))
+        files += glob.glob(os.path.join(self.root_path, "Raw_data", self.corpus, self.speaker, "wav", "*"))
         for f in files:
             os.remove(f)
 
@@ -110,10 +113,11 @@ class Speaker_Haskins(Speaker):
         new_order_arti = [order_arti_haskins.index(col) for col in order_arti]
         ema = ema[:, new_order_arti]
 
+        # We create wav files form intensity matlab files
         wav_data = data[0][2][:, 0]
-        librosa.output.write_wav(os.path.join(root_path, "Raw_data", self.corpus, self.speaker,
+        librosa.output.write_wav(os.path.join(self.root_path, "Raw_data", self.corpus, self.speaker,
                                               "wav", self.EMA_files[k] + ".wav"), wav_data, self.sampling_rate_wav)
-        wav, sr = librosa.load(os.path.join(root_path, "Raw_data", self.corpus, self.speaker, "wav",
+        wav, sr = librosa.load(os.path.join(self.root_path, "Raw_data", self.corpus, self.speaker, "wav",
                                             self.EMA_files[k] + ".wav"), sr=self.sampling_rate_wav_wanted)
         # np.save(os.path.join(root_path, "Raw_data", corpus, speaker, "wav",
         #                      EMA_files[k]), wav)
@@ -189,7 +193,7 @@ class Speaker_Haskins(Speaker):
         get_fileset_names(self.speaker)
 
 
-def Preprocessing_general_haskins(N_max):
+def Preprocessing_general_haskins(N_max, path_to_raw):
     """
     :param N_max: #max of files to treat (0 to treat all files), useful for test
     go through all the speakers of Haskins
@@ -198,7 +202,7 @@ def Preprocessing_general_haskins(N_max):
     speakers_Has = get_speakers_per_corpus(corpus)
     for sp in speakers_Has :
         print("In progress Haskins ",sp)
-        speaker = Speaker_Haskins(sp,N_max)
+        speaker = Speaker_Haskins(sp, path_to_raw=path_to_raw, N_max=N_max)
         speaker.Preprocessing_general_speaker()
         print("Done Haskins ",sp)
 

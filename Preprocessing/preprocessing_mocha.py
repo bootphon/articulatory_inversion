@@ -29,25 +29,21 @@ import glob
 
 root_path = dirname(dirname(os.path.realpath(__file__)))
 
-root_path = dirname(dirname(os.path.realpath(__file__)))
-
-root_path = dirname(dirname(os.path.realpath(__file__)))
-
 class Speaker_mocha(Speaker):
     """
     class for the speaker of MNGU0, child of the Speaker class (in class_corpus.py),
     then inherits of some preprocessing scripts and attributes
     """
-    def __init__(self, sp, N_max=0 ):
+    def __init__(self, sp, path_to_raw, N_max=0 ):
         """
         :param sp:  name of the speaker
         :param N_max:  # max of files we want to preprocess (0 is for All files), variable useful for test
         """
         super().__init__(sp)  # gets the attributes of the Speaker class
-
+        self.root_path = path_to_raw
         self.N_max = N_max
         self.path_files_treated = os.path.join(root_path, "Preprocessed_data", self.speaker)
-        self.path_files_brutes = os.path.join(root_path, "Raw_data", "mocha", self.speaker)
+        self.path_files_brutes = os.path.join(self.root_path, "Raw_data", "mocha", self.speaker)
 
         self.EMA_files = sorted([name for name in os.listdir(self.path_files_brutes) if "palate" not in name])
         self.EMA_files = sorted([name[:-4] for name in self.EMA_files if name.endswith('.ema')])
@@ -221,7 +217,7 @@ class Speaker_mocha(Speaker):
         get_fileset_names(self.speaker)
 
 
-def Preprocessing_general_mocha(N_max):
+def Preprocessing_general_mocha(N_max, path_to_raw):
     """
     :param N_max: #max of files to treat (0 to treat all files), useful for test
     go through all the speakers of Haskins
@@ -230,7 +226,7 @@ def Preprocessing_general_mocha(N_max):
     speakers_mocha = get_speakers_per_corpus(corpus)
     for sp in speakers_mocha :
         print("In progress mocha ",sp)
-        speaker = Speaker_mocha(sp,N_max)
+        speaker = Speaker_mocha(sp,path_to_raw=path_to_raw, N_max=N_max)
         speaker.Preprocessing_general_speaker()
         print("Done mocha ",sp)
 
