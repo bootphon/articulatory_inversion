@@ -124,7 +124,6 @@ class Speaker_usc(Speaker):
                     ema_temp = ema[xtrm_temp_ema[0]:xtrm_temp_ema[1], :]
                     wav_temp = wav[xtrm_temp_wav[0]:xtrm_temp_wav[1]]
 
-
                     # if we already have a file for id k it means that the sentence was pronounced over the 2 files
                     # we have to concatenante the previous and current data.
                     if os.path.exists(os.path.join(self.path_files_brutes, "mat_cut",
@@ -138,7 +137,6 @@ class Speaker_usc(Speaker):
                         premiere_partie_wav, sr = librosa.load(os.path.join(self.path_files_brutes, "wav_cut",
                                                                             self.EMA_files[j][:-7] + str(k) + ".wav"),
                                                                sr=self.sampling_rate_wav_wanted)
-
                         wav_concatenated = np.concatenate((wav_temp, premiere_partie_wav), axis=0)  # Final wav for id k
 
                     np.save(os.path.join(self.path_files_brutes, "mat_cut", self.EMA_files[j][:-7] + str(k)),

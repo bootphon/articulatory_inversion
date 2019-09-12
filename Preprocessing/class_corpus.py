@@ -138,7 +138,7 @@ class Speaker():
         np.save(os.path.join("norm_values", "all_mean_ema_" + self.speaker), all_mean_ema)
         #    weights_moving_average = low_pass_filter_weight(cut_off=10, sampling_rate=self.sampling_rate_ema)
         all_mean_ema = np.concatenate([np.expand_dims(np.pad(all_mean_ema[:, k], (pad, pad), "symmetric"), 1)
-                                       for k in range(all_mean_ema.shape[1])], axis=1)  # rajoute pad avant et apres
+                                       for k in range(all_mean_ema.shape[1])], axis=1)
 
         moving_average = np.array(
             [np.mean(all_mean_ema[k - pad:k + pad], axis=0) for k in range(pad, len(all_mean_ema) - pad)])
