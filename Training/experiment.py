@@ -189,10 +189,10 @@ def cross_val_for_alpha(corpus_to_train_on):
         the results of the experiment are printed
         """
     speakers = []
-    config = "indep"
+    config = "dep"
     for co in str(corpus_to_train_on[1:-1]).split(","):
         speakers = speakers + get_speakers_per_corpus(co)
-    speakers = ["F01","M01"] #CHAAAANGE
+    speakers = ["F02","M02"]
 
     loss_range = [0, 20, 40, 60, 80, 100]
     for loss_train in loss_range:
