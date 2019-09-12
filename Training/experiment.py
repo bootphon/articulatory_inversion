@@ -195,6 +195,8 @@ def cross_val_for_alpha(corpus_to_train_on):
     speakers = ["F02","M02"]
 
     loss_range = [0, 20, 40, 60, 80, 100]
+    loss_range = [100, 80, 60, 20, 80, 0]
+
     for loss_train in loss_range:
         count = 0
         rmse_all, pearson_all = np.zeros((len(speakers), output_dim)), np.zeros((len(speakers), output_dim))
