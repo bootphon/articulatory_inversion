@@ -49,18 +49,17 @@ config = "indep"
 
 def cross_val_config(corpus_to_train_on):
     """
-    performs the cross validation on Haskins corpus for 3 types of filter in order to evaluate the impact of the filter
-    the parameters (other than typefilter) are defined above and can be modified
-    the results of the experiment are printed (future work : add results in csv expliciting the experiment)
+    performs the cross validation on Haskins corpus for 3 types of config in order to evaluate the capacity of
+    generalization of the dataset. the parameters (other than config) are defined above and can be modified
     """
 
     speakers = []
     for co in str(corpus_to_train_on[1:-1]).split(","):
         speakers = speakers + get_speakers_per_corpus(co)
 
-    speakers = ["F01","M01"] #CHAAAANGE
 
-    for config in ["indep","dep"]:
+
+    for config in ["spec", "indep", "dep"]:
         count = 0
         rmse_all, pearson_all = np.zeros((len(speakers), output_dim)), np.zeros((len(speakers), output_dim))
         for speaker in speakers :
@@ -106,7 +105,7 @@ def cross_val_filter(corpus_to_train_on):
         speakers = speakers + get_speakers_per_corpus(co)
     speakers = ["F01","M01"] #CHAAAANGE
 
-    for filter_type in ["fix","unfix","out"]:
+    for filter_type in ["unfix","out","fix"]:
         count = 0
         rmse_all, pearson_all = np.zeros((len(speakers), output_dim)), np.zeros((len(speakers), output_dim))
         for speaker in speakers :
