@@ -13,20 +13,20 @@ import argparse
 from multiprocessing import Process
 
 
-def Preprocessing_general_per_corpus(corp, max):
+def Preprocessing_general_per_corpus(corp, max, path_to_corpus):
     """
     :param corp: corpus we want to do the preprocess
     :param max:  max of files to preprocess (useful for test), 0 to treat all files
     perform the preprocess for the asked corpus
      """
     if corp == "MNGU0":
-        Preprocessing_general_mngu0(max)
+        Preprocessing_general_mngu0(max, path_to_raw=path_to_corpus)
     elif corp == "usc":
-        Preprocessing_general_usc(max)
+        Preprocessing_general_usc(max, path_to_raw=path_to_corpus)
     elif corp == "Haskins":
-        Preprocessing_general_haskins(max)
+        Preprocessing_general_haskins(max, path_to_raw=path_to_corpus)
     elif corp == "mocha":
-        Preprocessing_general_mocha(max)
+        Preprocessing_general_mocha(max, path_to_raw=path_to_corpus)
 
 
 if __name__ == '__main__':
@@ -41,6 +41,8 @@ if __name__ == '__main__':
                         help='by default ')
     parser.add_argument('--corpus',  type=str, default=["MNGU0","mocha","usc","Haskins"],
                         help='corpus to preprocess')
+    parser.add_argument('--path_to_raw_data', type=str,
+                        help='path to the directory where all the folders with the raw data of each corpus are')
 
     root_folder = os.path.dirname(os.getcwd())
 
@@ -56,7 +58,7 @@ if __name__ == '__main__':
     else:
         corpus = args.corpus
     for co in corpus:
-        proc = Process(target=Preprocessing_general_per_corpus, args=(co, args.N_max))
+        proc = Process(target=Preprocessing_general_per_corpus, args=(co, args.N_max, args.path_to_raw_data))
         procs.append(proc)
         proc.start()
 
