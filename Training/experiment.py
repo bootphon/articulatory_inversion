@@ -78,7 +78,7 @@ def cross_val_config(corpus_to_train_on):
         results_pearson = np.mean(pearson_all, axis=0)
         std_rmse = np.std(rmse_all, axis=0)
         std_pearson = np.std(pearson_all, axis=0)
-        print("for filter type {} results are".format(filter_type))
+        print("for config {} results are".format(config))
         print("RMSE mean ", results_rmse)
         print("RMSE std ", std_rmse)
         print("PEARSON ", results_pearson)
@@ -165,7 +165,7 @@ def cross_val_bath_norma(corpus_to_train_on):
         results_pearson = np.mean(pearson_all, axis=0)
         std_rmse = np.std(rmse_all, axis=0)
         std_pearson = np.std(pearson_all, axis=0)
-        print("for filter type {} results are".format(filter_type))
+        print("for batch norma {} results are".format(batch_norma))
         print("RMSE mean ", results_rmse)
         print("RMSE std ", std_rmse)
         print("PEARSON ", results_pearson)
@@ -189,13 +189,13 @@ def cross_val_for_alpha(corpus_to_train_on):
         the results of the experiment are printed
         """
     speakers = []
-    config = "dep"
+    config = "indep"
     for co in str(corpus_to_train_on[1:-1]).split(","):
         speakers = speakers + get_speakers_per_corpus(co)
     speakers = ["F02","M02"]
 
     loss_range = [0, 20, 40, 60, 80, 100]
-    loss_range = [100, 80, 60, 20, 80, 0]
+    loss_range = [60, 40, 20, 0]
 
     for loss_train in loss_range:
         count = 0
@@ -213,7 +213,7 @@ def cross_val_for_alpha(corpus_to_train_on):
         results_pearson = np.mean(pearson_all, axis=0)
         std_rmse = np.std(rmse_all, axis=0)
         std_pearson = np.std(pearson_all, axis=0)
-        print("for filter type {} results are".format(filter_type))
+        print("for alpha {} results are".format(loss_train))
         print("RMSE mean ", results_rmse)
         print("RMSE std ", std_rmse)
         print("PEARSON ", results_pearson)
