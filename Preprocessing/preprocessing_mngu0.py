@@ -50,7 +50,7 @@ class Speaker_MNGU0(Speaker):
         self.path_files_annotation = os.path.join(self.root_path, "Raw_data", self.speaker, "phone_labels")
         self.path_ema_files = os.path.join(self.root_path, "Raw_data", self.speaker, "ema")
         self.EMA_files = sorted([name[:-4] for name in os.listdir(self.path_ema_files) if name.endswith('.ema')])
-        self.path_files_treated = os.path.join(self.root_path, "Preprocessed_data", self.speaker)
+        self.path_files_treated = os.path.join(root_path, "Preprocessed_data", self.speaker)
         self.path_files_brutes = os.path.join(self.root_path, "Raw_data", self.speaker)
         self.path_wav_files = os.path.join(self.root_path, "Raw_data", self.speaker, "wav")
 
