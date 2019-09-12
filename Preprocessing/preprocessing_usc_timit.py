@@ -88,7 +88,7 @@ class Speaker_usc(Speaker):
         """
         N = len(self.EMA_files)
         if self.N_max != 0:
-            N = min(int(self.N_max / 3), N)
+            N = max(min(int(self.N_max / 3), N), 1)   # 1 file contains several sentences
         marge = 0
         for j in range(N):    # run through the files
             path_wav = os.path.join(self.path_files_brutes, "wav", self.EMA_files[j] + '.wav')
