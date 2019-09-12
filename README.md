@@ -21,6 +21,7 @@ The library enables evaluating the generalization capacity of a set of (or one) 
  By analyzing how the scores decrease from configuration 1 to 3 we conclude on the generalization capacity.
 
 # Dependencies
+- python 3.7.3
 - numpy 1.16.3
 - tensorflow 1.13.1 (not used but tensorboard can be used)
 - pytorch 1.1.0
