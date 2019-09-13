@@ -1,9 +1,9 @@
 # Inversion-articulatoire
 
-Inversion-articulatoire is a Python library for training/testing neural network models for articulatory reconstruction.\
+Inversion-articulatoire is a Python library for training/testing neural network models for the acoustic to articulatory reconstruction.\
 The task is the following : based on the acoustic signal of a speech, predict 18 articulatory trajectories of the speaker.
 
-It was created for learning the acoustic to articulatory mapping in a subject independant framework.\
+It was created for learning the acoustic to articulatory mapping in a subject independent framework.\
 For that we use data from 4 public datasets, that contain in all 19 speakers and more than 10 hours of acoustic and articulatory recordings.
 
 It contains 3 main parts :<br/>
@@ -30,7 +30,8 @@ The library enables evaluating the generalization capacity of a set of (or one) 
 - psutil
 
 # Requirements
-The data from the 4 corpus have to be in the correct folders.
+We used data coming from 4 different dataset, it is not necessary to use all of them. We suggest to use Haskins database, since it gives good results of prediction on a new speaker.
+The data from the corpus have to be in the correct folders.
 - mocha : http://data.cstr.ed.ac.uk/mocha/ <br/> , download data for the speakers : "fsew0", "msak0", "faet0", "ffes0", "maps0", "mjjn0", "falh0".
  for some speakers it is in the "unchecked folder"
 - MNGU0 : http://www.mngu0.org/ <br/>
@@ -52,7 +53,7 @@ Once downloaded and unzipped, all the folders should be in "Raw_data", and some 
 
 
 ## Training 
-- modele.py : the pytorch model, neural network bi-LSTM. Define the layers of the network, implementation of the smoothing convolutional layer, can evaluate on test set the model
+- modele.py : the pytorch model, neural network bi-LSTM. Define the layers of the network, implementation of the smoothing convolutional layer, can evaluate the model on test set and plot some results.
 
 - train.py : the training process of our project. We can modulate some parameters of the learning. Especially we can chose on which corpus(es). 
 we train our model, and the dependancy level to the test speaker (ie one of the configurations : speaker specific, speaker dependent, speaker independent).
@@ -155,9 +156,12 @@ For instance if we run the experiment "filter", for each possibility (there are 
  At the end of the experiment we can see in the csv file the result of each possibility and can compare those easily.
 
 
-The script experiment.py takes 2 arguments : corpus and experiment_type.
+The script experiment.py takes 3 required arguments : corpus and experiment_type.
 corpus is the list of the corpus we want to do the experiment on, for instance ["Haskins"] or ["mocha","usc"].
 experiment_type is one of "config","filter","alpha", or "bn".
+The optional argument is "config" and has to be precise for any experiment except "config". It enables to precise in which configuration you 
+want to realise the experiment (again "spec","dep" or "indep")
+
 We found that the most interesting experiment are on the "config" of the corpus Haskins since it illustrates the capacity of the corpus to generalize well.
 
 To perform this experiment : be in the folder "Training" and type in the command line :
@@ -166,6 +170,13 @@ To perform this experiment : be in the folder "Training" and type in the command
 python experiment.py ["Haskins"] "config"  
 ```
 
+To evaluate what is the best value for alpha for a dependant configuration type :
+
+
+
+```bash
+python experiment.py ["Haskins"] "alpha" --config "dep"
+```
 
 # Results 
 Some models already trained are in saved_models_examples.
