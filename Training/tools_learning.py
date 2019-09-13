@@ -88,7 +88,7 @@ def cpuStats():
 
 
 
-def criterion_pearson(y, y_pred, cuda_avail, device):
+def criterion_pearson(y, y_pred, cuda_avail = False, device=torch.device("cpu")):
     """
     :param y: nparray (B,K,18) target trajectories of the batch (size B) , padded (K = maxlenght)
     :param y_pred: nparray (B,K,18) predicted trajectories of the batch (size B), padded (K = maxlenght
@@ -125,6 +125,8 @@ def criterion_both(L, cuda_avail, device):
     :return: the function that calculates the combined loss of 1 prediction. This function will be used as a criterion
     """
     L = L/100
+
+    print("L is : ",L)
 
     def criterion_both_lbd(my_y, my_ypred):
         """
