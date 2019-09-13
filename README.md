@@ -23,10 +23,11 @@ The library enables evaluating the generalization capacity of a set of (or one) 
 # Dependencies
 - python 3.7.3
 - numpy 1.16.3
-- tensorflow 1.13.1 (not used but tensorboard can be used)
 - pytorch 1.1.0
 - scipy 1.2.1
 - librosa 0.6.3
+- matplotlib
+- psutil
 
 # Requirements
 The data from the 4 corpus have to be in the correct folders.
