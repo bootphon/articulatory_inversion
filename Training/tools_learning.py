@@ -88,7 +88,7 @@ def cpuStats():
 
 
 
-def criterion_pearson(y, y_pred, cuda_avail = False, device=torch.device("cpu")):
+def criterion_pearson(y, y_pred, cuda_avail = False, device=torch.device("gpu")):
     """
     :param y: nparray (B,K,18) target trajectories of the batch (size B) , padded (K = maxlenght)
     :param y_pred: nparray (B,K,18) predicted trajectories of the batch (size B), padded (K = maxlenght
