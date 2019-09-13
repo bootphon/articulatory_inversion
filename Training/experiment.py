@@ -64,7 +64,7 @@ def cross_val_config(corpus_to_train_on):
             rmse_all[count, :] = rmse
             pearson_all[count, :] = pearson
             count += 1
-        print("kk")
+
         results_rmse = np.mean(rmse_all, axis=0)
         results_pearson = np.mean(pearson_all, axis=0)
         std_rmse = np.std(rmse_all, axis=0)
@@ -95,7 +95,6 @@ def cross_val_filter(corpus_to_train_on, config):
     speakers = []
     for co in str(corpus_to_train_on[1:-1]).split(","):
         speakers = speakers + get_speakers_per_corpus(co)
-    speakers = ["F01","M01"] #CHAAAANGE
 
     for filter_type in ["unfix","out","fix"]:
         count = 0
@@ -172,7 +171,7 @@ def cross_val_batch_norma(corpus_to_train_on, config):
                 writer.writerow(row)
 
 
-def cross_val_for_alpha(corpus_to_train_on):
+def cross_val_for_alpha(corpus_to_train_on,config):
     """
         performs the cross validation on corpus_to_train_on corpus for different values of alpha in the combined loss
         experiment to determine the optimal alpha
@@ -180,13 +179,10 @@ def cross_val_for_alpha(corpus_to_train_on):
         the results of the experiment are printed
         """
     speakers = []
-    config = "indep"
     for co in str(corpus_to_train_on[1:-1]).split(","):
         speakers = speakers + get_speakers_per_corpus(co)
-    speakers = ["F02","M02"]
 
     loss_range = [0, 20, 40, 60, 80, 100]
-    loss_range = [60, 40, 20, 0]
 
     for loss_train in loss_range:
         count = 0
