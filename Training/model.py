@@ -48,7 +48,7 @@ class my_ac2art_model(torch.nn.Module):
     pytorch implementation of neural network
     """
     def __init__(self, hidden_dim, input_dim, output_dim, batch_size,name_file="", sampling_rate=100,
-                 window=5, cutoff=10,cuda_avail =False, filter_type=1, batch_norma=False):
+                  cutoff=10,cuda_avail =False, filter_type=1, batch_norma=False):
         """
         :param hidden_dim: int, hidden dimension of lstm (usually 300)
         :param input_dim: int, input dimension of the acoustic features for 1 frame mfcc (usually 429)
@@ -56,7 +56,6 @@ class my_ac2art_model(torch.nn.Module):
         :param batch_size:  int, usually 10
         :param name_file: str, name of the model
         :param sampling_rate: int, sampling rate of the ema data for the smoothing (usually 100)
-        :param window: int, window size for the smoothing usually 5
         :param cutoff: int, intial cutoff frequency for the smoothing, usually 10Hz
         :param cuda_avail: bool, whether gpu is available
         :param filter type: str, "out": filter outside the nn, "fix" : weights are FIXED,
@@ -85,7 +84,7 @@ class my_ac2art_model(torch.nn.Module):
         self.softmax = torch.nn.Softmax(dim=output_dim)
         self.tanh = torch.nn.Tanh()
         self.sampling_rate = sampling_rate
-        self.window = window
+
         self.cutoff = cutoff
         self.min_valid_error = 100000
         self.all_training_loss = []
@@ -126,7 +125,7 @@ class my_ac2art_model(torch.nn.Module):
             x,y = x.to(device = self.device),y.to(device = self.device)
         return x, y
 
-    def forward(self, x, filter_output =None):
+    def forward(self, x, filter_output=None):
         """
         :param x: (Batchsize,K,429)  acoustic features corresponding to batch size
         :param filter_output: whether or not to pass throught the convolutional layer
@@ -162,11 +161,13 @@ class my_ac2art_model(torch.nn.Module):
             fc = torch.div(cutoff,
                   self.sampling_rate)  # Cutoff frequency as a fraction of the sampling rate (in (0, 0.5)).
             if fc > 0.5:
-                raise Exception("La frequence de coupure doit etre au moins deux fois la frequence dechantillonnage")
+                raise Exception("cutoff frequency must be at least twice sampling rate")
             b = 0.08  # Transition band, as a fraction of the sampling rate (in (0, 0.5)).
             N = int(np.ceil((4 / b)))  # le window
             if not N % 2:
-                N += 1  # Make sure that N is odd.
+                N += 1  # Make sure that N is odd .
+            self.N = N
+
             n = torch.arange(N).double()
             alpha = torch.mul(fc, 2 * (n - (N - 1) / 2)).double()
             minim = torch.tensor(0.01, dtype=torch.float64) #utile ?
@@ -189,6 +190,7 @@ class my_ac2art_model(torch.nn.Module):
         N = int(np.ceil((4 / b)))  # le window
         if not N % 2:
             N += 1  # Make sure that N is odd.
+        self.N = N
         n = np.arange(N)
         h = np.sinc(fc * 2 * (n - (N - 1) / 2))
         w = 0.5 * (1 - np.cos(n * 2 * math.pi / (N - 1)))  # Compute hanning window.
@@ -202,11 +204,9 @@ class my_ac2art_model(torch.nn.Module):
         the typefilter determines if the weights will be updated during the optim of the NN
         """
 
-
-        window_size = 5
         C_in = 1
         stride=1
-        padding = int(0.5*((C_in-1)*stride-C_in+window_size))+23
+        padding = int(0.5*((C_in-1)*stride-C_in+self.N))+23
 
         # maybe the two functions do exactly the same...
 
@@ -216,7 +216,7 @@ class my_ac2art_model(torch.nn.Module):
             weight_init = self.get_filter_weights()
 
         weight_init = weight_init.view((1, 1, -1))
-        lowpass = torch.nn.Conv1d(C_in,self.output_dim, window_size, stride=1, padding=padding, bias=False)
+        lowpass = torch.nn.Conv1d(C_in, self.output_dim, self.N, stride=1, padding=padding, bias=False)
 
         if self.filter_type == "unfix":  # we let the weights move
             lowpass.weight = torch.nn.Parameter(weight_init,requires_grad=True)
@@ -326,6 +326,7 @@ class my_ac2art_model(torch.nn.Module):
             print("rmse mean per arti : \n", rmse_per_arti_mean)
             print("pearson final : ", np.mean(pearson_per_arti_mean[rmse_per_arti_mean != 0]))
             print("pearson mean per arti : \n", pearson_per_arti_mean)
+
         return rmse_per_arti_mean, pearson_per_arti_mean
 
 

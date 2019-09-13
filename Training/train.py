@@ -289,8 +289,11 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
         writer = csv.writer(f)
         row_rmse = [name_file]+rmse_per_arti_mean.tolist()+[model.epoch_ref]
         row_pearson = [name_file]+pearson_per_arti_mean.tolist() + [model.epoch_ref]
+        row_pearson_validation = [name_file] + pearson_valid.tolist() + [model.epoch_ref]
         writer.writerow(row_rmse)
         writer.writerow(row_pearson)
+        writer.writerow(row_pearson_validation)
+
 
     weight_apres = model.lowpass.weight.data[0, 0, :].cpu()
     plot_allure_filtre = False

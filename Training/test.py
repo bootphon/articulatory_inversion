@@ -84,7 +84,6 @@ def test_model(test_on ,model_name):
     else:  # specific or dependant learning
         files_for_test = load_filenames([test_on], part=["test"])
 
-    plot_filtre_chaque_epochs = False
 
     random.shuffle(files_for_test)
     x, y = load_np_ema_and_mfcc(files_for_test)
@@ -103,8 +102,8 @@ def test_model(test_on ,model_name):
                 arti_to_consider = [int(x) for x in arti_to_consider]
     rmse_per_arti_mean, pearson_per_arti_mean = model.evaluate_on_test(x,y, std_speaker=std_speaker, to_plot=to_plot
                                                                        , to_consider=arti_to_consider, verbose=False)
-
-    if plot_filtre_chaque_epochs:
+    show_filter = True  #add it in argument
+    if show_filter:
         weight_apres = model.lowpass.weight.data[0, 0, :]
         print("GAIN",sum(weight_apres.cpu()))
         freqs, h = signal.freqz(weight_apres.cpu())
