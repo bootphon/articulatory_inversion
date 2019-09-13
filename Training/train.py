@@ -42,7 +42,6 @@ import random
 from Training.tools_learning import which_speakers_to_train_on, give_me_train_valid_test_filenames, \
     cpuStats, memReport, criterion_both, load_np_ema_and_mfcc, plot_filtre
 import json
-from Training.logger import Logger
 
 root_folder = os.path.dirname(os.getcwd())
 
@@ -112,7 +111,6 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
     name_file = name_file + "_" + str(n_previous_same)  # each model trained only once ,
     # this script doesnt continue a previous training if it was ended ie if there is a .txt
     print("going to train the model with name",name_file)
-    logger = Logger('./logs')
 
     cuda_avail = torch.cuda.is_available()
     print(" cuda ?", cuda_avail)
@@ -237,8 +235,6 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
                     param_group['lr'] = param_group['lr'] / 2
                     (param_group["lr"])
 
-        logger.scalar_summary('loss_train', loss_train_this_epoch, model.epoch_ref )
-        logger.scalar_summary('loss_valid', loss_vali, model.epoch_ref)
 
     if n_epochs > 0:
         model.epoch_ref = model.epoch_ref + epoch  # voir si ca marche vrmt pour les rares cas ou on continue un training

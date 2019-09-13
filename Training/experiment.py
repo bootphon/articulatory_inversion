@@ -26,9 +26,6 @@ import argparse
 import csv
 from datetime import date
 
-
-
-
 n_epochs = 50
 loss_train = 90
 patience = 5
@@ -44,9 +41,6 @@ output_dim = 18 #18 trajectories
 speakers = get_speakers_per_corpus("Haskins")
 config = "indep"
 
-
-
-
 def cross_val_config(corpus_to_train_on):
     """
     performs the cross validation on Haskins corpus for 3 types of config in order to evaluate the capacity of
@@ -56,8 +50,6 @@ def cross_val_config(corpus_to_train_on):
     speakers = []
     for co in str(corpus_to_train_on[1:-1]).split(","):
         speakers = speakers + get_speakers_per_corpus(co)
-
-
 
     for config in ["spec", "indep", "dep"]:
         count = 0
@@ -93,7 +85,7 @@ def cross_val_config(corpus_to_train_on):
                 writer.writerow(row)
 
 
-def cross_val_filter(corpus_to_train_on):
+def cross_val_filter(corpus_to_train_on, config):
     """
     performs the cross validation on Haskins corpus for 3 types of filter in order to evaluate the impact of the filter
     the parameters (other than typefilter) are defined above and can be modified
@@ -136,7 +128,7 @@ def cross_val_filter(corpus_to_train_on):
             for row in [row_rmse_mean, row_rmse_std, row_pearson_mean, row_pearson_std]:
                 writer.writerow(row)
 
-def cross_val_bath_norma(corpus_to_train_on):
+def cross_val_batch_norma(corpus_to_train_on, config):
     """
     performs the cross validation on corpus_to_train_on corpus with and without batch normalization
     the parameters (other than bath_norma) are defined above and can be modified
@@ -145,11 +137,9 @@ def cross_val_bath_norma(corpus_to_train_on):
     """
 
     speakers = []
-    config = "indep"
+
     for co in str(corpus_to_train_on[1:-1]).split(","):
         speakers = speakers + get_speakers_per_corpus(co)
-
-    speakers = ["F01","M01"] #CHAAAANGE
 
     for batch_norma in ["True", "False"]:
         count = 0
@@ -238,18 +228,30 @@ if __name__=='__main__':
     parser.add_argument('experiment_type', type=str,
                         help='type of experiment (filter alpha or bn)')
 
+    parser.add_argument('--config', type=str, default = None,
+                        help='type of experiment (filter alpha or bn)')
+
     args = parser.parse_args()
 
     if args.experiment_type == "config":
         cross_val_config(args.corpus_exp)
 
     elif args.experiment_type == "filter":
-        cross_val_filter(args.corpus_exp)
+        if args.config is None :
+            print("you have to precise the config for this experiment")
+        else:
+            cross_val_filter(args.corpus_exp, args.config)
 
     elif args.experiment_type == "alpha":
-        cross_val_for_alpha(args.corpus_exp)
+        if args.config is None:
+            print("you have to precise the config for this experiment")
+        else:
+            cross_val_for_alpha(args.corpus_exp,args.config)
 
     elif args.experiment_type == "bn":
-        cross_val_bath_norma(args.corpus_exp)
+        if args.config is None:
+            print("you have to precise the config for this experiment")
+        else :
+            cross_val_batch_norma(args.corpus_exp,args.config)
 
 
