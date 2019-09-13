@@ -116,37 +116,13 @@ def criterion_pearson(y, y_pred, cuda_avail , device):
     my_loss = torch.sum(my_loss)
     return -my_loss
 
-def criterion_both_2(my_y,my_ypred,alpha,cuda_avail,device):
+def criterion_both(my_y,my_ypred,alpha,cuda_avail,device):
     alpha = alpha / 100
     a = alpha * criterion_pearson(my_y, my_ypred, cuda_avail, device)
     b = (1 - alpha) * torch.nn.MSELoss(reduction='sum')(my_y, my_ypred) / 1000
     new_loss = a + b
     return new_loss
 
-
-def criterion_both(L, cuda_avail, device):
-    """
-    :param L: parameter in the combined loss of rmse and pearson (loss = (1-L)*rmse + L*pearson ) between 0 and 100
-    :param cuda_avail: bool if gpu is available
-    :param device: device
-    :return: the function that calculates the combined loss of 1 prediction. This function will be used as a criterion
-    """
-    L = L/100
-
-    print("L is : ",L)
-
-    def criterion_both_lbd(my_y, my_ypred):
-        """
-        :param my_y: target
-        :param my_ypred: perdiction
-        :return: the loss for the combined loss
-        """
-        a = L * criterion_pearson(my_y, my_ypred, cuda_avail, device)
-        b = (1 - L) * torch.nn.MSELoss(reduction='sum')(my_y, my_ypred) / 1000
-        new_loss = a + b
-        return new_loss
-
-    return criterion_both_lbd
 
 def plot_filtre(weights):
     """

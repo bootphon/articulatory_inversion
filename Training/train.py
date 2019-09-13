@@ -40,7 +40,7 @@ import csv
 from Training.pytorchtools import EarlyStopping
 import random
 from Training.tools_learning import which_speakers_to_train_on, give_me_train_valid_test_filenames, \
-    cpuStats, memReport, criterion_both, load_np_ema_and_mfcc, plot_filtre, criterion_pearson, criterion_both_2
+    cpuStats, memReport, criterion_both, load_np_ema_and_mfcc, plot_filtre
 import json
 
 root_folder = os.path.dirname(os.getcwd())
@@ -146,10 +146,6 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
             model.load_state_dict(model_dict)
 
 
-    #criterion = criterion_both_2(loss_train, cuda_avail, device)
-
-  #  criterion = criterion_pearson
- #   criterion = torch.nn.MSELoss(reduction='sum')
 
     files_per_categ, files_for_test = give_me_train_valid_test_filenames(train_on,test_on,config, batch_size)
 
@@ -188,7 +184,7 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
                    # y_pred[:,:,idx_to_ignore].detach()
                     #y[:,:,idx_to_ignore].requires_grad = False
 
-                loss = criterion_both_2(y, y_pred,loss_train, cuda_avail = cuda_avail, device=device)
+                loss = criterion_both(y, y_pred,loss_train, cuda_avail = cuda_avail, device=device)
                 loss.backward()
                 optimizer.step()
                 torch.cuda.empty_cache()
@@ -219,7 +215,7 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
                         y_pred[:, :, idx_to_ignore] = 0
                     #    y_pred[:, :, idx_to_ignore].detach()
                    #     y[:, :, idx_to_ignore].requires_grad = False
-                    loss_courant = criterion_both_2(y, y_pred, loss_train, cuda_avail = cuda_avail, device=device)
+                    loss_courant = criterion_both(y, y_pred, loss_train, cuda_avail = cuda_avail, device=device)
 
                     loss_vali += loss_courant.item()
             loss_vali  = loss_vali/n_valid
@@ -264,8 +260,7 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
 
     pearson_valid = np.zeros((1,output_dim))
     for categ in categs_to_consider:  # de A à F pour le moment
-        files_this_categ_courant = files_per_categ[categ][
-            "valid"]  # on na pas encore apprit dessus au cours de cette epoch
+        files_this_categ_courant = files_per_categ[categ]["valid"]  # on na pas encore apprit dessus au cours de cette epoch
         while len(files_this_categ_courant) > 0:
             x, y = load_np_ema_and_mfcc(files_this_categ_courant[:batch_size])
             files_this_categ_courant = files_this_categ_courant[batch_size:]  # on a appris sur ces 10 phrases
@@ -308,7 +303,7 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
         writer.writerow(row_pearson_val)
 
     weight_apres = model.lowpass.weight.data[0, 0, :].cpu()
-    plot_allure_filtre = False
+    plot_allure_filtre = True
     if plot_allure_filtre:
         plot_filtre(weight_apres)
 

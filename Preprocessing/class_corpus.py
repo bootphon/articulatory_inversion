@@ -134,7 +134,7 @@ class Speaker():
         list_MFCC_frames = self.list_MFCC_frames
 
         pad = 30
-        all_mean_ema = np.array([np.mean(traj, axis=0) for traj in list_EMA_traj])
+        all_mean_ema = np.array([np.mean(traj, axis=0) for traj in list_EMA_traj]) # (18, n_sentences)
         np.save(os.path.join("norm_values", "all_mean_ema_" + self.speaker), all_mean_ema)
         #    weights_moving_average = low_pass_filter_weight(cut_off=10, sampling_rate=self.sampling_rate_ema)
         all_mean_ema = np.concatenate([np.expand_dims(np.pad(all_mean_ema[:, k], (pad, pad), "symmetric"), 1)
