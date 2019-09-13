@@ -148,7 +148,7 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
 
     criterion = criterion_both(loss_train, cuda_avail, device)
 
-    criterion = criterion_pearson()
+    criterion = criterion_pearson
 
     files_per_categ, files_for_test = give_me_train_valid_test_filenames(train_on,test_on,config, batch_size)
 
