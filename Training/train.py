@@ -219,8 +219,7 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
                         y_pred[:, :, idx_to_ignore] = 0
                     #    y_pred[:, :, idx_to_ignore].detach()
                    #     y[:, :, idx_to_ignore].requires_grad = False
-
-                    loss_courant = criterion_both_2(y, y_pred, L=loss_train, cuda_avail = cuda_avail, device=device) #,cuda_avail = cuda_avail, device=device)
+                    loss_courant = criterion_both_2(y, y_pred, L=loss_train, cuda_avail = cuda_avail, device=device)
 
                     loss_vali += loss_courant.item()
             loss_vali  = loss_vali/n_valid
@@ -277,10 +276,11 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
                                                                  to_consider=arti_to_consider,verbose=False)
             pearson_per_arti_mean = np.reshape(np.array(pearson_per_arti_mean),(1,output_dim))
             pearson_valid = np.concatenate((pearson_valid,np.array(pearson_per_arti_mean)),axis=0)
+    pearson_valid = pearson_valid[1:,:]
     pearson_valid = np.mean(pearson_valid,axis=0)
     pearson_std = np.mean(pearson_valid,axis=0)
-    print("on validation set :mean :",pearson_valid)
-    print("on validation set :std :",pearson_std)
+    print("on validation set :mean :\n",pearson_valid)
+    print("on validation set :std :\n",pearson_std)
     print("training done for : ",name_file)
 
 
