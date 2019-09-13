@@ -260,10 +260,9 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
                                                                        , to_consider = arti_to_consider)
 
 
-    """  RESULTS ON VALIDATION SET 
+    """  RESULTS ON VALIDATION SET """
 
-    rmse_ = 0
-    n_valid = 0
+    pearson_valid = np.zeros((1,output_dim))
     for categ in categs_to_consider:  # de A à F pour le moment
         files_this_categ_courant = files_per_categ[categ][
             "valid"]  # on na pas encore apprit dessus au cours de cette epoch
@@ -271,25 +270,15 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
             n_valid += 1
             x, y = load_np_ema_and_mfcc(files_this_categ_courant[:batch_size])
             files_this_categ_courant = files_this_categ_courant[batch_size:]  # on a appris sur ces 10 phrases
-            x, y = model.prepare_batch(x, y)
-            y_pred = model(x).double()
-            torch.cuda.empty_cache()
-            if cuda_avail:
-                y_pred = y_pred.to(device=device)
-            y = y.double()  # (Batchsize, maxL, 18)
-            if select_arti:
-                arti_to_consider = categ_of_speakers[categ]["arti"]  # liste de 18 0/1 qui indique les arti à considérer
-                idx_to_ignore = [i for i, n in enumerate(arti_to_consider) if n == "0"]
-                y_pred[:, :, idx_to_ignore] = 0
-            #    y_pred[:, :, idx_to_ignore].detach()
-            #     y[:, :, idx_to_ignore].requires_grad = False
+            arti_to_consider = categ_of_speakers[categ]["arti"]  # liste de 18 0/1 qui indique les arti à considérer
 
-            loss_courant = criterion(y, y_pred)
-
-            loss_vali += loss_courant.item()
-    loss_vali = loss_vali / n_valid
-    """
-
+            rien, pearson_per_arti_mean = model.evaluate_on_test(x,y,std_speaker=1, to_plot=to_plot, to_consider=arti_to_consider)
+            pearson_per_arti_mean = np.reshape(np.array(pearson_per_arti_mean),(1,output_dim))
+            pearson_valid = np.concatenate((pearson_valid,np.array(pearson_per_arti_mean)),axis=0)
+    pearson_valid = np.mean(pearson_valid,axis=0)
+    pearson_std = np.mean(pearson_valid,axis=0)
+    print("on validation set :mean :",pearson_valid)
+    print("on validation set :std :",pearson_std)
     print("training done for : ",name_file)
 
 
