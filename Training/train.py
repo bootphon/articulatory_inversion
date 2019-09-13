@@ -272,7 +272,8 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
             files_this_categ_courant = files_this_categ_courant[batch_size:]  # on a appris sur ces 10 phrases
             arti_to_consider = categ_of_speakers[categ]["arti"]  # liste de 18 0/1 qui indique les arti à considérer
 
-            rien, pearson_per_arti_mean = model.evaluate_on_test(x,y,std_speaker=1, to_plot=to_plot, to_consider=arti_to_consider)
+            rien, pearson_per_arti_mean = model.evaluate_on_test(x,y,std_speaker=1, to_plot=to_plot,
+                                                                 to_consider=arti_to_consider,verbose=False)
             pearson_per_arti_mean = np.reshape(np.array(pearson_per_arti_mean),(1,output_dim))
             pearson_valid = np.concatenate((pearson_valid,np.array(pearson_per_arti_mean)),axis=0)
     pearson_valid = np.mean(pearson_valid,axis=0)
