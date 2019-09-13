@@ -88,7 +88,7 @@ class Speaker_usc(Speaker):
         """
         N = len(self.EMA_files)
         if self.N_max != 0:
-            N = min(int(self.N_max / 3), N)
+            N = max(min(int(self.N_max / 3), N), 1)   # 1 file contains several sentences
         marge = 0
         for j in range(N):    # run through the files
             path_wav = os.path.join(self.path_files_brutes, "wav", self.EMA_files[j] + '.wav')
@@ -132,19 +132,19 @@ class Speaker_usc(Speaker):
                         premiere_partie_ema = np.load(os.path.join(self.path_files_brutes,"mat_cut",
                                                                    self.EMA_files[j][:-7] + str(k) + ".npy"))
 
-                        ema_concatenated = np.concatenate((ema_temp, premiere_partie_ema), axis=0) # Final ema for id k
+                        ema_temp = np.concatenate((ema_temp, premiere_partie_ema), axis=0) # Final ema for id k
 
                         premiere_partie_wav, sr = librosa.load(os.path.join(self.path_files_brutes, "wav_cut",
                                                                             self.EMA_files[j][:-7] + str(k) + ".wav"),
                                                                sr=self.sampling_rate_wav_wanted)
-                        wav_concatenated = np.concatenate((wav_temp, premiere_partie_wav), axis=0)  # Final wav for id k
+                        wav_temp = np.concatenate((wav_temp, premiere_partie_wav), axis=0)  # Final wav for id k
 
                     np.save(os.path.join(self.path_files_brutes, "mat_cut", self.EMA_files[j][:-7] + str(k)),
-                            ema_concatenated)
+                            ema_temp)
 
                     librosa.output.write_wav(
                         os.path.join(self.path_files_brutes, "wav_cut", self.EMA_files[j][:-7] + str(k) + ".wav"),
-                        wav_concatenated, self.sampling_rate_wav_wanted)
+                        wav_temp, self.sampling_rate_wav_wanted)
 
     def read_ema_file(self,m):
         """
