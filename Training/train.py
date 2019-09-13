@@ -40,7 +40,7 @@ import csv
 from Training.pytorchtools import EarlyStopping
 import random
 from Training.tools_learning import which_speakers_to_train_on, give_me_train_valid_test_filenames, \
-    cpuStats, memReport, criterion_both, load_np_ema_and_mfcc, plot_filtre, criterion_pearson
+    cpuStats, memReport, criterion_both, load_np_ema_and_mfcc, plot_filtre, criterion_pearson, criterion_both_2
 import json
 
 root_folder = os.path.dirname(os.getcwd())
@@ -146,10 +146,10 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
             model.load_state_dict(model_dict)
 
 
-    criterion = criterion_both(loss_train, cuda_avail, device)
+    #criterion = criterion_both_2(loss_train, cuda_avail, device)
 
   #  criterion = criterion_pearson
-    criterion = torch.nn.MSELoss(reduction='sum')
+ #   criterion = torch.nn.MSELoss(reduction='sum')
 
     files_per_categ, files_for_test = give_me_train_valid_test_filenames(train_on,test_on,config, batch_size)
 
@@ -188,7 +188,7 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
                    # y_pred[:,:,idx_to_ignore].detach()
                     #y[:,:,idx_to_ignore].requires_grad = False
 
-                loss = criterion(y, y_pred)# cuda_avail = cuda_avail, device=device)
+                loss = criterion_both_2(y, y_pred, L=loss_train, cuda_avail = cuda_avail, device=device)
                 loss.backward()
                 optimizer.step()
                 torch.cuda.empty_cache()
@@ -220,7 +220,7 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
                     #    y_pred[:, :, idx_to_ignore].detach()
                    #     y[:, :, idx_to_ignore].requires_grad = False
 
-                    loss_courant = criterion(y, y_pred) #,cuda_avail = cuda_avail, device=device)
+                    loss_courant = criterion_both_2(y, y_pred, L=loss_train, cuda_avail = cuda_avail, device=device) #,cuda_avail = cuda_avail, device=device)
 
                     loss_vali += loss_courant.item()
             loss_vali  = loss_vali/n_valid
