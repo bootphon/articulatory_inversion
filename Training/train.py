@@ -40,7 +40,7 @@ import csv
 from Training.pytorchtools import EarlyStopping
 import random
 from Training.tools_learning import which_speakers_to_train_on, give_me_train_valid_test_filenames, \
-    cpuStats, memReport, criterion_both, load_np_ema_and_mfcc, plot_filtre
+    cpuStats, memReport, criterion_both, load_np_ema_and_mfcc, plot_filtre, criterion_pearson
 import json
 
 root_folder = os.path.dirname(os.getcwd())
@@ -148,6 +148,8 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
 
     criterion = criterion_both(loss_train, cuda_avail, device)
 
+    criterion = criterion_pearson()
+
     files_per_categ, files_for_test = give_me_train_valid_test_filenames(train_on,test_on,config, batch_size)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
@@ -210,7 +212,6 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
                     if cuda_avail:
                         y_pred = y_pred.to(device=device)
                     y = y.double()  # (Batchsize, maxL, 18)
-
                     if select_arti:
                         arti_to_consider = categ_of_speakers[categ]["arti"]  # liste de 18 0/1 qui indique les arti à considérer
                         idx_to_ignore = [i for i, n in enumerate(arti_to_consider) if n == "0"]
@@ -219,6 +220,7 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
                    #     y[:, :, idx_to_ignore].requires_grad = False
 
                     loss_courant = criterion(y, y_pred)
+
                     loss_vali += loss_courant.item()
             loss_vali  = loss_vali/n_valid
         torch.cuda.empty_cache()
@@ -256,7 +258,40 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
 
     rmse_per_arti_mean, pearson_per_arti_mean = model.evaluate_on_test(x, y, std_speaker = std_speaker, to_plot=to_plot
                                                                        , to_consider = arti_to_consider)
+
+
+    """  RESULTS ON VALIDATION SET 
+
+    rmse_ = 0
+    n_valid = 0
+    for categ in categs_to_consider:  # de A à F pour le moment
+        files_this_categ_courant = files_per_categ[categ][
+            "valid"]  # on na pas encore apprit dessus au cours de cette epoch
+        while len(files_this_categ_courant) > 0:
+            n_valid += 1
+            x, y = load_np_ema_and_mfcc(files_this_categ_courant[:batch_size])
+            files_this_categ_courant = files_this_categ_courant[batch_size:]  # on a appris sur ces 10 phrases
+            x, y = model.prepare_batch(x, y)
+            y_pred = model(x).double()
+            torch.cuda.empty_cache()
+            if cuda_avail:
+                y_pred = y_pred.to(device=device)
+            y = y.double()  # (Batchsize, maxL, 18)
+            if select_arti:
+                arti_to_consider = categ_of_speakers[categ]["arti"]  # liste de 18 0/1 qui indique les arti à considérer
+                idx_to_ignore = [i for i, n in enumerate(arti_to_consider) if n == "0"]
+                y_pred[:, :, idx_to_ignore] = 0
+            #    y_pred[:, :, idx_to_ignore].detach()
+            #     y[:, :, idx_to_ignore].requires_grad = False
+
+            loss_courant = criterion(y, y_pred)
+
+            loss_vali += loss_courant.item()
+    loss_vali = loss_vali / n_valid
+    """
+
     print("training done for : ",name_file)
+
 
     # write result in csv
     with open('model_results.csv', 'a') as f:
