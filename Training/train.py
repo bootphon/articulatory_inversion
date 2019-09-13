@@ -188,7 +188,7 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
                    # y_pred[:,:,idx_to_ignore].detach()
                     #y[:,:,idx_to_ignore].requires_grad = False
 
-                loss = criterion_both_2(y, y_pred, L=loss_train, cuda_avail = cuda_avail, device=device)
+                loss = criterion_both_2(y, y_pred,loss_train, cuda_avail = cuda_avail, device=device)
                 loss.backward()
                 optimizer.step()
                 torch.cuda.empty_cache()
@@ -219,7 +219,7 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
                         y_pred[:, :, idx_to_ignore] = 0
                     #    y_pred[:, :, idx_to_ignore].detach()
                    #     y[:, :, idx_to_ignore].requires_grad = False
-                    loss_courant = criterion_both_2(y, y_pred, L=loss_train, cuda_avail = cuda_avail, device=device)
+                    loss_courant = criterion_both_2(y, y_pred, loss_train, cuda_avail = cuda_avail, device=device)
 
                     loss_vali += loss_courant.item()
             loss_vali  = loss_vali/n_valid
@@ -267,7 +267,6 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
         files_this_categ_courant = files_per_categ[categ][
             "valid"]  # on na pas encore apprit dessus au cours de cette epoch
         while len(files_this_categ_courant) > 0:
-            n_valid += 1
             x, y = load_np_ema_and_mfcc(files_this_categ_courant[:batch_size])
             files_this_categ_courant = files_this_categ_courant[batch_size:]  # on a appris sur ces 10 phrases
             arti_to_consider = categ_of_speakers[categ]["arti"]  # liste de 18 0/1 qui indique les arti à considérer
@@ -278,22 +277,34 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
             pearson_valid = np.concatenate((pearson_valid,np.array(pearson_per_arti_mean)),axis=0)
     pearson_valid = pearson_valid[1:,:]
     pearson_valid = np.mean(pearson_valid,axis=0)
-    pearson_std = np.mean(pearson_valid,axis=0)
     print("on validation set :mean :\n",pearson_valid)
-    print("on validation set :std :\n",pearson_std)
     print("training done for : ",name_file)
 
+    articulators = ['tt_x', 'tt_y', 'td_x', 'td_y', 'tb_x', 'tb_y', 'li_x', 'li_y',
+                    'ul_x', 'ul_y', 'll_x', 'll_y', 'la', 'lp', 'ttcl', 'tbcl', 'v_x', 'v_y']
+    if not os.path.exists('model_results.csv'):
+        with open('model_results.csv', 'a') as f:
+            writer = csv.writer(f)
+            header = ["name file", "test on", "configuration", "train on (if not spec)", "loss",
+                      "n_epochs", "evaluation with...", "average"] + articulators
+            writer.writerow(header)
 
     # write result in csv
-    with open('model_results.csv', 'a') as f:
+    with open('model_results.csv', 'a',newline = "") as f:
         writer = csv.writer(f)
-        row_rmse = [name_file]+rmse_per_arti_mean.tolist()+[model.epoch_ref]
-        row_pearson = [name_file]+pearson_per_arti_mean.tolist() + [model.epoch_ref]
-        row_pearson_validation = [name_file] + pearson_valid.tolist() + [model.epoch_ref]
+        row_details = [name_file,test_on,config,name_corpus_concat,loss_train,model.epoch_ref]
+        row_rmse = row_details + ["rmse_on_test", np.mean(rmse_per_arti_mean)] +\
+                   rmse_per_arti_mean.tolist()
+
+        row_pearson = row_details + ["pearson_on_test", np.mean(pearson_per_arti_mean)]+\
+                      pearson_per_arti_mean.tolist()
+
+        row_pearson_val = row_details + ["pearson_on_valid", np.mean(pearson_valid)] + \
+                      pearson_valid.tolist()
+       
         writer.writerow(row_rmse)
         writer.writerow(row_pearson)
-        writer.writerow(row_pearson_validation)
-
+        writer.writerow(row_pearson_val)
 
     weight_apres = model.lowpass.weight.data[0, 0, :].cpu()
     plot_allure_filtre = False

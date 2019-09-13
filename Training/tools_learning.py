@@ -118,7 +118,7 @@ def criterion_pearson(y, y_pred, cuda_avail , device):
 
 def criterion_both_2(my_y,my_ypred,alpha,cuda_avail,device):
     alpha = alpha / 100
-    a = L * criterion_pearson(my_y, my_ypred, cuda_avail, device)
+    a = alpha * criterion_pearson(my_y, my_ypred, cuda_avail, device)
     b = (1 - alpha) * torch.nn.MSELoss(reduction='sum')(my_y, my_ypred) / 1000
     new_loss = a + b
     return new_loss

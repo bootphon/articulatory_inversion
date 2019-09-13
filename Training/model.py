@@ -84,8 +84,8 @@ class my_ac2art_model(torch.nn.Module):
         self.softmax = torch.nn.Softmax(dim=output_dim)
         self.tanh = torch.nn.Tanh()
         self.sampling_rate = sampling_rate
-
         self.cutoff = cutoff
+        self.N = None
         self.min_valid_error = 100000
         self.all_training_loss = []
         self.all_validation_loss = []
@@ -204,9 +204,6 @@ class my_ac2art_model(torch.nn.Module):
         the typefilter determines if the weights will be updated during the optim of the NN
         """
 
-        C_in = 1
-        stride=1
-        padding = int(0.5*((C_in-1)*stride-C_in+self.N))+23
 
         # maybe the two functions do exactly the same...
 
@@ -214,7 +211,10 @@ class my_ac2art_model(torch.nn.Module):
             weight_init = self.get_filter_weights_en_dur()
         elif self.filter_type == "unfix":
             weight_init = self.get_filter_weights()
-
+        C_in = 1
+        stride = 1
+        must_be_5 = 5
+        padding = int(0.5 * ((C_in - 1) * stride - C_in + must_be_5)) + 23
         weight_init = weight_init.view((1, 1, -1))
         lowpass = torch.nn.Conv1d(C_in, self.output_dim, self.N, stride=1, padding=padding, bias=False)
 
