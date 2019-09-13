@@ -271,11 +271,12 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
             files_this_categ_courant = files_this_categ_courant[batch_size:]  # on a appris sur ces 10 phrases
             arti_to_consider = categ_of_speakers[categ]["arti"]  # liste de 18 0/1 qui indique les arti à considérer
 
-            rien, pearson_per_arti_mean = model.evaluate_on_test(x,y,std_speaker=1, to_plot=to_plot,
+            rien, pearson_valid_temp = model.evaluate_on_test(x,y,std_speaker=1, to_plot=to_plot,
                                                                  to_consider=arti_to_consider,verbose=False)
-            pearson_per_arti_mean = np.reshape(np.array(pearson_per_arti_mean),(1,output_dim))
-            pearson_valid = np.concatenate((pearson_valid,np.array(pearson_per_arti_mean)),axis=0)
+            pearson_valid_temp = np.reshape(np.array(pearson_valid_temp),(1,output_dim))
+            pearson_valid = np.concatenate((pearson_valid,pearson_valid_temp),axis=0)
     pearson_valid = pearson_valid[1:,:]
+    pearson_valid[np.isnan(pearson_valid)] = 0
     pearson_valid = np.mean(pearson_valid,axis=0)
     print("on validation set :mean :\n",pearson_valid)
     print("training done for : ",name_file)
@@ -283,7 +284,7 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
     articulators = ['tt_x', 'tt_y', 'td_x', 'td_y', 'tb_x', 'tb_y', 'li_x', 'li_y',
                     'ul_x', 'ul_y', 'll_x', 'll_y', 'la', 'lp', 'ttcl', 'tbcl', 'v_x', 'v_y']
     if not os.path.exists('model_results.csv'):
-        with open('model_results.csv', 'a') as f:
+        with open('model_results.csv', 'a',newline = "") as f:
             writer = csv.writer(f)
             header = ["name file", "test on", "configuration", "train on (if not spec)", "loss",
                       "n_epochs", "evaluation with...", "average"] + articulators
@@ -293,15 +294,15 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
     with open('model_results.csv', 'a',newline = "") as f:
         writer = csv.writer(f)
         row_details = [name_file,test_on,config,name_corpus_concat,loss_train,model.epoch_ref]
-        row_rmse = row_details + ["rmse_on_test", np.mean(rmse_per_arti_mean)] +\
+        row_rmse = row_details + ["rmse_on_test", np.mean(rmse_per_arti_mean[rmse_per_arti_mean!=0])] +\
                    rmse_per_arti_mean.tolist()
 
-        row_pearson = row_details + ["pearson_on_test", np.mean(pearson_per_arti_mean)]+\
+        row_pearson = row_details + ["pearson_on_test", np.mean(pearson_per_arti_mean[pearson_per_arti_mean!=0])]+\
                       pearson_per_arti_mean.tolist()
 
-        row_pearson_val = row_details + ["pearson_on_valid", np.mean(pearson_valid)] + \
+        row_pearson_val = row_details + ["pearson_on_valid", np.mean(pearson_valid[pearson_valid !=0])] + \
                       pearson_valid.tolist()
-       
+
         writer.writerow(row_rmse)
         writer.writerow(row_pearson)
         writer.writerow(row_pearson_val)
