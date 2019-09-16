@@ -184,7 +184,7 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
                    # y_pred[:,:,idx_to_ignore].detach()
                     #y[:,:,idx_to_ignore].requires_grad = False
 
-                loss = criterion_both(y, y_pred,loss_train, cuda_avail = cuda_avail, device=device)
+                loss = criterion_both(y, y_pred,alpha=loss_train, cuda_avail = cuda_avail, device=device)
                 loss.backward()
                 optimizer.step()
                 torch.cuda.empty_cache()
