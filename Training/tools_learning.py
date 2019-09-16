@@ -111,15 +111,18 @@ def criterion_pearson(y, y_pred, cuda_avail , device):
         minim = minim.to(device=device)
         deno = deno.to(device=device)
         nume = nume.to(device=device)
-    deno = torch.max(deno, minim)  # replace 0 by minimum
+    # TODO : uncomment that
+    #deno = torch.max(deno, minim)  # replace 0 by minimum
+    # TODO: comment that
+    deno = deno + minim
     my_loss = torch.div(nume, deno)  # (B,1,18)
     my_loss = torch.sum(my_loss)
     return -my_loss
 
 def criterion_both(my_y,my_ypred,alpha,cuda_avail,device):
-    alpha = alpha / 100
+    alpha = float(alpha) / 100.
     a = alpha * criterion_pearson(my_y, my_ypred, cuda_avail, device)
-    b = (1 - alpha) * torch.nn.MSELoss(reduction='sum')(my_y, my_ypred) / 1000
+    b = (1. - alpha) * torch.nn.MSELoss(reduction='sum')(my_y, my_ypred) / 1000.
     new_loss = a + b
     return new_loss
 
