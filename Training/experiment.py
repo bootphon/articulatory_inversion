@@ -183,7 +183,7 @@ def cross_val_for_alpha(corpus_to_train_on,config):
         speakers = speakers + get_speakers_per_corpus(co)
 
     # TODO: delete that it is just to make a small test
-    speakers = ["F01", "M01", "F02", "M02"]
+    #speakers = ["F01", "M01", "F02", "M02"]
 
     loss_range = [0, 20, 40, 60, 80, 100]
 

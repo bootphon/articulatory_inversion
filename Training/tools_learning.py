@@ -106,7 +106,7 @@ def criterion_pearson(y, y_pred, cuda_avail , device):
     deno = torch.sqrt(torch.sum(y_1 ** 2, dim=1, keepdim=True)) * \
         torch.sqrt(torch.sum(y_pred_1 ** 2, dim=1, keepdim=True))  # (B,1,18)
 
-    minim = torch.tensor(0.01,dtype=torch.float64)  # avoid division by 0
+    minim = torch.tensor(0.0001,dtype=torch.float64)  # avoid division by 0
     if cuda_avail:
         minim = minim.to(device=device)
         deno = deno.to(device=device)
