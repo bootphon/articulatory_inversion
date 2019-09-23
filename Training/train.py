@@ -173,10 +173,10 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
 
                 files_this_categ_courant = files_this_categ_courant[batch_size:] #we a re going to train on this 10 files
                 x, y = model.prepare_batch(x, y)
-                y_pred = model(x).double()
+                y_pred = model(x).float()
                 if cuda_avail:
                     y_pred = y_pred.to(device=device)
-                y = y.double()
+                y = y.float()
                 optimizer.zero_grad()
                 if select_arti:
                     arti_to_consider = categ_of_speakers[categ]["arti"]  # liste de 18 0/1 qui indique les arti à considérer
