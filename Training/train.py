@@ -195,7 +195,7 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
 
         loss_train_this_epoch = loss_train_this_epoch/n_this_epoch
         print("Training loss for epoch", epoch, ': ', loss_train_this_epoch)
-        f_loss_train.write(str(epoch) + ',' + str(loss_train_this_epoch))
+        f_loss_train.write(str(epoch) + ',' + str(loss_train_this_epoch) + '\n')
         if epoch%delta_test == 0:  #toutes les delta_test epochs on évalue le modèle sur validation et on sauvegarde le modele si le score est meilleur
             loss_vali = 0
             n_valid = 0
@@ -221,7 +221,7 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
 
                     loss_vali += loss_courant.item()
             loss_vali  = loss_vali/n_valid
-            f_loss_valid.write(str(epoch) + ',' + str(loss_vali))
+            f_loss_valid.write(str(epoch) + ',' + str(loss_vali) + '\n')
         torch.cuda.empty_cache()
         model.all_validation_loss.append(loss_vali)
         model.all_training_loss.append(loss_train_this_epoch)
