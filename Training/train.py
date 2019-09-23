@@ -221,7 +221,7 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
 
                     loss_vali += loss_courant.item()
             loss_vali  = loss_vali/n_valid
-            f_loss_valid.write(str(epoch) + ',' + loss_vali)
+            f_loss_valid.write(str(epoch) + ',' + str(loss_vali))
         torch.cuda.empty_cache()
         model.all_validation_loss.append(loss_vali)
         model.all_training_loss.append(loss_train_this_epoch)
