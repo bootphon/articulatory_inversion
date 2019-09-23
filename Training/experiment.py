@@ -181,7 +181,7 @@ def cross_val_for_alpha(corpus_to_train_on,config):
     speakers = []
     for co in str(corpus_to_train_on[1:-1]).split(","):
         speakers = speakers + get_speakers_per_corpus(co)
-
+    print(speakers)
     # TODO: delete that it is just to make a small test
     #speakers = ["F01", "M01", "F02", "M02"]
 

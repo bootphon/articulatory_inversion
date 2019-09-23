@@ -100,29 +100,34 @@ def criterion_pearson(y, y_pred, cuda_avail , device):
     // Idea : integrate the range of the traj here, making the loss for each sentence as the weighted average of the
     losses with weight proportional to the range of the traj (?)
     """
-    y_1 = y - torch.mean(y, dim=1, keepdim=True)
-    y_pred_1 = y_pred - torch.mean(y_pred,dim=1, keepdim=True)
+    y_1 = y.sub(torch.mean(y, dim=1, keepdim=True))
+    y_pred_1 = y_pred.sub(torch.mean(y_pred,dim=1, keepdim=True))
     nume = torch.sum(y_1 * y_pred_1, dim=1, keepdim=True)  # (B,1,18)
     deno = torch.sqrt(torch.sum(y_1 ** 2, dim=1, keepdim=True)) * \
         torch.sqrt(torch.sum(y_pred_1 ** 2, dim=1, keepdim=True))  # (B,1,18)
 
-    minim = torch.tensor(0.0001,dtype=torch.float64)  # avoid division by 0
+    minim = torch.tensor(0.000001,dtype=torch.float64)  # avoid division by 0
     if cuda_avail:
         minim = minim.to(device=device)
         deno = deno.to(device=device)
         nume = nume.to(device=device)
-    # TODO : uncomment that
-    #deno = torch.max(deno, minim)  # replace 0 by minimum
-    # TODO: comment that
+    nume = nume + minim
     deno = deno + minim
     my_loss = torch.div(nume, deno)  # (B,1,18)
     my_loss = torch.sum(my_loss)
     return -my_loss
 
+
 def criterion_both(my_y,my_ypred,alpha,cuda_avail,device):
-    alpha = float(alpha) / 100.
-    a = alpha * criterion_pearson(my_y, my_ypred, cuda_avail, device)
-    b = (1. - alpha) * torch.nn.MSELoss(reduction='sum')(my_y, my_ypred) / 1000.
+    alpha = torch.tensor(float(alpha) / 100., dtype = torch.float64)
+    compl = torch.tensor( 1. - float(alpha) / 100., dtype = torch.float64)
+    multip = torch.tensor(float(1000), dtype = torch.float64)
+    if cuda_avail:
+        alpha = alpha.to(device = device)
+        multip = multip.to(device = device)
+        compl = compl.to(device= device)
+    a = alpha * criterion_pearson(my_y, my_ypred, cuda_avail, device)*multip
+    b = compl * torch.nn.MSELoss(reduction='sum')(my_y, my_ypred)
     new_loss = a + b
     return new_loss
 

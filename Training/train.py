@@ -84,7 +84,8 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
 
     :return: [rmse, pearson] . rmse the is the list of the 18 rmse (1 per articulator), same for pearson.
     """
-
+    f_loss_train = open('training_loss.csv', 'w')
+    f_loss_valid = open('valid_loss.csv', 'w')
     corpus_to_train_on = corpus_to_train_on[1:-1].split(",")
 
     train_on = which_speakers_to_train_on(corpus_to_train_on, test_on, config)
@@ -193,7 +194,8 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
         torch.cuda.empty_cache()
 
         loss_train_this_epoch = loss_train_this_epoch/n_this_epoch
-
+        print("Training loss for epoch", epoch, ': ', loss_train_this_epoch)
+        f_loss_train.write(str(epoch) + ',' + str(loss_train_this_epoch))
         if epoch%delta_test == 0:  #toutes les delta_test epochs on évalue le modèle sur validation et on sauvegarde le modele si le score est meilleur
             loss_vali = 0
             n_valid = 0
@@ -219,6 +221,7 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
 
                     loss_vali += loss_courant.item()
             loss_vali  = loss_vali/n_valid
+            f_loss_valid.write(str(epoch) + ',' + loss_vali)
         torch.cuda.empty_cache()
         model.all_validation_loss.append(loss_vali)
         model.all_training_loss.append(loss_train_this_epoch)
