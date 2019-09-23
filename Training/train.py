@@ -128,7 +128,7 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
     model = my_ac2art_model(hidden_dim=hidden_dim, input_dim=input_dim, name_file=name_file, output_dim=output_dim,
                             batch_size=batch_size, cuda_avail=cuda_avail,
                             filter_type=filter_type, batch_norma=batch_norma)
-    model = model.float()
+    model = model.double()
     file_weights = os.path.join("saved_models", name_file +".pt")
     if cuda_avail:
         model = model.to(device=device)
@@ -173,10 +173,10 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
 
                 files_this_categ_courant = files_this_categ_courant[batch_size:] #we a re going to train on this 10 files
                 x, y = model.prepare_batch(x, y)
-                y_pred = model(x).float()
+                y_pred = model(x).double()
                 if cuda_avail:
                     y_pred = y_pred.to(device=device)
-                y = y.float ()
+                y = y.double ()
                 optimizer.zero_grad()
                 if select_arti:
                     arti_to_consider = categ_of_speakers[categ]["arti"]  # liste de 18 0/1 qui indique les arti à considérer
