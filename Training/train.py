@@ -164,6 +164,8 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
         n_this_epoch = 0
         random.shuffle(list(categs_to_consider))
         loss_train_this_epoch = 0
+        loss_pearson = 0
+        loss_rmse = 0
         for categ in categs_to_consider:
             files_this_categ_courant = files_per_categ[categ]["train"]
             random.shuffle(files_this_categ_courant)
@@ -188,6 +190,12 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
                 loss = criterion_both(y, y_pred,alpha=loss_train, cuda_avail = cuda_avail, device=device)
                 loss.backward()
                 optimizer.step()
+
+                # computation to have evolution of the losses
+                loss_2 = criterion_both(y, y_pred, alpha=100, cuda_avail=cuda_avail, device=device)
+                loss_pearson += loss_2.item()
+                loss_3 = criterion_both(y, y_pred, alpha=0, cuda_avail=cuda_avail, device=device)
+                loss_rmse += loss_3.item()
                 torch.cuda.empty_cache()
                 loss_train_this_epoch += loss.item()
 
@@ -195,10 +203,12 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
 
         loss_train_this_epoch = loss_train_this_epoch/n_this_epoch
         print("Training loss for epoch", epoch, ': ', loss_train_this_epoch)
-        f_loss_train.write(str(epoch) + ',' + str(loss_train_this_epoch) + '\n')
+        f_loss_train.write(str(epoch) + ',' + str(loss_train_this_epoch) + ',' + str(loss_pearson/n_this_epoch/1000./batch_size/18.*(-1.)) + ',' + str(loss_rmse/n_this_epoch/batch_size) + '\n')
         if epoch%delta_test == 0:  #toutes les delta_test epochs on évalue le modèle sur validation et on sauvegarde le modele si le score est meilleur
             loss_vali = 0
             n_valid = 0
+            loss_pearson = 0
+            loss_rmse = 0
             for categ in categs_to_consider:  # de A à F pour le moment
                 files_this_categ_courant = files_per_categ[categ]["valid"]  # on na pas encore apprit dessus au cours de cette epoch
                 while len(files_this_categ_courant) >0 :
@@ -218,10 +228,15 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
                     #    y_pred[:, :, idx_to_ignore].detach()
                    #     y[:, :, idx_to_ignore].requires_grad = False
                     loss_courant = criterion_both(y, y_pred, loss_train, cuda_avail = cuda_avail, device=device)
-
                     loss_vali += loss_courant.item()
+                    # to follow both losses
+                    loss_2 = criterion_both(y, y_pred, alpha=100, cuda_avail=cuda_avail, device=device)
+                    loss_pearson += loss_2.item()
+                    loss_3 = criterion_both(y, y_pred, alpha=0, cuda_avail=cuda_avail, device=device)
+                    loss_rmse += loss_3.item()
+
             loss_vali  = loss_vali/n_valid
-            f_loss_valid.write(str(epoch) + ',' + str(loss_vali) + '\n')
+            f_loss_valid.write(str(epoch) + ',' + str(loss_vali) + ',' +  str(loss_pearson/n_valid/1000./batch_size/18.*(-1.)) + ',' + str(loss_rmse/n_this_epoch/batch_size) + '\n')
         torch.cuda.empty_cache()
         model.all_validation_loss.append(loss_vali)
         model.all_training_loss.append(loss_train_this_epoch)
