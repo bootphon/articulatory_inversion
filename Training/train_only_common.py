@@ -41,13 +41,13 @@ import os
 import csv
 from Training.pytorchtools import EarlyStopping
 import random
-from Training.tools_learning import which_speakers_to_train_on, give_me_train_valid_test_filenames, \
-    cpuStats, memReport, criterion_both, load_np_ema_and_mfcc, plot_filtre, criterion_pearson
+from Training.tools_learning import which_speakers_to_train_on, give_me_train_valid_test_filenames_no_cat, \
+    cpuStats, memReport, criterion_both, load_np_ema_and_mfcc, plot_filtre, give_me_common_articulators
 import json
 
 root_folder = os.path.dirname(os.getcwd())
 
-def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_train_on, batch_norma, filter_type,
+def train_model_arti_common(test_on, n_epochs, loss_train, patience, corpus_to_train_on, batch_norma, filter_type,
                 to_plot, lr, delta_test, config, speakers_to_train_on = ""):
     """
     :param test_on: (str) one speaker's name we want to test on, the speakers and the corpus the come frome can be seen in
@@ -95,6 +95,8 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
     else:
         train_on = speakers_to_train_on
 
+    arti_common = give_me_common_articulators([test_on] + train_on)
+
     name_corpus_concat = ""
     if config != "spec" : # if spec DOESNT train on other speakers
         for corpus in corpus_to_train_on:
@@ -128,7 +130,7 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
     hidden_dim = 300
     input_dim = 429
     batch_size = 10
-    output_dim = 18
+    output_dim = len(arti_common)
     early_stopping = EarlyStopping(name_file, patience=patience, verbose=True)
     model = my_ac2art_model(hidden_dim=hidden_dim, input_dim=input_dim, name_file=name_file, output_dim=output_dim,
                             batch_size=batch_size, cuda_avail=cuda_avail,
@@ -153,13 +155,10 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
 
 
 
-    files_per_categ, files_for_test = give_me_train_valid_test_filenames(train_on,test_on,config, batch_size)
+    files_for_train, files_for_valid, files_for_test = give_me_train_valid_test_filenames_no_cat(train_on,test_on,config)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
-    categs_to_consider = files_per_categ.keys()
-    with open('categ_of_speakers.json', 'r') as fp:
-        categ_of_speakers = json.load(fp)  # dict that gives for each category the speakers in it and the available arti
     plot_filtre_chaque_epochs = False
 
     for epoch in range(n_epochs):
@@ -167,71 +166,56 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
         if plot_filtre_chaque_epochs :
             plot_filtre(weights)
         n_this_epoch = 0
-        random.shuffle(list(categs_to_consider))
+        random.shuffle(files_for_train)
         loss_train_this_epoch = 0
         loss_pearson = 0
         loss_rmse = 0
-        for categ in categs_to_consider:
-            files_this_categ_courant = files_per_categ[categ]["train"]
-            random.shuffle(files_this_categ_courant)
-            while len(files_this_categ_courant) > 0: # go through all  the files batch by batch
-                n_this_epoch+=1
-                x, y = load_np_ema_and_mfcc(files_this_categ_courant[:batch_size])
+        nb_batch = len(files_for_train)/ batch_size
+        for i in range(int(nb_batch)):
 
-                files_this_categ_courant = files_this_categ_courant[batch_size:] #we a re going to train on this 10 files
-                x, y = model.prepare_batch(x, y)
-                y_pred = model(x).double()
-                if cuda_avail:
-                    y_pred = y_pred.to(device=device)
-                y = y.double ()
-                optimizer.zero_grad()
-                if select_arti:
-                    arti_to_consider = categ_of_speakers[categ]["arti"]  # liste de 18 0/1 qui indique les arti à considérer
-                    idx_to_ignore = [i for i, n in enumerate(arti_to_consider) if n == "0"]
-                    y_pred[:, :, idx_to_ignore] = 0 #the grad associated to this value will be zero  : CHECK THAT
-                   # y_pred[:,:,idx_to_ignore].detach()
-                    #y[:,:,idx_to_ignore].requires_grad = False
+            n_this_epoch+=1
+            x, y = load_np_ema_and_mfcc(files_for_train[i*batch_size:(i+1)*batch_size])
+            x, y = model.prepare_batch(x, y)
+            y = y[:,:, arti_common]
+            y_pred = model(x).double()
+            if cuda_avail:
+                y_pred = y_pred.to(device=device)
+            y = y.double ()
+            optimizer.zero_grad()
 
-                loss = criterion_pearson(y, y_pred, cuda_avail = cuda_avail, device=device)#criterion_both(y, y_pred,alpha=loss_train, cuda_avail = cuda_avail, device=device)
-                loss.backward()
-                optimizer.step()
+            loss = criterion_both(y, y_pred,alpha=loss_train, cuda_avail = cuda_avail, device=device)
+            loss.backward()
+            optimizer.step()
 
-                # computation to have evolution of the losses
-                loss_2 = criterion_both(y, y_pred, alpha=100, cuda_avail=cuda_avail, device=device)
-                loss_pearson += loss_2.item()
-                loss_3 = criterion_both(y, y_pred, alpha=0, cuda_avail=cuda_avail, device=device)
-                loss_rmse += loss_3.item()
-                torch.cuda.empty_cache()
-                loss_train_this_epoch += loss.item()
+            # computation to have evolution of the losses
+            loss_2 = criterion_both(y, y_pred, alpha=100, cuda_avail=cuda_avail, device=device)
+            loss_pearson += loss_2.item()
+            loss_3 = criterion_both(y, y_pred, alpha=0, cuda_avail=cuda_avail, device=device)
+            loss_rmse += loss_3.item()
+            torch.cuda.empty_cache()
+            loss_train_this_epoch += loss.item()
 
         torch.cuda.empty_cache()
 
         loss_train_this_epoch = loss_train_this_epoch/n_this_epoch
         print("Training loss for epoch", epoch, ': ', loss_train_this_epoch)
-        f_loss_train.write(str(epoch) + ',' + str(loss_train_this_epoch) + ',' + str(loss_pearson/n_this_epoch/1000./batch_size/18.*(-1.)) + ',' + str(loss_rmse/n_this_epoch/batch_size) + '\n')
+        f_loss_train.write(str(epoch) + ',' + str(loss_train_this_epoch) + ',' + str(loss_pearson/n_this_epoch/1000./batch_size/len(arti_common)*(-1.)) + ',' + str(loss_rmse/n_this_epoch/batch_size/len(arti_common)) + '\n')
         if epoch%delta_test == 0:  #toutes les delta_test epochs on évalue le modèle sur validation et on sauvegarde le modele si le score est meilleur
             loss_vali = 0
             n_valid = 0
             loss_pearson = 0
             loss_rmse = 0
-            for categ in categs_to_consider:  # de A à F pour le moment
-                files_this_categ_courant = files_per_categ[categ]["valid"]  # on na pas encore apprit dessus au cours de cette epoch
-                while len(files_this_categ_courant) >0 :
+            nb_batch = len(files_for_valid) / batch_size
+            for i in range(int(nb_batch)):
                     n_valid +=1
-                    x, y = load_np_ema_and_mfcc(files_this_categ_courant[:batch_size])
-                    files_this_categ_courant = files_this_categ_courant[batch_size:]  # on a appris sur ces 10 phrases
+                    x, y = load_np_ema_and_mfcc(files_for_train[i * batch_size:(i + 1) * batch_size])
                     x, y = model.prepare_batch(x, y)
+                    y = y[:, :, arti_common]
                     y_pred = model(x).double()
                     torch.cuda.empty_cache()
                     if cuda_avail:
                         y_pred = y_pred.to(device=device)
-                    y = y.double()  # (Batchsize, maxL, 18)
-                    if select_arti:
-                        arti_to_consider = categ_of_speakers[categ]["arti"]  # liste de 18 0/1 qui indique les arti à considérer
-                        idx_to_ignore = [i for i, n in enumerate(arti_to_consider) if n == "0"]
-                        y_pred[:, :, idx_to_ignore] = 0
-                    #    y_pred[:, :, idx_to_ignore].detach()
-                   #     y[:, :, idx_to_ignore].requires_grad = False
+                    y = y.double()  # (Batchsize, maxL, art_common_nb)
                     loss_courant = criterion_both(y, y_pred, loss_train, cuda_avail = cuda_avail, device=device)
                     loss_vali += loss_courant.item()
                     # to follow both losses
@@ -241,7 +225,7 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
                     loss_rmse += loss_3.item()
 
             loss_vali  = loss_vali/n_valid
-            f_loss_valid.write(str(epoch) + ',' + str(loss_vali) + ',' +  str(loss_pearson/n_valid/1000./batch_size/18.*(-1.)) + ',' + str(loss_rmse/n_this_epoch/batch_size) + '\n')
+            f_loss_valid.write(str(epoch) + ',' + str(loss_vali) + ',' +  str(loss_pearson/n_valid/1000./batch_size/len(arti_common)*(-1.)) + ',' + str(loss_rmse/n_valid/batch_size/len(arti_common)) + '\n')
         torch.cuda.empty_cache()
         model.all_validation_loss.append(loss_vali)
         model.all_training_loss.append(loss_train_this_epoch)
@@ -253,7 +237,7 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
         if epoch > 0:  # on divise le learning rate par deux dès qu'on surapprend un peu par rapport au validation set
             if loss_vali > model.all_validation_loss[-1]:
                 for param_group in optimizer.param_groups:
-                    param_group['lr'] = param_group['lr'] / 2
+                    param_group['lr'] = param_group['lr'] / 2.
                     (param_group["lr"])
 
 
@@ -265,16 +249,7 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
     x, y = load_np_ema_and_mfcc(files_for_test)
     print("evaluation on speaker {}".format(test_on))
     std_speaker = np.load(os.path.join(root_folder,"Preprocessing","norm_values","std_ema_"+test_on+".npy"))
-    arti_per_speaker = os.path.join(root_folder, "Preprocessing", "articulators_per_speaker.csv")
-    csv.register_dialect('myDialect', delimiter=';')
-    with open(arti_per_speaker, 'r') as csvFile:
-        reader = csv.reader(csvFile, dialect="myDialect")
-        next(reader)
-        for row in reader:
-            if row[0] == test_on:
-                arti_to_consider = row[1:19]
-                arti_to_consider = [int(x) for x in arti_to_consider]
-
+    arti_to_consider = [1 if i in arti_common else 0 for i in range(18)]
     rmse_per_arti_mean, pearson_per_arti_mean = model.evaluate_on_test(x, y, std_speaker = std_speaker, to_plot=to_plot
                                                                        , to_consider = arti_to_consider)
 
@@ -282,17 +257,15 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
     """  RESULTS ON VALIDATION SET """
 
     pearson_valid = np.zeros((1,output_dim))
-    for categ in categs_to_consider:  # de A à F pour le moment
-        files_this_categ_courant = files_per_categ[categ]["valid"]  # on na pas encore apprit dessus au cours de cette epoch
-        while len(files_this_categ_courant) > 0:
-            x, y = load_np_ema_and_mfcc(files_this_categ_courant[:batch_size])
-            files_this_categ_courant = files_this_categ_courant[batch_size:]  # on a appris sur ces 10 phrases
-            arti_to_consider = categ_of_speakers[categ]["arti"]  # liste de 18 0/1 qui indique les arti à considérer
+    nb_batch = len(files_for_test) / batch_size
+    for i in range(int(nb_batch)):
 
-            rien, pearson_valid_temp = model.evaluate_on_test(x,y,std_speaker=1, to_plot=to_plot,
-                                                                 to_consider=arti_to_consider,verbose=False)
-            pearson_valid_temp = np.reshape(np.array(pearson_valid_temp),(1,output_dim))
-            pearson_valid = np.concatenate((pearson_valid,pearson_valid_temp),axis=0)
+        x, y = load_np_ema_and_mfcc(files_for_train[i * batch_size:(i + 1) * batch_size])
+
+        rien, pearson_valid_temp = model.evaluate_on_test(x,y,std_speaker=1, to_plot=to_plot,
+                                                             to_consider=arti_to_consider,verbose=False)
+        pearson_valid_temp = np.reshape(np.array(pearson_valid_temp),(1,output_dim))
+        pearson_valid = np.concatenate((pearson_valid,pearson_valid_temp),axis=0)
     pearson_valid = pearson_valid[1:,:]
     pearson_valid[np.isnan(pearson_valid)] = 0
     pearson_valid = np.mean(pearson_valid,axis=0)
@@ -352,9 +325,6 @@ if __name__=='__main__':
     parser.add_argument("--patience",type=int, default=5,
                         help = "patience before early topping")
 
-    parser.add_argument("--select_arti", type = bool,default=True,
-                        help = "whether to learn only on available parameters or not")
-
 
     parser.add_argument('corpus_to_train_on', type=str,
                         help='list of the corpus we want to train on ')
@@ -379,7 +349,7 @@ if __name__=='__main__':
 
     args = parser.parse_args()
 
-    train_model(test_on=args.test_on, n_epochs=args.n_epochs, loss_train=args.loss_train,
-                patience=args.patience, select_arti=args.select_arti, corpus_to_train_on=args.corpus_to_train_on,
+    train_model_arti_common(test_on=args.test_on, n_epochs=args.n_epochs, loss_train=args.loss_train,
+                patience=args.patience,  corpus_to_train_on=args.corpus_to_train_on,
                 batch_norma=args.batch_norma, filter_type=args.filter_type, to_plot=args.to_plot,
                 lr=args.lr, delta_test=args.delta_test, config=args.config, speakers_to_train_on=args.speakers_to_train)

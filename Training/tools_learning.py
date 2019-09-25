@@ -169,6 +169,27 @@ def which_speakers_to_train_on(corpus_to_train_on, test_on, config):
             speakers_to_train_on.remove(test_on)
     return speakers_to_train_on
 
+def give_me_common_articulators(list_speakers):
+    """
+    Give the indexes of the articulators that are in common for a list of speakers
+    :param list_speakers: list of the speakers to consider
+    :return: list of indexes that correspond to tha articulators in common
+    """
+    f_artic = open('articulators_per_speaker.csv', 'r')
+    ind = f_artic.readline().replace('\n', '').split(';')
+    list_arti_common = range(18)
+    for line in f_artic:
+        new_line = line.replace('\n', '').split(';')
+        if new_line[0] in list_speakers:
+            arti_dispo = []
+            for i in range(len(new_line[1:-2])):
+                if new_line[1 + i] == '1':
+                    arti_dispo.append(i)
+            list_arti_common = list(set(list_arti_common).intersection(arti_dispo))
+    return list_arti_common
+
+
+
 
 def give_me_train_valid_test_filenames(train_on, test_on, config, batch_size):
     """
@@ -236,4 +257,41 @@ def give_me_train_valid_test_filenames(train_on, test_on, config, batch_size):
             files_per_categ[categ]["valid"] = files_valid_this_categ
 
     return files_per_categ, files_for_test
+
+def give_me_train_valid_test_filenames_no_cat(train_on, test_on, config):
+    """
+    :param train_on: list of corpus to train on
+    :param test_on: the speaker test
+    :param config: either spec/dep/indep
+    :param batch_size
+    :return: files_per_categ :  dictionnary where keys are the categories present in the training set. For each category
+    we have a dictionnary with 2 keys (train, valid), and the values is a list of the namefiles for this categ and this
+    part (train/valid)
+            files_for_test : list of the files of the test set
+    3 configurations that impacts the train/valid/test set (if we train a bit on test speaker, we have to be sure that
+    the don't test on files that were in the train set)
+    - spec : for speaker specific, learning and testing only on the speaker test
+    - dep : for speaker dependant, learning on speakers in train_on and a part of the speaker test
+    - indep : for speaker independant, learnong on other speakers.
+    """
+    if config == "spec":
+        files_for_train = load_filenames([test_on], part=["train"])
+        files_for_valid = load_filenames([test_on], part=["valid"])
+        files_for_test = load_filenames([test_on], part=["test"])
+
+    elif config == "dep":
+        files_for_train = load_filenames(train_on, part=["train", "test"]) + \
+                          load_filenames([test_on], part=["train"])
+        files_for_valid = load_filenames(train_on, part=["valid"]) + \
+                          load_filenames([test_on], part=["valid"])
+        files_for_test = load_filenames([test_on], part=["test"])
+
+    elif config == "indep":
+        files_for_train = load_filenames(train_on, part=["train", "test"])
+        files_for_valid = load_filenames(train_on, part=["valid"])
+        files_for_test = load_filenames([test_on], part=["train", "valid", "test"])
+
+
+
+    return files_for_train, files_for_valid, files_for_test
 
