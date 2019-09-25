@@ -48,7 +48,7 @@ import json
 root_folder = os.path.dirname(os.getcwd())
 
 def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_train_on, batch_norma, filter_type,
-                to_plot, lr, delta_test, config, speakers_to_train_on = []):
+                to_plot, lr, delta_test, config, speakers_to_train_on = ""):
     """
     :param test_on: (str) one speaker's name we want to test on, the speakers and the corpus the come frome can be seen in
     "fonction_utiles.py", in the function "get_speakers_per_corpus'.
@@ -89,7 +89,8 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
     f_loss_train = open('training_loss.csv', 'w')
     f_loss_valid = open('valid_loss.csv', 'w')
     corpus_to_train_on = corpus_to_train_on[1:-1].split(",")
-    if speakers_to_train_on == []:
+    speakers_to_train_on = speakers_to_train_on[1:-1].split(",")
+    if speakers_to_train_on == [""] or speakers_to_train_on == []:
         train_on = which_speakers_to_train_on(corpus_to_train_on, test_on, config)
     else:
         train_on = speakers_to_train_on
