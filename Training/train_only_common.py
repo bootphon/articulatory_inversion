@@ -182,7 +182,7 @@ def train_model_arti_common(test_on, n_epochs, loss_train, patience, corpus_to_t
             x, y = load_np_ema_and_mfcc(files_for_train[i*batch_size:(i+1)*batch_size])
             model.output_dim = 18
             x, y = model.prepare_batch(x, y)
-            print(x.shape, y.shape)
+
             model.output_dim = len(arti_common)
             y = get_right_indexes(y,arti_common)
             if cuda_avail:
