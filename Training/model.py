@@ -27,6 +27,7 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 import gc
+from Training.tools_learning import get_right_indexes
 
 def memReport(all = False):
     """
@@ -276,7 +277,7 @@ class my_ac2art_model(torch.nn.Module):
             plt.savefig(save_pics_path)
             plt.close('all')
 
-    def evaluate_on_test(self, X_test, Y_test, std_speaker, to_plot=False, to_consider=None, verbose=True):
+    def evaluate_on_test(self, X_test, Y_test, std_speaker, to_plot=False, to_consider=None, verbose=True, index_common = []):
         """
         :param X_test:  list of all the input of the test set
         :param Y_test:  list of all the target of the test set
@@ -292,7 +293,9 @@ class my_ac2art_model(torch.nn.Module):
         for i in range(len(X_test)):
                 L = len(X_test[i])
                 x_torch = torch.from_numpy(X_test[i]).view(1, L, self.input_dim)  #x (1,L,429)
-                y = Y_test[i].reshape((L, self.output_dim))                     #y (L,13)
+                y = Y_test[i].reshape((L, 18))                     #y (L,13)
+                if index_common != []:
+                    y = get_right_indexes(y, index_common)
                 if self.cuda_avail:
                     x_torch = x_torch.to(device=self.device)
                 y_pred_not_smoothed = self(x_torch, False).double() #output y_pred (1,L,13)

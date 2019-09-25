@@ -178,10 +178,13 @@ def train_model_arti_common(test_on, n_epochs, loss_train, patience, corpus_to_t
         for i in range(int(nb_batch)):
 
             n_this_epoch+=1
-            x, y = load_np_ema_and_mfcc(files_for_train[i*batch_size:(i+1)*batch_size])
 
-            y = get_right_indexes(y,arti_common)
+            x, y = load_np_ema_and_mfcc(files_for_train[i*batch_size:(i+1)*batch_size])
+            model.output_dim = 18
             x, y = model.prepare_batch(x, y)
+            model.output_dim = len(arti_common)
+            y = get_right_indexes(y,arti_common)
+
             y_pred = model(x).double()
             if cuda_avail:
                 y_pred = y_pred.to(device=device)
@@ -212,23 +215,25 @@ def train_model_arti_common(test_on, n_epochs, loss_train, patience, corpus_to_t
             loss_rmse = 0
             nb_batch = len(files_for_valid) / batch_size
             for i in range(int(nb_batch)):
-                    n_valid +=1
-                    x, y = load_np_ema_and_mfcc(files_for_train[i * batch_size:(i + 1) * batch_size])
+                n_valid +=1
+                x, y = load_np_ema_and_mfcc(files_for_train[i * batch_size:(i + 1) * batch_size])
+                model.output_dim = 18
+                x, y = model.prepare_batch(x, y)
+                model.output_dim = len(arti_common)
+                y = get_right_indexes(y, arti_common)
 
-                    y = get_right_indexes(y, arti_common)
-                    x, y = model.prepare_batch(x, y)
-                    y_pred = model(x).double()
-                    torch.cuda.empty_cache()
-                    if cuda_avail:
-                        y_pred = y_pred.to(device=device)
-                    y = y.double()  # (Batchsize, maxL, art_common_nb)
-                    loss_courant = criterion_both(y, y_pred, loss_train, cuda_avail = cuda_avail, device=device)
-                    loss_vali += loss_courant.item()
-                    # to follow both losses
-                    loss_2 = criterion_both(y, y_pred, alpha=100, cuda_avail=cuda_avail, device=device)
-                    loss_pearson += loss_2.item()
-                    loss_3 = criterion_both(y, y_pred, alpha=0, cuda_avail=cuda_avail, device=device)
-                    loss_rmse += loss_3.item()
+                y_pred = model(x).double()
+                torch.cuda.empty_cache()
+                if cuda_avail:
+                    y_pred = y_pred.to(device=device)
+                y = y.double()  # (Batchsize, maxL, art_common_nb)
+                loss_courant = criterion_both(y, y_pred, loss_train, cuda_avail = cuda_avail, device=device)
+                loss_vali += loss_courant.item()
+                # to follow both losses
+                loss_2 = criterion_both(y, y_pred, alpha=100, cuda_avail=cuda_avail, device=device)
+                loss_pearson += loss_2.item()
+                loss_3 = criterion_both(y, y_pred, alpha=0, cuda_avail=cuda_avail, device=device)
+                loss_rmse += loss_3.item()
 
             loss_vali  = loss_vali/n_valid
             f_loss_valid.write(str(epoch) + ',' + str(loss_vali) + ',' +  str(loss_pearson/n_valid/1000./batch_size/len(arti_common)*(-1.)) + ',' + str(loss_rmse/n_valid/batch_size/len(arti_common)) + '\n')
