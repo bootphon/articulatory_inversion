@@ -295,12 +295,13 @@ def give_me_train_valid_test_filenames_no_cat(train_on, test_on, config):
 
     return files_for_train, files_for_valid, files_for_test
 
-def get_right_indexes(y, indexes_list):
 
+def get_right_indexes(y, indexes_list):
     list_array = []
     for i in indexes_list:
-        list_array.append(y[:,:,i])
-    return np.concatenate(tuple(list_array), axis = 2)
+        list_array.append(y[:, :, i:i + 1])
+    print(list_array)
+    return np.concatenate(tuple(list_array), axis=2)
 
 
 
