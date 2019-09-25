@@ -184,7 +184,8 @@ def train_model_arti_common(test_on, n_epochs, loss_train, patience, corpus_to_t
             x, y = model.prepare_batch(x, y)
             model.output_dim = len(arti_common)
             y = get_right_indexes(y,arti_common)
-
+            if cuda_avail:
+                x, y = x.to(device=model.device), y.to(device=model.device)
             y_pred = model(x).double()
             if cuda_avail:
                 y_pred = y_pred.to(device=device)
@@ -221,7 +222,8 @@ def train_model_arti_common(test_on, n_epochs, loss_train, patience, corpus_to_t
                 x, y = model.prepare_batch(x, y)
                 model.output_dim = len(arti_common)
                 y = get_right_indexes(y, arti_common)
-
+                if cuda_avail:
+                    x, y = x.to(device=model.device), y.to(device=model.device)
                 y_pred = model(x).double()
                 torch.cuda.empty_cache()
                 if cuda_avail:
@@ -263,7 +265,7 @@ def train_model_arti_common(test_on, n_epochs, loss_train, patience, corpus_to_t
     std_speaker = np.load(os.path.join(root_folder,"Preprocessing","norm_values","std_ema_"+test_on+".npy"))
     arti_to_consider = [1 for i in range(len(arti_common))]
     rmse_per_arti_mean, pearson_per_arti_mean = model.evaluate_on_test(x, y, std_speaker = std_speaker, to_plot=to_plot
-                                                                       , to_consider = arti_to_consider)
+                                                                       , to_consider = arti_to_consider, index_common=arti_common)
 
 
     """  RESULTS ON VALIDATION SET """
@@ -275,7 +277,7 @@ def train_model_arti_common(test_on, n_epochs, loss_train, patience, corpus_to_t
         x, y = load_np_ema_and_mfcc(files_for_train[i * batch_size:(i + 1) * batch_size])
         y = get_right_indexes(y, arti_common)
         rien, pearson_valid_temp = model.evaluate_on_test(x,y,std_speaker=1, to_plot=to_plot,
-                                                             to_consider=arti_to_consider,verbose=False)
+                                                             to_consider=arti_to_consider,verbose=False, index_common=arti_common )
         pearson_valid_temp = np.reshape(np.array(pearson_valid_temp),(1,output_dim))
         pearson_valid = np.concatenate((pearson_valid,pearson_valid_temp),axis=0)
     pearson_valid = pearson_valid[1:,:]

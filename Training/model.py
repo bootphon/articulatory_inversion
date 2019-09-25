@@ -122,8 +122,7 @@ class my_ac2art_model(torch.nn.Module):
             new_y[j] = zeropad(torch.from_numpy(y[j])).double()
         x = new_x.view((B, max_length, self.input_dim))
         y = new_y.view((B, max_length, self.output_dim))
-        if self.cuda_avail :
-            x,y = x.to(device = self.device),y.to(device = self.device)
+
         return x, y
 
     def forward(self, x, filter_output=None):
