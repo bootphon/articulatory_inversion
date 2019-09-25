@@ -119,11 +119,8 @@ def criterion_pearson(y, y_pred, cuda_avail , device):
 
 
 def criterion_both(my_y,my_ypred,alpha,cuda_avail,device):
-    print(alpha)
+    compl = torch.tensor(1. - float(alpha) / 100., dtype=torch.float64)
     alpha = torch.tensor(float(alpha) / 100., dtype = torch.float64)
-    print(float(alpha) / 100.)
-    print(1 - float(alpha)/100.)
-    compl = torch.tensor( 1. - float(alpha) / 100., dtype = torch.float64)
     multip = torch.tensor(float(1000), dtype = torch.float64)
     if cuda_avail:
         alpha = alpha.to(device = device)
