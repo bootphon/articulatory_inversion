@@ -192,7 +192,7 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
                    # y_pred[:,:,idx_to_ignore].detach()
                     #y[:,:,idx_to_ignore].requires_grad = False
 
-                loss = criterion_pearson(y, y_pred, cuda_avail = cuda_avail, device=device)#criterion_both(y, y_pred,alpha=loss_train, cuda_avail = cuda_avail, device=device)
+                loss = torch.nn.MSELoss(reduction='sum')(y, y_pred)#criterion_pearson(y, y_pred, cuda_avail = cuda_avail, device=device)#criterion_both(y, y_pred,alpha=loss_train, cuda_avail = cuda_avail, device=device)
                 loss.backward()
                 optimizer.step()
 
@@ -232,7 +232,7 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
                         y_pred[:, :, idx_to_ignore] = 0
                     #    y_pred[:, :, idx_to_ignore].detach()
                    #     y[:, :, idx_to_ignore].requires_grad = False
-                    loss_courant = criterion_pearson(y, y_pred, cuda_avail = cuda_avail, device=device)#criterion_both(y, y_pred, loss_train, cuda_avail = cuda_avail, device=device)
+                    loss_courant = torch.nn.MSELoss(reduction='sum')(y, y_pred)#criterion_pearson(y, y_pred, cuda_avail = cuda_avail, device=device)#criterion_both(y, y_pred, loss_train, cuda_avail = cuda_avail, device=device)
                     loss_vali += loss_courant.item()
                     # to follow both losses
                     loss_2 = criterion_both(y, y_pred, alpha=100, cuda_avail=cuda_avail, device=device)
@@ -378,7 +378,8 @@ if __name__=='__main__':
                         help='spec or dep or indep that stands for speaker specific/dependant/independant')
 
     args = parser.parse_args()
-
+    print('arguments given:', args.test_on, args.speakers_to_train, args.n_epochs, args.loss_train,
+          args.patience, args.select_arti, args.corpus_to_train_on, args.batch_norm, args.filter_type, args.to_plot,args.lr, args.delta_test, args.config )
     train_model(test_on=args.test_on, n_epochs=args.n_epochs, loss_train=args.loss_train,
                 patience=args.patience, select_arti=args.select_arti, corpus_to_train_on=args.corpus_to_train_on,
                 batch_norma=args.batch_norma, filter_type=args.filter_type, to_plot=args.to_plot,
