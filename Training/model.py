@@ -288,7 +288,8 @@ class my_ac2art_model(torch.nn.Module):
         idx_to_ignore = [i for i in range(len(to_consider)) if not(to_consider[i])]
         all_diff = np.zeros((1, self.output_dim))
         all_pearson = np.zeros((1, self.output_dim))
-        indices_to_plot = np.random.choice(len(X_test), 2, replace=False)
+        if to_plot:
+            indices_to_plot = np.random.choice(len(X_test), 2, replace=False)
         for i in range(len(X_test)):
                 L = len(X_test[i])
                 x_torch = torch.from_numpy(X_test[i]).view(1, L, self.input_dim)  #x (1,L,429)
