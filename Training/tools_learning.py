@@ -184,7 +184,7 @@ def give_me_common_articulators(list_speakers):
             arti_dispo = []
             for i in range(len(new_line[1:-2])):
                 if new_line[1 + i] == '1':
-                    arti_dispo.append(i)
+                    arti_dispo.append(int(i))
             list_arti_common = list(set(list_arti_common).intersection(arti_dispo))
     return list_arti_common
 
@@ -294,4 +294,15 @@ def give_me_train_valid_test_filenames_no_cat(train_on, test_on, config):
 
 
     return files_for_train, files_for_valid, files_for_test
+
+def get_right_indexes(y, indexes_list):
+
+    list_array = []
+    for i in indexes_list:
+        list_array.append(y[:,:,i])
+    return np.concatenate(tuple(list_array), axis = 2)
+
+
+
+
 
