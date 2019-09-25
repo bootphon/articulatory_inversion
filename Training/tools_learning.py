@@ -296,14 +296,17 @@ def give_me_train_valid_test_filenames_no_cat(train_on, test_on, config):
     return files_for_train, files_for_valid, files_for_test
 
 
-def get_right_indexes(y, indexes_list):
+def get_right_indexes(y, indexes_list, shape = 3):
     #print(y.shape)
     list_array = []
     for i in indexes_list:
         #print(i)
         #print(y[:, :, i:i+1].shape)
         #print(y[:,:,i].shape)
-        list_array.append(y[:, :, i:i+1])
+        if shape == 3:
+            list_array.append(y[:, :, i:i+1])
+        if shape == 2:
+            list_array.append(y[:, i:i + 1])
     #print(list_array)
     return np.concatenate(tuple(list_array), axis=2)
 
