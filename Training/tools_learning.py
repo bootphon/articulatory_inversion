@@ -303,7 +303,7 @@ def get_right_indexes(y, indexes_list):
         print(i)
         print(y[:, :, i:i+1].shape)
         print(y[:,:,i].shape)
-        list_array.append(y[:][:][i:i + 1])
+        list_array.append(y[:, :, i:i+1])
     print(list_array)
     return np.concatenate(tuple(list_array), axis=2)
 
