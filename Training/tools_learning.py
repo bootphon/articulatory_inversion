@@ -128,7 +128,7 @@ def criterion_both(my_y,my_ypred,alpha,cuda_avail,device):
         compl = compl.to(device= device)
     a = alpha * criterion_pearson(my_y, my_ypred, cuda_avail, device)*multip
     b = compl * torch.nn.MSELoss(reduction='sum')(my_y, my_ypred)
-    new_loss = a #+ b
+    new_loss = b#.add(a)
     return new_loss
 
 
