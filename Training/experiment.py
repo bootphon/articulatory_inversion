@@ -183,7 +183,7 @@ def cross_val_for_alpha(corpus_to_train_on,config):
         speakers = speakers + get_speakers_per_corpus(co)
     print(speakers)
     # TODO: delete that it is just to make a small test
-    #speakers = ["F01", "M01", "F02", "M02"]
+    speakers = ["fsew0", "msak0", "MNGU0"]
 
     loss_range = [0, 20, 40, 60, 80, 100]
 
@@ -191,10 +191,11 @@ def cross_val_for_alpha(corpus_to_train_on,config):
         count = 0
         rmse_all, pearson_all = np.zeros((len(speakers), output_dim)), np.zeros((len(speakers), output_dim))
         for speaker in speakers:
+            speaker_to_train = [sp for sp in speakers if sp != speaker]
             rmse, pearson = train_model(test_on=speaker, n_epochs=n_epochs, loss_train=loss_train, patience=patience,
                                         select_arti=select_arti, corpus_to_train_on=corpus_to_train_on,
                                         batch_norma=batch_norma, filter_type=filter_type, to_plot=to_plot,
-                                        lr=lr, delta_test=delta_test, config=config)
+                                        lr=lr, delta_test=delta_test, config=config, speakers_to_train_on=speaker_to_train)
             rmse_all[count, :] = rmse
             pearson_all[count, :] = pearson
             count += 1

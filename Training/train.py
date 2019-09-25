@@ -48,7 +48,7 @@ import json
 root_folder = os.path.dirname(os.getcwd())
 
 def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_train_on, batch_norma, filter_type,
-                to_plot, lr, delta_test, config, speakers_to_train_on = ""):
+                to_plot, lr, delta_test, config, speakers_to_train_on = "", relearn = False):
     """
     :param test_on: (str) one speaker's name we want to test on, the speakers and the corpus the come frome can be seen in
     "fonction_utiles.py", in the function "get_speakers_per_corpus'.
@@ -137,19 +137,20 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
     file_weights = os.path.join("saved_models", name_file +".pt")
     if cuda_avail:
         model = model.to(device=device)
-    load_old_model = True
-    if load_old_model:
-        if os.path.exists(file_weights):
-            print("previous model did not finish learning")
-            loaded_state = torch.load(file_weights,map_location=device)
-            model.load_state_dict(loaded_state)
-            model_dict = model.state_dict()
-            loaded_state = {k: v for k, v in loaded_state.items() if
-                            k in model_dict}  # only layers param that are in our current model
-            loaded_state = {k: v for k, v in loaded_state.items() if
-                            loaded_state[k].shape == model_dict[k].shape}  # only if layers have correct shapes
-            model_dict.update(loaded_state)
-            model.load_state_dict(model_dict)
+    if relearn:
+        load_old_model = True
+        if load_old_model:
+            if os.path.exists(file_weights):
+                print("previous model did not finish learning")
+                loaded_state = torch.load(file_weights,map_location=device)
+                model.load_state_dict(loaded_state)
+                model_dict = model.state_dict()
+                loaded_state = {k: v for k, v in loaded_state.items() if
+                                k in model_dict}  # only layers param that are in our current model
+                loaded_state = {k: v for k, v in loaded_state.items() if
+                                loaded_state[k].shape == model_dict[k].shape}  # only if layers have correct shapes
+                model_dict.update(loaded_state)
+                model.load_state_dict(model_dict)
 
 
 
@@ -368,6 +369,9 @@ if __name__=='__main__':
     parser.add_argument('--to_plot', type=bool, default= False,
                         help='whether to save one graph of prediction & target of the test ')
 
+    parser.add_argument('--relearn', type=bool, default=False,
+                        help='whether to learn on previous partially learned model or not')
+
     parser.add_argument('--lr', type = float, default = 0.001,
                         help='learning rate of Adam optimizer ')
 
@@ -383,4 +387,4 @@ if __name__=='__main__':
     train_model(test_on=args.test_on, n_epochs=args.n_epochs, loss_train=args.loss_train,
                 patience=args.patience, select_arti=args.select_arti, corpus_to_train_on=args.corpus_to_train_on,
                 batch_norma=args.batch_norma, filter_type=args.filter_type, to_plot=args.to_plot,
-                lr=args.lr, delta_test=args.delta_test, config=args.config, speakers_to_train_on=args.speakers_to_train)
+                lr=args.lr, delta_test=args.delta_test, config=args.config, speakers_to_train_on=args.speakers_to_train, relearn=args.relearn)
