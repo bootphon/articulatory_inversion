@@ -379,7 +379,7 @@ if __name__=='__main__':
 
     args = parser.parse_args()
     print('arguments given:', args.test_on, args.speakers_to_train, args.n_epochs, args.loss_train,
-          args.patience, args.select_arti, args.corpus_to_train_on, args.batch_norm, args.filter_type, args.to_plot,args.lr, args.delta_test, args.config )
+          args.patience, args.select_arti, args.corpus_to_train_on, args.batch_norma, args.filter_type, args.to_plot,args.lr, args.delta_test, args.config )
     train_model(test_on=args.test_on, n_epochs=args.n_epochs, loss_train=args.loss_train,
                 patience=args.patience, select_arti=args.select_arti, corpus_to_train_on=args.corpus_to_train_on,
                 batch_norma=args.batch_norma, filter_type=args.filter_type, to_plot=args.to_plot,
