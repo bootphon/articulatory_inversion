@@ -181,6 +181,8 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
 
                 files_this_categ_courant = files_this_categ_courant[batch_size:] #we a re going to train on this 10 files
                 x, y = model.prepare_batch(x, y)
+                if cuda_avail:
+                    x, y = x.to(device=model.device), y.to( device=model.device)
                 y_pred = model(x).double()
                 if cuda_avail:
                     y_pred = y_pred.to(device=device)
@@ -222,6 +224,8 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
                     x, y = load_np_ema_and_mfcc(files_this_categ_courant[:batch_size])
                     files_this_categ_courant = files_this_categ_courant[batch_size:]  # on a appris sur ces 10 phrases
                     x, y = model.prepare_batch(x, y)
+                    if cuda_avail:
+                        x, y = x.to(device=model.device), y.to(device=model.device)
                     y_pred = model(x).double()
                     torch.cuda.empty_cache()
                     if cuda_avail:
