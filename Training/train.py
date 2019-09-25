@@ -232,7 +232,7 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
                         y_pred[:, :, idx_to_ignore] = 0
                     #    y_pred[:, :, idx_to_ignore].detach()
                    #     y[:, :, idx_to_ignore].requires_grad = False
-                    loss_courant = criterion_both(y, y_pred, loss_train, cuda_avail = cuda_avail, device=device)
+                    loss_courant = criterion_pearson(y, y_pred, cuda_avail = cuda_avail, device=device)#criterion_both(y, y_pred, loss_train, cuda_avail = cuda_avail, device=device)
                     loss_vali += loss_courant.item()
                     # to follow both losses
                     loss_2 = criterion_both(y, y_pred, alpha=100, cuda_avail=cuda_avail, device=device)
