@@ -86,17 +86,16 @@ def train_model_arti_common(test_on, n_epochs, loss_train, patience, corpus_to_t
 
     :return: [rmse, pearson] . rmse the is the list of the 18 rmse (1 per articulator), same for pearson.
     """
-    f_loss_train = open('training_loss.csv', 'w')
-    f_loss_valid = open('valid_loss.csv', 'w')
+
     corpus_to_train_on = corpus_to_train_on[1:-1].split(",")
-    speakers_to_train_on = speakers_to_train_on[1:-1].split(",")
+    speakers_to_train_on = speakers_to_train_on[1:-1].replace("'", "").replace('"', '').replace(' ', '').split(",")
     if speakers_to_train_on == [""] or speakers_to_train_on == []:
         train_on = which_speakers_to_train_on(corpus_to_train_on, test_on, config)
     else:
         train_on = speakers_to_train_on
 
     arti_common = give_me_common_articulators([test_on] + train_on)
-
+    print(arti_common)
     name_corpus_concat = ""
     if config != "spec" : # if spec DOESNT train on other speakers
         for corpus in corpus_to_train_on:
@@ -104,6 +103,11 @@ def train_model_arti_common(test_on, n_epochs, loss_train, patience, corpus_to_t
 
     name_file = test_on+"_"+config+"_"+name_corpus_concat+"loss_"+str(loss_train)+"_filter_"+\
                 str(filter_type)+"_bn_"+str(batch_norma)
+
+    f_loss_train = open('training_loss'+ name_file +'.csv', 'w')
+    f_loss_valid = open('valid_loss'+ name_file +'.csv', 'w')
+    f_loss_valid.write('epoch,training_loss,pearson,rmse')
+    f_loss_train.write('epoch,training_loss,pearson,rmse')
 
     if not os.path.exists("saved_models"):
         os.mkdir("saved_models")
@@ -324,7 +328,6 @@ if __name__=='__main__':
 
     parser.add_argument("--patience",type=int, default=5,
                         help = "patience before early topping")
-
 
     parser.add_argument('corpus_to_train_on', type=str,
                         help='list of the corpus we want to train on ')
