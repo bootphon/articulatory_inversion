@@ -24,13 +24,15 @@ currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfram
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 
-ncpu="10" # number of cpu available
+
 import os
+"""
+ncpu="10" # number of cpu available
 os.environ["OMP_NUM_THREADS"] = ncpu  # export OMP_NUM_THREADS=4
 os.environ["OPENBLAS_NUM_THREADS"] = ncpu  # export OPENBLAS_NUM_THREADS=4
 os.environ["MKL_NUM_THREADS"] = ncpu  # export MKL_NUM_THREADS=4
 os.environ["VECLIB_MAXIMUM_THREADS"] = ncpu  # export VECLIB_MAXIMUM_THREADS=4
-os.environ["NUMEXPR_NUM_THREADS"] = ncpu  # export NUMEXPR_NUM_THREADS=4
+os.environ["NUMEXPR_NUM_THREADS"] = ncpu  # export NUMEXPR_NUM_THREADS=4"""
 import numpy as np
 import argparse
 from Training.model import my_ac2art_model
@@ -46,7 +48,7 @@ import json
 root_folder = os.path.dirname(os.getcwd())
 
 def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_train_on, batch_norma, filter_type,
-                to_plot, lr, delta_test, config):
+                to_plot, lr, delta_test, config, speakers_to_train_on = []):
     """
     :param test_on: (str) one speaker's name we want to test on, the speakers and the corpus the come frome can be seen in
     "fonction_utiles.py", in the function "get_speakers_per_corpus'.
@@ -87,8 +89,10 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
     f_loss_train = open('training_loss.csv', 'w')
     f_loss_valid = open('valid_loss.csv', 'w')
     corpus_to_train_on = corpus_to_train_on[1:-1].split(",")
-
-    train_on = which_speakers_to_train_on(corpus_to_train_on, test_on, config)
+    if speakers_to_train_on == []:
+        train_on = which_speakers_to_train_on(corpus_to_train_on, test_on, config)
+    else:
+        train_on = speakers_to_train_on
 
     name_corpus_concat = ""
     if config != "spec" : # if spec DOESNT train on other speakers
@@ -335,10 +339,13 @@ if __name__=='__main__':
     parser.add_argument('test_on', type=str,
                         help='the speaker we want to test on')
 
+    parser.add_argument('--speakers_to_train', type=str, default=[],
+                        help='specific speakers to train on')
+
     parser.add_argument('--n_epochs', type=int, default=50,
                         help='max number of epochs to train the model')
 
-    parser.add_argument("--loss_train",type = int, default="90",
+    parser.add_argument("--loss_train",type = int, default=90,
                         help = "from 0 to 100, coeff of pearson is the combined loss")
 
     parser.add_argument("--patience",type=int, default=5,
@@ -346,6 +353,7 @@ if __name__=='__main__':
 
     parser.add_argument("--select_arti", type = bool,default=True,
                         help = "whether to learn only on available parameters or not")
+
 
     parser.add_argument('corpus_to_train_on', type=str,
                         help='list of the corpus we want to train on ')
@@ -373,4 +381,4 @@ if __name__=='__main__':
     train_model(test_on=args.test_on, n_epochs=args.n_epochs, loss_train=args.loss_train,
                 patience=args.patience, select_arti=args.select_arti, corpus_to_train_on=args.corpus_to_train_on,
                 batch_norma=args.batch_norma, filter_type=args.filter_type, to_plot=args.to_plot,
-                lr=args.lr, delta_test=args.delta_test, config=args.config)
+                lr=args.lr, delta_test=args.delta_test, config=args.config, speakers_to_train_on=args.speakers_to_train)

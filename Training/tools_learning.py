@@ -153,8 +153,8 @@ def which_speakers_to_train_on(corpus_to_train_on, test_on, config):
     :param corpus_to_train_on: list of all the corpus name to train on
     :param test_on: the speaker test name
     :param config:  either specific/dependant/independant
-    :return: name_corpus_concat : concatenation of the corpus name, used only for the name of the modele
-            train_on : list of the speakers to train_on (except the test speaker)
+    :return:
+            speaker_train_on : list of the speakers to train_on (except the test speaker)
     """
     if config == "spec":  # speaker specific
         speakers_to_train_on = [""]  # only train on the test speaker
