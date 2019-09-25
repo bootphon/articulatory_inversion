@@ -89,7 +89,7 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
     f_loss_train = open('training_loss.csv', 'w')
     f_loss_valid = open('valid_loss.csv', 'w')
     corpus_to_train_on = corpus_to_train_on[1:-1].split(",")
-    speakers_to_train_on = speakers_to_train_on[1:-1].split(",")
+    speakers_to_train_on = speakers_to_train_on[1:-1].replace("'", "").replace('"', '').split(",")
     if speakers_to_train_on == [""] or speakers_to_train_on == []:
         train_on = which_speakers_to_train_on(corpus_to_train_on, test_on, config)
     else:
