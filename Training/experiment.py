@@ -183,7 +183,7 @@ def cross_val_for_alpha(corpus_to_train_on,config):
         speakers = speakers + get_speakers_per_corpus(co)
     print(speakers)
     # TODO: delete that it is just to make a small test
-    speakers = ["fsew0", "msak0", "MNGU0"]
+    speakers = '["fsew0", "msak0", "MNGU0"]'
 
     loss_range = [0, 20, 40, 60, 80, 100]
 
@@ -229,7 +229,7 @@ if __name__=='__main__':
                         help='type of experiment (filter alpha or bn)')
 
     parser.add_argument('--config', type=str, default = None,
-                        help='type of experiment (filter alpha or bn)')
+                        help='indep, spec or dep')
 
     args = parser.parse_args()
 
