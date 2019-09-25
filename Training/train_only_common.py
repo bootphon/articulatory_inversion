@@ -262,7 +262,7 @@ def train_model_arti_common(test_on, n_epochs, loss_train, patience, corpus_to_t
         torch.save(model.state_dict(), os.path.join( "saved_models",name_file+".txt")) #lorsque .txt ==> training terminé !
     random.shuffle(files_for_test)
     x, y = load_np_ema_and_mfcc(files_for_test)
-    y = get_right_indexes(y, arti_common)
+    #y = get_right_indexes(y, arti_common)
     print("evaluation on speaker {}".format(test_on))
     std_speaker = np.load(os.path.join(root_folder,"Preprocessing","norm_values","std_ema_"+test_on+".npy"))
     arti_to_consider = [1 for i in range(len(arti_common))]
@@ -277,7 +277,7 @@ def train_model_arti_common(test_on, n_epochs, loss_train, patience, corpus_to_t
     for i in range(int(nb_batch)):
 
         x, y = load_np_ema_and_mfcc(files_for_train[i * batch_size:(i + 1) * batch_size])
-        y = get_right_indexes(y, arti_common)
+        #y = get_right_indexes(y, arti_common)
         rien, pearson_valid_temp = model.evaluate_on_test(x,y,std_speaker=1, to_plot=to_plot,
                                                              to_consider=arti_to_consider,verbose=False, index_common=arti_common )
         pearson_valid_temp = np.reshape(np.array(pearson_valid_temp),(1,output_dim))
