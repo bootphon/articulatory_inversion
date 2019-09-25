@@ -297,6 +297,7 @@ def give_me_train_valid_test_filenames_no_cat(train_on, test_on, config):
 
 
 def get_right_indexes(y, indexes_list):
+    print(y.shape)
     list_array = []
     for i in indexes_list:
         list_array.append(y[:][:][i:i + 1])
