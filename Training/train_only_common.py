@@ -186,7 +186,7 @@ def train_model_arti_common(test_on, n_epochs, loss_train, patience, corpus_to_t
             model.output_dim = len(arti_common)
             y = get_right_indexes(y,arti_common)
             if cuda_avail:
-                x, y = torch.from_numpy(x).double().to(device=model.device), torch.from_numpy(y).double().to(device=model.device)
+                x, y = x.to(device=model.device), torch.from_numpy(y).double().to(device=model.device)
             y_pred = model(x).double()
             if cuda_avail:
                 y_pred = y_pred.to(device=device)
@@ -224,7 +224,7 @@ def train_model_arti_common(test_on, n_epochs, loss_train, patience, corpus_to_t
                 model.output_dim = len(arti_common)
                 y = get_right_indexes(y, arti_common)
                 if cuda_avail:
-                    x, y = torch.from_numpy(x).double().to(device=model.device), torch.from_numpy(y).double().to(
+                    x, y = x.to(device=model.device), torch.from_numpy(y).double().to(
                         device=model.device)
                 y_pred = model(x).double()
                 torch.cuda.empty_cache()
