@@ -101,7 +101,7 @@ def train_model_arti_common(test_on, n_epochs, loss_train, patience, corpus_to_t
         for corpus in corpus_to_train_on:
             name_corpus_concat = name_corpus_concat + corpus + "_"
 
-    name_file = test_on+"_"+config+"_"+name_corpus_concat+"loss_"+str(loss_train)+"_filter_"+\
+    name_file = 'only_arti_common_' + test_on+"_"+config+"_"+'_'.join(train_on)+"_loss_"+str(loss_train)+"_filter_"+\
                 str(filter_type)+"_bn_"+str(batch_norma)
 
     f_loss_train = open('training_loss'+ name_file +'.csv', 'w')

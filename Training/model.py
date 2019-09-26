@@ -312,7 +312,9 @@ class my_ac2art_model(torch.nn.Module):
                 rmse = np.sqrt(np.mean(np.square(y - y_pred_smoothed), axis=0))  # calculate rmse
                 rmse = np.reshape(rmse, (1, self.output_dim))
                 if index_common != []:
+                    print(std_speaker.shape)
                     std_speaker = get_right_indexes(std_speaker, index_common, shape=1)
+                    print(std_speaker.shape)
                 rmse = rmse*std_speaker  # unormalize
                 all_diff = np.concatenate((all_diff, rmse))
                 pearson = [0]*self.output_dim
