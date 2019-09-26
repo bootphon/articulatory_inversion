@@ -307,11 +307,15 @@ def get_right_indexes(y, indexes_list, shape = 3):
             list_array.append(y[:, :, i:i+1])
         if shape == 2:
             list_array.append(y[:, i:i + 1])
+        if shape == 1:
+            list_array.append(y[i:i + 1])
     #print(list_array)
     if shape == 3:
         return np.concatenate(tuple(list_array), axis=2)
     if shape == 2:
         return np.concatenate(tuple(list_array), axis=1)
+    if shape == 1:
+        return np.concatenate(tuple(list_array), axis=0)
 
 
 
