@@ -315,7 +315,7 @@ def get_right_indexes(y, indexes_list, shape = 3):
     if shape == 2:
         return np.concatenate(tuple(list_array), axis=1)
     if shape == 1:
-        print(list_array)
+        #print(list_array)
         return np.concatenate(tuple(list_array), axis=0)
 
 
