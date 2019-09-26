@@ -240,7 +240,7 @@ def cross_val_for_alpha(corpus_to_train_on,config, only_common = False):
         print("PEARSON ", results_pearson)
         print(" PEARSON STD", std_pearson)
         today = date.today().strftime("%d/%m/%Y")
-        with open('experiment_results_alpha.csv', 'a') as f:
+        with open('experiment_results_alpha_haskins.csv', 'a') as f:
             writer = csv.writer(f)
             row_rmse_mean = [today, corpus_to_train_on, loss_train, "rmse_mean"] + results_rmse.tolist()
             row_rmse_std = [today,corpus_to_train_on, loss_train, "rmse_std"] + std_rmse.tolist()
