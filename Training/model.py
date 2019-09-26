@@ -291,36 +291,36 @@ class my_ac2art_model(torch.nn.Module):
         if to_plot:
             indices_to_plot = np.random.choice(len(X_test), 2, replace=False)
         for i in range(len(X_test)):
-                L = len(X_test[i])
-                x_torch = torch.from_numpy(X_test[i]).view(1, L, self.input_dim)  #x (1,L,429)
-                y = Y_test[i].reshape((L, 18))                     #y (L,13)
-                if index_common != []:
-                    y = get_right_indexes(y, index_common, shape = 2)
-                if self.cuda_avail:
-                    x_torch = x_torch.to(device=self.device)
-                y_pred_not_smoothed = self(x_torch, False).double() #output y_pred (1,L,13)
-                y_pred_smoothed = self(x_torch, True).double()
-                if self.cuda_avail:
-                    y_pred_not_smoothed = y_pred_not_smoothed.cpu()
-                    y_pred_smoothed = y_pred_smoothed.cpu()
-                y_pred_not_smoothed = y_pred_not_smoothed.detach().numpy().reshape((L, self.output_dim))  # y_pred (L,13)
-                y_pred_smoothed = y_pred_smoothed.detach().numpy().reshape((L, self.output_dim))  # y_pred (L,13)
-                if to_plot:
-                    if i in indices_to_plot:
-                        self.plot_results(y_target = y, y_pred_smoothed = y_pred_smoothed,
-                                          y_pred_not_smoothed = y_pred_not_smoothed, to_cons = to_consider)
-                rmse = np.sqrt(np.mean(np.square(y - y_pred_smoothed), axis=0))  # calculate rmse
-                rmse = np.reshape(rmse, (1, self.output_dim))
-                std_to_modify = std_speaker.copy()
-                if index_common != []:
-                    std_to_modify = get_right_indexes(std_to_modify, index_common, shape=1)
-                rmse = rmse*std_to_modify  # unormalize
-                all_diff = np.concatenate((all_diff, rmse))
-                pearson = [0]*self.output_dim
-                for k in range(self.output_dim):
-                    pearson[k] = np.corrcoef(y[:, k].T, y_pred_smoothed[:, k].T)[0, 1]
-                pearson = np.array(pearson).reshape((1, self.output_dim))
-                all_pearson = np.concatenate((all_pearson, pearson))
+            L = len(X_test[i])
+            x_torch = torch.from_numpy(X_test[i]).view(1, L, self.input_dim)  #x (1,L,429)
+            y = Y_test[i].reshape((L, 18))                     #y (L,13)
+            if index_common != []:
+                y = get_right_indexes(y, index_common, shape = 2)
+            if self.cuda_avail:
+                x_torch = x_torch.to(device=self.device)
+            y_pred_not_smoothed = self(x_torch, False).double() #output y_pred (1,L,13)
+            y_pred_smoothed = self(x_torch, True).double()
+            if self.cuda_avail:
+                y_pred_not_smoothed = y_pred_not_smoothed.cpu()
+                y_pred_smoothed = y_pred_smoothed.cpu()
+            y_pred_not_smoothed = y_pred_not_smoothed.detach().numpy().reshape((L, self.output_dim))  # y_pred (L,13)
+            y_pred_smoothed = y_pred_smoothed.detach().numpy().reshape((L, self.output_dim))  # y_pred (L,13)
+            if to_plot:
+                if i in indices_to_plot:
+                    self.plot_results(y_target = y, y_pred_smoothed = y_pred_smoothed,
+                                      y_pred_not_smoothed = y_pred_not_smoothed, to_cons = to_consider)
+            rmse = np.sqrt(np.mean(np.square(y - y_pred_smoothed), axis=0))  # calculate rmse
+            rmse = np.reshape(rmse, (1, self.output_dim))
+            std_to_modify = std_speaker
+            if index_common != []:
+                std_to_modify = get_right_indexes(std_to_modify, index_common, shape=1)
+            rmse = rmse*std_to_modify  # unormalize
+            all_diff = np.concatenate((all_diff, rmse))
+            pearson = [0]*self.output_dim
+            for k in range(self.output_dim):
+                pearson[k] = np.corrcoef(y[:, k].T, y_pred_smoothed[:, k].T)[0, 1]
+            pearson = np.array(pearson).reshape((1, self.output_dim))
+            all_pearson = np.concatenate((all_pearson, pearson))
         all_pearson = all_pearson[1:]
         all_pearson[:, idx_to_ignore] = 0
         all_diff = all_diff[1:]
