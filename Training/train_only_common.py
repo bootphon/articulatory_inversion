@@ -279,7 +279,7 @@ def train_model_arti_common(test_on, n_epochs, loss_train, patience, corpus_to_t
         x, y = load_np_ema_and_mfcc(files_for_train[i * batch_size:(i + 1) * batch_size])
         #y = get_right_indexes(y, arti_common)
         rien, pearson_valid_temp = model.evaluate_on_test(x,y,std_speaker=1, to_plot=to_plot,
-                                                             to_consider=arti_to_consider,verbose=False, index_common=arti_common )
+                                                             to_consider=arti_to_consider,verbose=False, index_common=arti_common , no_std = True)
         pearson_valid_temp = np.reshape(np.array(pearson_valid_temp),(1,output_dim))
         pearson_valid = np.concatenate((pearson_valid,pearson_valid_temp),axis=0)
     pearson_valid = pearson_valid[1:,:]
