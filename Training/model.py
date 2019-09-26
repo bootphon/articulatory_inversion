@@ -276,7 +276,7 @@ class my_ac2art_model(torch.nn.Module):
             plt.savefig(save_pics_path)
             plt.close('all')
 
-    def evaluate_on_test(self, X_test, Y_test, std_speaker, to_plot=False, to_consider=None, verbose=True, index_common = []):
+    def evaluate_on_test(self, X_test, Y_test, std_speaker, to_plot=False, to_consider=None, verbose=True, index_common = [], no_std = False):
         """
         :param X_test:  list of all the input of the test set
         :param Y_test:  list of all the target of the test set
@@ -311,8 +311,9 @@ class my_ac2art_model(torch.nn.Module):
                                       y_pred_not_smoothed = y_pred_not_smoothed, to_cons = to_consider)
             rmse = np.sqrt(np.mean(np.square(y - y_pred_smoothed), axis=0))  # calculate rmse
             rmse = np.reshape(rmse, (1, self.output_dim))
+
             std_to_modify = std_speaker
-            if index_common != []:
+            if index_common != [] and not no_std:
                 std_to_modify = get_right_indexes(std_to_modify, index_common, shape=1)
             rmse = rmse*std_to_modify  # unormalize
             all_diff = np.concatenate((all_diff, rmse))
