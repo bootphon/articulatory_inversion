@@ -218,7 +218,7 @@ def train_model_arti_common(test_on, n_epochs, loss_train, patience, corpus_to_t
             nb_batch = len(files_for_valid) / batch_size
             for i in range(int(nb_batch)):
                 n_valid +=1
-                x, y = load_np_ema_and_mfcc(files_for_train[i * batch_size:(i + 1) * batch_size])
+                x, y = load_np_ema_and_mfcc(files_for_valid[i * batch_size:(i + 1) * batch_size])
                 model.output_dim = 18
                 x, y = model.prepare_batch(x, y)
                 model.output_dim = len(arti_common)

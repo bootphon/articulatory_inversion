@@ -260,7 +260,7 @@ def give_me_train_valid_test_filenames(train_on, test_on, config, batch_size):
 
 def give_me_train_valid_test_filenames_no_cat(train_on, test_on, config):
     """
-    :param train_on: list of corpus to train on
+    :param train_on: list of speakers to train on
     :param test_on: the speaker test
     :param config: either spec/dep/indep
     :param batch_size
