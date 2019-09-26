@@ -290,7 +290,7 @@ def train_model_arti_common(test_on, n_epochs, loss_train, patience, corpus_to_t
 
     articulators = ['tt_x', 'tt_y', 'td_x', 'td_y', 'tb_x', 'tb_y', 'li_x', 'li_y',
                     'ul_x', 'ul_y', 'll_x', 'll_y', 'la', 'lp', 'ttcl', 'tbcl', 'v_x', 'v_y']
-    articulators = articulators[arti_common]
+    articulators = [art for art in articulators if art in arti_common]
     if not os.path.exists('model_results.csv'):
         with open('model_results.csv', 'a',newline = "") as f:
             writer = csv.writer(f)
