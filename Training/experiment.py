@@ -201,7 +201,7 @@ def cross_val_for_alpha(corpus_to_train_on,config, only_common = False):
     print(speakers)
     # TODO: delete that it is just to make a small test
     #speakers = ["fsew0", "msak0", "MNGU0"]
-    speakers = ['F01', 'F02', 'F03', 'F04', 'M01', 'M02', 'M03', 'M04']
+    speakers = ['F01', 'F02','F03', 'M01', 'M02', 'M03']
     if only_common:
         output_dim = len(give_me_common_articulators(speakers))
 
