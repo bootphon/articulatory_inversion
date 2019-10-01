@@ -48,7 +48,7 @@ import json
 root_folder = os.path.dirname(os.getcwd())
 
 def train_model_arti_common(test_on, n_epochs, loss_train, patience, corpus_to_train_on, batch_norma, filter_type,
-                to_plot, lr, delta_test, config, speakers_to_train_on = ""):
+                to_plot, lr, delta_valid, delta_test, config, speakers_to_train_on = "", speakers_to_valid_on = ""):
     """
     :param test_on: (str) one speaker's name we want to test on, the speakers and the corpus the come frome can be seen in
     "fonction_utiles.py", in the function "get_speakers_per_corpus'.
@@ -81,34 +81,44 @@ def train_model_arti_common(test_on, n_epochs, loss_train, patience, corpus_to_t
 
     :param delta_test: frequency of validation evaluation, 1 seems good
 
-    :param config : either "spe" "dep", or "indep", for specific (train only on test sp), dependant (train on test sp
-    and others), or independant, train only on other speakers
+    :param config : either "spe" "dep", or "indep" or "train_indep", for specific (train only on test sp), dependant (train on test sp
+    and others), or independant, train only on other speakers, and training independant for training on a certain list, validation
+    on another an d test on another speaker
 
     :return: [rmse, pearson] . rmse the is the list of the 18 rmse (1 per articulator), same for pearson.
     """
 
     corpus_to_train_on = corpus_to_train_on[1:-1].split(",")
     speakers_to_train_on = speakers_to_train_on[1:-1].replace("'", "").replace('"', '').replace(' ', '').split(",")
+    speakers_to_valid_on = speakers_to_valid_on[1:-1].replace("'", "").replace('"', '').replace(' ', '').split(",")
     if speakers_to_train_on == [""] or speakers_to_train_on == []:
         train_on = which_speakers_to_train_on(corpus_to_train_on, test_on, config)
     else:
         train_on = speakers_to_train_on
 
-    arti_common = give_me_common_articulators([test_on] + train_on)
+    if speakers_to_valid_on == [""] or speakers_to_valid_on == []:
+        valid_on = []
+    else:
+
+        valid_on = speakers_to_valid_on
+        print("You choose to valid on", speakers_to_valid_on)
+
+    arti_common = give_me_common_articulators([test_on] + train_on + valid_on)
     print(arti_common)
     name_corpus_concat = ""
     if config != "spec" : # if spec DOESNT train on other speakers
         for corpus in corpus_to_train_on:
             name_corpus_concat = name_corpus_concat + corpus + "_"
 
-    name_file = 'only_arti_common_' + test_on+"_"+config+"_"+'_'.join(train_on)+"_loss_"+str(loss_train)+"_filter_"+\
+    name_file = 'only_arti_common_' + test_on+"_"+config+"_train_"+'_'.join(train_on)+'_'+ '_'.join(valid_on) + "_loss_"+str(loss_train)+"_filter_"+\
                 str(filter_type)+"_bn_"+str(batch_norma)
 
     f_loss_train = open('training_loss'+ name_file +'.csv', 'w')
     f_loss_valid = open('valid_loss'+ name_file +'.csv', 'w')
-    f_loss_valid.write('epoch,training_loss,pearson,rmse')
-    f_loss_train.write('epoch,training_loss,pearson,rmse')
-
+    f_loss_test = open('test_loss' + name_file + '.csv', 'w')
+    f_loss_valid.write('epoch,training_loss,pearson,rmse\n')
+    f_loss_train.write('epoch,training_loss,pearson,rmse\n')
+    f_loss_test.write('epoch,training_loss,pearson,rmse\n')
     if not os.path.exists("saved_models"):
         os.mkdir("saved_models")
 
@@ -159,7 +169,7 @@ def train_model_arti_common(test_on, n_epochs, loss_train, patience, corpus_to_t
 
 
 
-    files_for_train, files_for_valid, files_for_test = give_me_train_valid_test_filenames_no_cat(train_on,test_on,config)
+    files_for_train, files_for_valid, files_for_test = give_me_train_valid_test_filenames_no_cat(train_on,test_on,config, valid_on=valid_on)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
@@ -210,7 +220,8 @@ def train_model_arti_common(test_on, n_epochs, loss_train, patience, corpus_to_t
         loss_train_this_epoch = loss_train_this_epoch/n_this_epoch
         print("Training loss for epoch", epoch, ': ', loss_train_this_epoch)
         f_loss_train.write(str(epoch) + ',' + str(loss_train_this_epoch) + ',' + str(loss_pearson/n_this_epoch/1000./batch_size/len(arti_common)*(-1.)) + ',' + str(loss_rmse/n_this_epoch/batch_size/len(arti_common)) + '\n')
-        if epoch%delta_test == 0:  #toutes les delta_test epochs on évalue le modèle sur validation et on sauvegarde le modele si le score est meilleur
+
+        if epoch%delta_valid == 0:  #toutes les delta_test epochs on évalue le modèle sur validation et on sauvegarde le modele si le score est meilleur
             loss_vali = 0
             n_valid = 0
             loss_pearson = 0
@@ -233,6 +244,7 @@ def train_model_arti_common(test_on, n_epochs, loss_train, patience, corpus_to_t
                 y = y.double()  # (Batchsize, maxL, art_common_nb)
                 loss_courant = criterion_both(y, y_pred, loss_train, cuda_avail = cuda_avail, device=device)
                 loss_vali += loss_courant.item()
+
                 # to follow both losses
                 loss_2 = criterion_both(y, y_pred, alpha=100, cuda_avail=cuda_avail, device=device)
                 loss_pearson += loss_2.item()
@@ -240,7 +252,43 @@ def train_model_arti_common(test_on, n_epochs, loss_train, patience, corpus_to_t
                 loss_rmse += loss_3.item()
 
             loss_vali  = loss_vali/n_valid
-            f_loss_valid.write(str(epoch) + ',' + str(loss_vali) + ',' +  str(loss_pearson/n_valid/1000./batch_size/len(arti_common)*(-1.)) + ',' + str(loss_rmse/n_valid/batch_size/len(arti_common)) + '\n')
+            f_loss_valid.write(str(epoch) + ',' + str(loss_vali) + ',' +  str(loss_pearson/n_valid/1000./batch_size/len(arti_common)*(-1.)) +
+                               ',' + str(loss_rmse/n_valid/batch_size/len(arti_common)) + '\n')
+        # test on the test files
+        if epoch % delta_test == 0:  # toutes les delta_test epochs on évalue le modèle sur validation et on sauvegarde le modele si le score est meilleur
+            loss_test = 0
+            n_test = 0
+            loss_pearson = 0
+            loss_rmse = 0
+            nb_batch = len(files_for_test) / batch_size
+            for i in range(int(nb_batch)):
+                n_test += 1
+                x, y = load_np_ema_and_mfcc(files_for_test[i * batch_size:(i + 1) * batch_size])
+                model.output_dim = 18
+                x, y = model.prepare_batch(x, y)
+                model.output_dim = len(arti_common)
+                y = get_right_indexes(y, arti_common)
+                if cuda_avail:
+                    x, y = x.to(device=model.device), torch.from_numpy(y).double().to(
+                        device=model.device)
+                y_pred = model(x).double()
+                torch.cuda.empty_cache()
+                if cuda_avail:
+                    y_pred = y_pred.to(device=device)
+                y = y.double()  # (Batchsize, maxL, art_common_nb)
+                loss_courant = criterion_both(y, y_pred, loss_train, cuda_avail=cuda_avail, device=device)
+                loss_test += loss_courant.item()
+
+                # to follow both losses
+                loss_2 = criterion_both(y, y_pred, alpha=100, cuda_avail=cuda_avail, device=device)
+                loss_pearson += loss_2.item()
+                loss_3 = criterion_both(y, y_pred, alpha=0, cuda_avail=cuda_avail, device=device)
+                loss_rmse += loss_3.item()
+
+            loss_test = loss_test / n_test
+            f_loss_test.write(str(epoch) + ',' + str(loss_test) + ',' + str(
+                loss_pearson / n_test / 1000. / batch_size / len(arti_common) * (-1.)) +
+                               ',' + str(loss_rmse / n_test / batch_size / len(arti_common)) + '\n')
         torch.cuda.empty_cache()
         model.all_validation_loss.append(loss_vali)
         model.all_training_loss.append(loss_train_this_epoch)
@@ -275,7 +323,6 @@ def train_model_arti_common(test_on, n_epochs, loss_train, patience, corpus_to_t
     pearson_valid = np.zeros((1,output_dim))
     nb_batch = len(files_for_test) / batch_size
     for i in range(int(nb_batch)):
-
         x, y = load_np_ema_and_mfcc(files_for_train[i * batch_size:(i + 1) * batch_size])
         #y = get_right_indexes(y, arti_common)
         rien, pearson_valid_temp = model.evaluate_on_test(x,y,std_speaker=1, to_plot=to_plot,
@@ -301,7 +348,7 @@ def train_model_arti_common(test_on, n_epochs, loss_train, patience, corpus_to_t
     # write result in csv
     with open('model_results.csv', 'a',newline = "") as f:
         writer = csv.writer(f)
-        row_details = [name_file,test_on,config,name_corpus_concat,loss_train,model.epoch_ref]
+        row_details = ['only_common', name_file,test_on,config,name_corpus_concat,loss_train,model.epoch_ref]
         row_rmse = row_details + ["rmse_on_test", np.mean(rmse_per_arti_mean[rmse_per_arti_mean!=0])] +\
                    rmse_per_arti_mean.tolist()
 
@@ -357,8 +404,11 @@ if __name__=='__main__':
     parser.add_argument('--lr', type = float, default = 0.001,
                         help='learning rate of Adam optimizer ')
 
-    parser.add_argument('--delta_test', type=int, default=1,
+    parser.add_argument('--delta_valid', type=int, default=1,
                         help='how often evaluate the validation set')
+
+    parser.add_argument('--delta_test', type=int, default=5,
+                        help='how often evaluate the test set')
 
     parser.add_argument('config', type=str,
                         help='spec or dep or indep that stands for speaker specific/dependant/independant')
@@ -368,4 +418,4 @@ if __name__=='__main__':
     train_model_arti_common(test_on=args.test_on, n_epochs=args.n_epochs, loss_train=args.loss_train,
                 patience=args.patience,  corpus_to_train_on=args.corpus_to_train_on,
                 batch_norma=args.batch_norma, filter_type=args.filter_type, to_plot=args.to_plot,
-                lr=args.lr, delta_test=args.delta_test, config=args.config, speakers_to_train_on=args.speakers_to_train)
+                lr=args.lr, delta_valid=args.delta_valid, delta_test=args.delta_test, config=args.config, speakers_to_train_on=args.speakers_to_train)

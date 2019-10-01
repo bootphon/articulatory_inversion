@@ -258,7 +258,7 @@ def give_me_train_valid_test_filenames(train_on, test_on, config, batch_size):
 
     return files_per_categ, files_for_test
 
-def give_me_train_valid_test_filenames_no_cat(train_on, test_on, config):
+def give_me_train_valid_test_filenames_no_cat(train_on, test_on, config, valid_on = []):
     """
     :param train_on: list of speakers to train on
     :param test_on: the speaker test
@@ -273,6 +273,7 @@ def give_me_train_valid_test_filenames_no_cat(train_on, test_on, config):
     - spec : for speaker specific, learning and testing only on the speaker test
     - dep : for speaker dependant, learning on speakers in train_on and a part of the speaker test
     - indep : for speaker independant, learnong on other speakers.
+    - train_indep: when you want to train on a list of speakers, valid on another list and test on another speaker
     """
     if config == "spec":
         files_for_train = load_filenames([test_on], part=["train"])
@@ -290,8 +291,14 @@ def give_me_train_valid_test_filenames_no_cat(train_on, test_on, config):
         files_for_train = load_filenames(train_on, part=["train", "test"])
         files_for_valid = load_filenames(train_on, part=["valid"])
         files_for_test = load_filenames([test_on], part=["train", "valid", "test"])
-
-
+    elif config == "train_indep":
+        # this means that we have a speaker in valid_on
+        if valid_on == []:
+            print('ERROR, you did not choose speaker to valid on')
+            return
+        files_for_train = load_filenames(train_on, part=["train", "test", "valid"])
+        files_for_valid = load_filenames(valid_on, part=["train", "test", "valid"])
+        files_for_test = load_filenames([test_on], part=["train", "valid", "test"])
 
     return files_for_train, files_for_valid, files_for_test
 
