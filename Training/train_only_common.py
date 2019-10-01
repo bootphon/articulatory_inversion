@@ -110,7 +110,7 @@ def train_model_arti_common(test_on, n_epochs, loss_train, patience, corpus_to_t
         for corpus in corpus_to_train_on:
             name_corpus_concat = name_corpus_concat + corpus + "_"
 
-    name_file = 'only_arti_common_' + test_on+"_"+config+"_train_"+'_'.join(train_on)+'_'+ '_'.join(valid_on) + "_loss_"+str(loss_train)+"_filter_"+\
+    name_file = 'only_arti_common_' + test_on+"_"+config+"_train_"+'_'.join(train_on)+'_valid_'+ '_'.join(valid_on) + "_loss_"+str(loss_train)+"_filter_"+\
                 str(filter_type)+"_bn_"+str(batch_norma)
 
     f_loss_train = open('training_loss'+ name_file +'.csv', 'w')
@@ -380,6 +380,9 @@ if __name__=='__main__':
     parser.add_argument('--speakers_to_train', type=str, default=[],
                         help='specific speakers to train on')
 
+    parser.add_argument('--speakers_to_valid', type=str, default=[],
+                        help='specific speakers to valid on')
+
     parser.add_argument('--n_epochs', type=int, default=50,
                         help='max number of epochs to train the model')
 
@@ -418,4 +421,5 @@ if __name__=='__main__':
     train_model_arti_common(test_on=args.test_on, n_epochs=args.n_epochs, loss_train=args.loss_train,
                 patience=args.patience,  corpus_to_train_on=args.corpus_to_train_on,
                 batch_norma=args.batch_norma, filter_type=args.filter_type, to_plot=args.to_plot,
-                lr=args.lr, delta_valid=args.delta_valid, delta_test=args.delta_test, config=args.config, speakers_to_train_on=args.speakers_to_train)
+                lr=args.lr, delta_valid=args.delta_valid, delta_test=args.delta_test, config=args.config,
+                            speakers_to_train_on=args.speakers_to_train, speakers_to_valid_on=args.speakers_to_valid)
