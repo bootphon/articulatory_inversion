@@ -69,11 +69,13 @@ def preprocess_my_wav_files(wav_folder, mfcc_folder, Nmax=0):
         frames = np.concatenate([padding, mfcc, padding])
         full_window = 1 + 2 * window
         mfcc = np.concatenate([frames[j:j + len(mfcc)] for j in range(full_window)], axis=1)  # add context
+        # normalize
+        mfcc =( mfcc - mfcc.mean(axis = 0, keepdims=True) )/ mfcc.std(axis = 0, keepdims=True)
         np.save(os.path.join(root_folder, "Predictions_arti",mfcc_folder, filename), mfcc)
 
 
 def predictions_arti(model_name,mfcc_folder="my_mfcc_files_for_inversion",
-                     ema_folder="my_articulatory_prediction"):
+                     ema_folder="my_articulatory_prediction", output_dim = 18):
     """
     :param model_name: name of model we want to use for the articulatory predictions
     with the weights in model_name, this script perform articulatory predictions corresponding to the wav files
@@ -86,8 +88,8 @@ def predictions_arti(model_name,mfcc_folder="my_mfcc_files_for_inversion",
 
     hidden_dim = 300
     input_dim = 429
-    batch_size = 10
-    output_dim = 18
+    batch_size = 1
+    output_dim = output_dim
 
     filter_type = "fix"
     batch_norma = False  # future work : read from model name if true or false
@@ -105,21 +107,32 @@ def predictions_arti(model_name,mfcc_folder="my_mfcc_files_for_inversion",
         mfcc = np.load(os.path.join(root_folder,"Predictions_arti",mfcc_folder,mfcc_file))
         mfcc_torch = torch.from_numpy(mfcc).view(1, -1, input_dim)
         ema_torch = model(mfcc_torch)
-        ema = ema_torch.detach().numpy().reshape((-1,18))
+        ema = ema_torch.detach().numpy().reshape((-1, output_dim))
         np.save(os.path.join(root_folder,"Predictions_arti",ema_folder,model_name,mfcc_file),ema)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Articulatory predictions for some wav files')
 
+    parser.add_argument('wav_folder', type=str,
+                        help= 'where the wav that need to be predicted are')
+
+    parser.add_argument('mfcc_folder', type=str,
+                        help='where you want to put the features extracted from the wav')
+    parser.add_argument('output_folder', type=str,
+                        help='where you want to put the articulatory_reconstruction')
+    parser.add_argument('--output_dim', type=int, default=18,
+                        help='output dimension of the model you are using')
+    parser.add_argument('model_name', type=str, help='the name of your model')
     parser.add_argument('--already_prepro', type=bool, default=False,
                         help='put to True if preprocessin already done for the wav files')
 
     args = parser.parse_args()
     if not(args.already_prepro):
         print("preprocessing...")
-        preprocess_my_wav_files()
-    predictions_arti(args.model)
+        preprocess_my_wav_files(wav_folder = args.wav_folder, mfcc_folder = args.mfcc_folder, Nmax=0)
+    predictions_arti(model_name = args.model_name, mfcc_folder=args.mfcc_folder,
+                     ema_folder=args.output_folder, output_dim = args.output_dim)
 
 
 #example name model "F01_spec_loss_0_filter_fix_bn_False_0"

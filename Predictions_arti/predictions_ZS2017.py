@@ -24,16 +24,16 @@ root_folder = os.path.dirname(os.getcwd())
 import argparse
 
 
-def prediction_arti_ZS(name_model,Nmax = 0) :
+def prediction_arti_ZS(name_model, wav_folder, mfcc_folder, ema_folder, output_dim = 18,Nmax = 0) :
     """
     :param name_model: name of the model we want to predict the trajectories with
     :param Nmax: if we dont want to predict the traj of ALL wav files, precise how many
     arti predictions for the wav files of ZS2017 with the asked model.
     Also writes fea files in order to run the abx test
     """
-    preprocess_my_wav_files("wav_ZS2017_1s", "mfcc_ZS2017_1s",Nmax)
-    predictions_arti(name_model,"mfcc_ZS2017_1s","ema_predictions_ZS2017_1s")
-    filenames = os.listdir(os.path.join(root_folder,"Predictions_arti",name_model,"ema_predictions_ZS2017_1s"))
+    preprocess_my_wav_files(wav_folder=wav_folder, mfcc_folder=mfcc_folder,Nmax = Nmax)
+    predictions_arti(model_name=name_model,mfcc_folder=mfcc_folder,ema_folder=ema_folder, output_dim=output_dim)
+    filenames = os.listdir(os.path.join(root_folder,"Predictions_arti",name_model,ema_folder))
     if not os.path.exists(os.path.join(root_folder,"Predictions_arti", "fea_ZS2017_1s")):
         os.mkdir(os.path.join(root_folder,"Predictions_arti", "fea_ZS2017_1s"))
     if Nmax > 0 :
@@ -66,10 +66,18 @@ if __name__ == '__main__':
 
     parser.add_argument('name_model', type=str,
                         help='model to use for the inversion')
-
+    parser.add_argument('wav_folder', type=str,
+                        help='folder wav')
+    parser.add_argument('mfcc_folder', type=str,
+                        help='folde to put mfcc')
+    parser.add_argument('ema_folder', type=str,
+                        help='folder to put ema')
     parser.add_argument('--Nmax', type=int, default=0,
                         help='#max of predictions to do. If 0 do ALL the predictions')
+    parser.add_argument('--output_dime', type=int, default=18,
+                        help='output dimension of ema')
 
     args = parser.parse_args()
-    prediction_arti_ZS(args.name_model, args.Nmax)
+    prediction_arti_ZS(name_model=args.name_model, Nmax=args.Nmax, wav_folder=args.wav_folder, mfcc_folder=args.mfcc_folder,
+                       ema_folder = args.ema_folder, output_dim=args.output_dim)
 
