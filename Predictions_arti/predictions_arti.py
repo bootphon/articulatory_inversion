@@ -84,6 +84,8 @@ def predictions_arti(model_name,mfcc_folder="my_mfcc_files_for_inversion",
     """
 
     if not os.path.exists(os.path.join(root_folder,"Predictions_arti",ema_folder,model_name)):
+        if not os.path.exists(os.path.join(root_folder,"Predictions_arti",ema_folder)):
+            os.mkdir(os.path.join(root_folder, "Predictions_arti", ema_folder))
         os.mkdir(os.path.join(root_folder,"Predictions_arti",ema_folder,model_name))
 
     hidden_dim = 300

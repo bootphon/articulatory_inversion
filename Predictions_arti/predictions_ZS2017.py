@@ -24,23 +24,28 @@ root_folder = os.path.dirname(os.getcwd())
 import argparse
 
 
-def prediction_arti_ZS(name_model, wav_folder, mfcc_folder, ema_folder, output_dim = 18,Nmax = 0) :
+def prediction_arti_ZS(name_model, wav_folder, mfcc_folder, ema_folder, output_dim = 18,Nmax = 0, prepro_done = False) :
     """
     :param name_model: name of the model we want to predict the trajectories with
     :param Nmax: if we dont want to predict the traj of ALL wav files, precise how many
     arti predictions for the wav files of ZS2017 with the asked model.
     Also writes fea files in order to run the abx test
     """
-    preprocess_my_wav_files(wav_folder=wav_folder, mfcc_folder=mfcc_folder,Nmax = Nmax)
+    print('Preprocessing...')
+    if not prepro_done:
+        preprocess_my_wav_files(wav_folder=wav_folder, mfcc_folder=mfcc_folder,Nmax = Nmax)
+    print('Preprocessed done!')
+    print('Predicting...')
     predictions_arti(model_name=name_model,mfcc_folder=mfcc_folder,ema_folder=ema_folder, output_dim=output_dim)
-    filenames = os.listdir(os.path.join(root_folder,"Predictions_arti",name_model,ema_folder))
+    print('Predicting done!')
+    filenames = os.listdir(os.path.join(root_folder,"Predictions_arti",ema_folder,name_model))
     if not os.path.exists(os.path.join(root_folder,"Predictions_arti", "fea_ZS2017_1s")):
         os.mkdir(os.path.join(root_folder,"Predictions_arti", "fea_ZS2017_1s"))
     if Nmax > 0 :
         filenames = filenames[:Nmax]
 
     for filename in filenames :
-        arti_pred = np.load(os.path.join(root_folder,"Predictions_arti",name_model,"ema_predictions_ZS2017_1s",filename))
+        arti_pred = np.load(os.path.join(root_folder,"Predictions_arti",ema_folder,name_model,filename))
         write_fea_file(arti_pred, filename)
 
 
@@ -76,8 +81,9 @@ if __name__ == '__main__':
                         help='#max of predictions to do. If 0 do ALL the predictions')
     parser.add_argument('--output_dim', type=int, default=18,
                         help='output dimension of ema')
+    parser.add_argument('--prep_done', type=bool, default = False, help='preprocessing done')
 
     args = parser.parse_args()
     prediction_arti_ZS(name_model=args.name_model, Nmax=args.Nmax, wav_folder=args.wav_folder, mfcc_folder=args.mfcc_folder,
-                       ema_folder = args.ema_folder, output_dim=args.output_dim)
+                       ema_folder = args.ema_folder, output_dim=args.output_dim, prepro_done=args.prep_done)
 
