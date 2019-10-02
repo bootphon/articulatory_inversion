@@ -170,7 +170,7 @@ def train_model_arti_common(test_on, n_epochs, loss_train, patience, corpus_to_t
 
 
     files_for_train, files_for_valid, files_for_test = give_me_train_valid_test_filenames_no_cat(train_on,test_on,config, valid_on=valid_on)
-
+    print('train on', len(files_for_train), 'valid on', len(files_for_valid), 'test on', len(files_for_test))
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
     plot_filtre_chaque_epochs = False
@@ -220,7 +220,8 @@ def train_model_arti_common(test_on, n_epochs, loss_train, patience, corpus_to_t
         loss_train_this_epoch = loss_train_this_epoch/n_this_epoch
         print("Training loss for epoch", epoch, ': ', loss_train_this_epoch)
         f_loss_train.write(str(epoch) + ',' + str(loss_train_this_epoch) + ',' + str(loss_pearson/n_this_epoch/1000./batch_size/len(arti_common)*(-1.)) + ',' + str(loss_rmse/n_this_epoch/batch_size/len(arti_common)) + '\n')
-
+        real_batch_size = batch_size
+        batch_size = 1
         if epoch%delta_valid == 0:  #toutes les delta_test epochs on évalue le modèle sur validation et on sauvegarde le modele si le score est meilleur
             loss_vali = 0
             n_valid = 0
@@ -289,6 +290,7 @@ def train_model_arti_common(test_on, n_epochs, loss_train, patience, corpus_to_t
             f_loss_test.write(str(epoch) + ',' + str(loss_test) + ',' + str(
                 loss_pearson / n_test / 1000. / batch_size / len(arti_common) * (-1.)) +
                                ',' + str(loss_rmse / n_test / batch_size / len(arti_common)) + '\n')
+        batch_size = real_batch_size
         torch.cuda.empty_cache()
         model.all_validation_loss.append(loss_vali)
         model.all_training_loss.append(loss_train_this_epoch)
