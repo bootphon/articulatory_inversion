@@ -12,7 +12,7 @@
     The results are then averaged over all the speakers results.
 """
 
-
+import random
 import os,sys,inspect
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
@@ -36,13 +36,13 @@ batch_norma = False
 filter_type = "fix"
 to_plot = False
 lr = 0.001
-delta_test = 1
+delta_test = 3
 corpus = ["Haskins"]
 train_a_bit_on_test = False
 output_dim = 18 #18 trajectories
 speakers = get_speakers_per_corpus("Haskins")
 config = "indep"
-
+delta_valid = 1
 def cross_val_config(corpus_to_train_on, only_common = False):
     """
     performs the cross validation on Haskins corpus for 3 types of config in order to evaluate the capacity of
@@ -201,7 +201,9 @@ def cross_val_for_alpha(corpus_to_train_on,config, only_common = False):
     print(speakers)
     # TODO: delete that it is just to make a small test
     #speakers = ["fsew0", "msak0", "MNGU0"]
-    speakers = ['F01', 'F02','F03', 'M01', 'M02', 'M03']
+    speakers = ['F01', 'M01', "fsew0", "msak0", "MNGU0"]
+    haskins = ['F01', 'M01']
+    mocha_mng = ["fsew0", "msak0", "MNGU0"]
     if only_common:
         output_dim = len(give_me_common_articulators(speakers))
 
@@ -212,13 +214,20 @@ def cross_val_for_alpha(corpus_to_train_on,config, only_common = False):
         rmse_all, pearson_all = np.zeros((len(speakers), output_dim)), np.zeros((len(speakers), output_dim))
 
         for speaker in speakers:
-            speaker_to_train = str([sp for sp in speakers if sp != speaker])
+            if speaker in haskins:
+
+                speaker_to_valid = str([[sp for sp in mocha_mng if sp != speaker][random.randint(0,2)]])
+            if speaker in mocha_mng:
+                speaker_to_valid = str([[sp for sp in haskins if sp != speaker][random.randint(0,1)]])
+
+            speaker_to_train = str([sp for sp in speakers if (sp != speaker and sp not in speaker_to_valid)])
 
             if only_common:
                 rmse, pearson = train_model_arti_common(test_on=speaker, n_epochs=n_epochs, loss_train=loss_train, patience=patience,
                                             corpus_to_train_on=corpus_to_train_on,
                                             batch_norma=batch_norma, filter_type=filter_type, to_plot=to_plot,
-                                            lr=lr, delta_test=delta_test, config=config, speakers_to_train_on=speaker_to_train)
+                                            lr=lr, delta_test=delta_test, config=config, speakers_to_train_on=speaker_to_train,
+                                                        speakers_to_valid_on=speaker_to_valid, delta_valid = delta_valid)
             else:
                 rmse, pearson = train_model(test_on=speaker, n_epochs=n_epochs, loss_train=loss_train,
                                             patience=patience,
