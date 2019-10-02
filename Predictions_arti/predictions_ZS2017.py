@@ -74,7 +74,7 @@ if __name__ == '__main__':
                         help='folder to put ema')
     parser.add_argument('--Nmax', type=int, default=0,
                         help='#max of predictions to do. If 0 do ALL the predictions')
-    parser.add_argument('--output_dime', type=int, default=18,
+    parser.add_argument('--output_dim', type=int, default=18,
                         help='output dimension of ema')
 
     args = parser.parse_args()
