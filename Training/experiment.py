@@ -309,25 +309,25 @@ def cross_val(corpus_to_train_on, config, only_common = False):
         pearson_all[count, :] = pearson
         count += 1
 
-        results_rmse = np.mean(rmse_all, axis=0)
-        results_pearson = np.mean(pearson_all, axis=0)
-        std_rmse = np.std(rmse_all, axis=0)
-        std_pearson = np.std(pearson_all, axis=0)
-        print("for speaker test {} results are".format(speaker))
-        print("RMSE mean ", results_rmse)
-        print("RMSE std ", std_rmse)
-        print("PEARSON ", results_pearson)
-        print(" PEARSON STD", std_pearson)
-        today = date.today().strftime("%d/%m/%Y")
+    results_rmse = np.mean(rmse_all, axis=0)
+    results_pearson = np.mean(pearson_all, axis=0)
+    std_rmse = np.std(rmse_all, axis=0)
+    std_pearson = np.std(pearson_all, axis=0)
+    #print("for speaker test {} results are".format(speaker))
+    print("RMSE mean ", results_rmse)
+    print("RMSE std ", std_rmse)
+    print("PEARSON ", results_pearson)
+    print(" PEARSON STD", std_pearson)
+    today = date.today().strftime("%d/%m/%Y")
 
-        with open(name, 'a') as f:
-            writer = csv.writer(f)
-            row_rmse_mean = [today, corpus_to_train_on, loss_train, "rmse_mean"] + results_rmse.tolist()
-            row_rmse_std = [today,corpus_to_train_on, loss_train, "rmse_std"] + std_rmse.tolist()
-            row_pearson_mean = [today, corpus_to_train_on,loss_train, "pearson_mean"] + results_pearson.tolist()
-            row_pearson_std = [today,corpus_to_train_on, loss_train, "pearson_std"] + std_pearson.tolist()
-            for row in [row_rmse_mean, row_rmse_std, row_pearson_mean, row_pearson_std]:
-                writer.writerow(row)
+    with open(name, 'a') as f:
+        writer = csv.writer(f)
+        row_rmse_mean = [today, corpus_to_train_on, loss_train, "rmse_mean"] + results_rmse.tolist()
+        row_rmse_std = [today,corpus_to_train_on, loss_train, "rmse_std"] + std_rmse.tolist()
+        row_pearson_mean = [today, corpus_to_train_on,loss_train, "pearson_mean"] + results_pearson.tolist()
+        row_pearson_std = [today,corpus_to_train_on, loss_train, "pearson_std"] + std_pearson.tolist()
+        for row in [row_rmse_mean, row_rmse_std, row_pearson_mean, row_pearson_std]:
+            writer.writerow(row)
 
 if __name__=='__main__':
 
