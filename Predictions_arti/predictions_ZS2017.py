@@ -62,12 +62,16 @@ def write_fea_file(prediction, filename):
     all_times = [frame_lenght / 2 + frame_hop * i for i in range(prediction.shape[0])]
     prediction_with_time[:, 0] = all_times
     lines = [' '.join(str(ema) for ema in prediction_with_time[i]) for i in range(len(prediction_with_time))]
-    with open(os.path.join(root_folder,"Predictions_arti", "fea_ZS2017_1s", filename + ".fea"), 'w') as f:
+    with open(os.path.join(root_folder,"Predictions_arti", "fea_ZS2017_1s", filename[:-4] + ".fea"), 'w') as f:
         f.writelines("%s\n" % l for l in lines)
 
+def rename(folder):
+    filenames = os.listdir(folder)
+    for filename in filenames:
+        os.rename(os.path.join(folder, filename), os.path.join(folder, filename[:-8] + '.fea'))
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Articulatory predictions for some wav files')
+    """parser = argparse.ArgumentParser(description='Articulatory predictions for some wav files')
 
     parser.add_argument('name_model', type=str,
                         help='model to use for the inversion')
@@ -85,5 +89,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     prediction_arti_ZS(name_model=args.name_model, Nmax=args.Nmax, wav_folder=args.wav_folder, mfcc_folder=args.mfcc_folder,
-                       ema_folder = args.ema_folder, output_dim=args.output_dim, prepro_done=args.prep_done)
+                       ema_folder = args.ema_folder, output_dim=args.output_dim, prepro_done=args.prep_done)"""
+    folder = sys.argv[1]
+    rename(folder)
 

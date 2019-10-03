@@ -204,6 +204,9 @@ def cross_val_for_alpha(corpus_to_train_on,config, only_common = False):
     speakers = ['F01', 'M01', "fsew0", "msak0", "MNGU0"]
     haskins = ['F01', 'M01']
     mocha_mng = ["fsew0", "msak0", "MNGU0"]
+    name = 'experiment_results_alpha_' + '_'.join(speakers) + '.csv'
+    f = open(name, 'w')
+    f.close()
     if only_common:
         output_dim = len(give_me_common_articulators(speakers))
 
@@ -249,9 +252,7 @@ def cross_val_for_alpha(corpus_to_train_on,config, only_common = False):
         print("PEARSON ", results_pearson)
         print(" PEARSON STD", std_pearson)
         today = date.today().strftime("%d/%m/%Y")
-        name = 'experiment_results_alpha_' + '_'.join(speakers) + '.csv'
-        f = open(name, 'w')
-        f.close()
+
         with open(name, 'a') as f:
             writer = csv.writer(f)
             row_rmse_mean = [today, corpus_to_train_on, loss_train, "rmse_mean"] + results_rmse.tolist()
