@@ -274,7 +274,7 @@ def cross_val(corpus_to_train_on, config, only_common = False):
         speakers = speakers + get_speakers_per_corpus(co)
     print(speakers)
 
-    if corpus_to_train_on == 'mocha':
+    if 'mocha' in corpus_to_train_on:
         speakers = ["fsew0", "msak0", "MNGU0"]
 
     name = 'experiment_results_cross_' + '_'.join(speakers) + '.csv'
