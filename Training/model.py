@@ -405,7 +405,7 @@ class my_ac2art_model(torch.nn.Module):
             print("pearson final : ", np.mean(pearson_per_arti_mean[pearson_per_arti_mean != 0]))
             print("pearson mean per arti : \n", pearson_per_arti_mean)
 
-        return rmse_per_arti_mean, pearson_per_arti_mean):
+        return rmse_per_arti_mean, pearson_per_arti_mean
 
 
 
