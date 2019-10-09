@@ -26,7 +26,7 @@ import torch
 import os
 import csv
 import sys
-from Training.tools_learning import load_np_ema_and_mfcc, load_filenames
+from Training.tools_learning import load_np_ema_and_mfcc, load_filenames, give_me_common_articulators
 import random
 from scipy import signal
 import matplotlib.pyplot as plt
@@ -37,7 +37,7 @@ fileset_path = os.path.join(root_folder, "Preprocessed_data", "fileset")
 
 print(sys.argv)
 
-def test_model(test_on ,model_name):
+def test_model(test_on ,model_name) :
     """
     :param test_on:  the speaker test
     :param model_name: the name of the model (of the .txt file, without the ".txt")
@@ -48,6 +48,13 @@ def test_model(test_on ,model_name):
     trained on.
     It also saves the graphs for one sentence of the predicted and true arti trajectories
     """
+    arti_indexes = []
+    if 'only_arti_common' in model_name:
+        name = model_name.split('train_indep')
+        test = name[0].split('_')[3]
+        train = [sp for sp in name[1].split('valid')[0].split('_') if (sp != '' and sp != 'train')]
+        valid = [sp for sp in name[1].split('valid')[1].split('loss')[0].split('_') if (sp != '' and sp != 'train')]
+        arti_indexes = give_me_common_articulators([test] + train + valid )
 
     batch_norma = False
     filter_type = "fix"
@@ -62,7 +69,7 @@ def test_model(test_on ,model_name):
     hidden_dim = 300
     input_dim = 429
     batch_size = 10
-    output_dim = 18
+    output_dim = len(arti_indexes) if arti_indexes != [] else 18
 
     model = my_ac2art_model(hidden_dim=hidden_dim, input_dim=input_dim, output_dim=output_dim,
                              batch_size=batch_size, cuda_avail=cuda_avail, name_file=model_name,
@@ -100,8 +107,11 @@ def test_model(test_on ,model_name):
             if row[0] == test_on:
                 arti_to_consider = row[1:19]
                 arti_to_consider = [int(x) for x in arti_to_consider]
+    if arti_indexes != []:
+        arti_to_consider = [1 for k in range(len(arti_indexes))]
+
     rmse_per_arti_mean, pearson_per_arti_mean = model.evaluate_on_test(x,y, std_speaker=std_speaker, to_plot=to_plot
-                                                                       , to_consider=arti_to_consider, verbose=False)
+                                                                       , to_consider=arti_to_consider, verbose=False, arti_indexes= arti_indexes)
     show_filter = True  #add it in argument
     if show_filter:
         weight_apres = model.lowpass.weight.data[0, 0, :]
@@ -134,6 +144,8 @@ if __name__ == '__main__':
 
     parser.add_argument('model_name', type=str,
                         help='name of the model (without .txt)')
+
+
     args = parser.parse_args()
 
     rmse,pearson = test_model(test_on=args.test_on, model_name=args.model_name)

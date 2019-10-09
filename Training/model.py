@@ -323,9 +323,11 @@ class my_ac2art_model(torch.nn.Module):
             pearson = np.array(pearson).reshape((1, self.output_dim))
             all_pearson = np.concatenate((all_pearson, pearson))
         all_pearson = all_pearson[1:]
-        all_pearson[:, idx_to_ignore] = 0
+        if index_common == []:
+            all_pearson[:, idx_to_ignore] = 0
         all_diff = all_diff[1:]
-        all_diff[:, idx_to_ignore] = 0
+        if index_common == []:
+            all_diff[:, idx_to_ignore] = 0
         all_pearson[np.isnan(all_pearson)] = 0
 
         pearson_per_arti_mean = np.mean(all_pearson, axis=0)
