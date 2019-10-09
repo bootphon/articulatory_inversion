@@ -384,7 +384,7 @@ class my_ac2art_model(torch.nn.Module):
 
             #y_pred_not_smoothed = y_pred_not_smoothed.reshape(1, L, self.output_dim)
             y_pred_smoothed = y_pred_smoothed.reshape(1,L, self.output_dim)
-            y_pred_smoothed = torch.from_nupy(y_pred_smoothed)
+            y_pred_smoothed = torch.from_numpy(y_pred_smoothed)
             y = torch.from_numpy(y.reshape(1, L, self.output_dim))
             pearson_per_art = criterion_pearson_no_reduction(y, y_pred_smoothed, cuda_avail=self.cuda_avail, device=self.device) # (1,1,18)
             pearson_per_art = pearson_per_art.reshape(1, self.output_dim)
