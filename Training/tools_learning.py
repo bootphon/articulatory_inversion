@@ -143,7 +143,7 @@ def criterion_pearson_no_reduction(y, y_pred, cuda_avail, device):
     nume = nume + minim
     deno = deno + minim"""
     my_loss = torch.div(nume, deno)  # (B,1,18)
-    return my_loss.item()
+    return my_loss.numpy()
     #my_loss = torch.sum(my_loss)
     #return -my_loss
 
