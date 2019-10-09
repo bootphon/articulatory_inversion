@@ -36,7 +36,7 @@ if __name__ == "__main__":
     filenames = os.listdir(os.path.join(root_folder, "Predictions_arti", args.mfcc_folder))
     for filename in filenames:
         value = np.load(os.path.join(root_folder, "Predictions_arti", args.mfcc_folder, filename))
-        print(value.shape)
+        #print(value.shape)
         #break
         write_fea_file(value, filename)
 
