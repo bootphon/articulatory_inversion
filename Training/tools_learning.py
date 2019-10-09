@@ -117,6 +117,36 @@ def criterion_pearson(y, y_pred, cuda_avail , device):
     my_loss = torch.sum(my_loss)
     return -my_loss
 
+def criterion_pearson_no_reduction(y, y_pred, cuda_avail, device):
+    """
+        :param y: nparray (B,K,18) target trajectories of the batch (size B) , padded (K = maxlenght)
+        :param y_pred: nparray (B,K,18) predicted trajectories of the batch (size B), padded (K = maxlenght
+        :param cuda_avail: bool whether gpu is available
+        :param device: the device
+        :return: loss function for this prediction for loss = pearson correlation
+        for each pair of trajectories (target & predicted) we calculate the pearson correlation between the two
+        we sum all the pearson correlation to obtain the loss function
+        // Idea : integrate the range of the traj here, making the loss for each sentence as the weighted average of the
+        losses with weight proportional to the range of the traj (?)
+        """
+    y_1 = y.sub(torch.mean(y, dim=1, keepdim=True))
+    y_pred_1 = y_pred.sub(torch.mean(y_pred, dim=1, keepdim=True))
+    nume = torch.sum(y_1 * y_pred_1, dim=1, keepdim=True)  # (B,1,18)
+    deno = torch.sqrt(torch.sum(y_1 ** 2, dim=1, keepdim=True)) * \
+           torch.sqrt(torch.sum(y_pred_1 ** 2, dim=1, keepdim=True))  # (B,1,18)
+
+    #minim = torch.tensor(0.000001, dtype=torch.float64)  # avoid division by 0
+    """if cuda_avail:
+        minim = minim.to(device=device)
+        deno = deno.to(device=device)
+        nume = nume.to(device=device)
+    nume = nume + minim
+    deno = deno + minim"""
+    my_loss = torch.div(nume, deno)  # (B,1,18)
+    return my_loss.item()
+    #my_loss = torch.sum(my_loss)
+    #return -my_loss
+
 
 def criterion_both(my_y,my_ypred,alpha,cuda_avail,device):
     compl = torch.tensor(1. - float(alpha) / 100., dtype=torch.float64)

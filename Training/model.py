@@ -27,7 +27,7 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 import gc
-from Training.tools_learning import get_right_indexes
+from Training.tools_learning import get_right_indexes, criterion_pearson_no_reduction
 
 def memReport(all = False):
     """
@@ -339,6 +339,73 @@ class my_ac2art_model(torch.nn.Module):
             print("pearson mean per arti : \n", pearson_per_arti_mean)
 
         return rmse_per_arti_mean, pearson_per_arti_mean
+
+    def evaluate_on_test_modified(self,X_test, Y_test, std_speaker, to_plot=False, to_consider=None, verbose=True, index_common = [], no_std = False):
+        """
+        :param X_test:  list of all the input of the test set
+        :param Y_test:  list of all the target of the test set
+        :param std_speaker : list of the std of each articulator, useful to calculate the RMSE of the predicction
+        :param to_plot: wether or not we want to save some predicted smoothed and not and true trajectory
+        :param to_consider: list of 0/1 for the test speaker , 1 if the articulator is ok for the test speaker
+        :return: print and return the pearson correlation and RMSE between real and predicted trajectories per articulators.
+        """
+        idx_to_ignore = [i for i in range(len(to_consider)) if not(to_consider[i])]
+        all_diff = np.zeros((1, self.output_dim))
+        all_pearson = np.zeros((1, self.output_dim))
+        if to_plot:
+            indices_to_plot = np.random.choice(len(X_test), 2, replace=False)
+        for i in range(len(X_test)):
+            L = len(X_test[i])
+            x_torch = torch.from_numpy(X_test[i]).view(1, L, self.input_dim)  #x (1,L,429)
+            y = Y_test[i].reshape((L, 18))                     #y (L,13)
+            if index_common != []:
+                y = get_right_indexes(y, index_common, shape = 2)
+            if self.cuda_avail:
+                x_torch = x_torch.to(device=self.device)
+            y_pred_not_smoothed = self(x_torch, False).double() #output y_pred (1,L,13)
+            y_pred_smoothed = self(x_torch, True).double()
+            if self.cuda_avail:
+                y_pred_not_smoothed = y_pred_not_smoothed.cpu()
+                y_pred_smoothed = y_pred_smoothed.cpu()
+            y_pred_not_smoothed = y_pred_not_smoothed.detach().numpy().reshape((L, self.output_dim))  # y_pred (L,13)
+            y_pred_smoothed = y_pred_smoothed.detach().numpy().reshape((L, self.output_dim))  # y_pred (L,13)
+            if to_plot:
+                if i in indices_to_plot:
+                    self.plot_results(y_target = y, y_pred_smoothed = y_pred_smoothed,
+                                      y_pred_not_smoothed = y_pred_not_smoothed, to_cons = to_consider)
+            rmse = np.sqrt(np.mean(np.square(y - y_pred_smoothed), axis=0))  # calculate rmse
+            rmse = np.reshape(rmse, (1, self.output_dim))
+
+            std_to_modify = std_speaker
+            if index_common != [] and not no_std:
+                std_to_modify = get_right_indexes(std_to_modify, index_common, shape=1)
+            rmse = rmse*std_to_modify  # unormalize
+            all_diff = np.concatenate((all_diff, rmse))
+
+            #y_pred_not_smoothed = y_pred_not_smoothed.reshape(1, L, self.output_dim)
+            y_pred_smoothed = y_pred_smoothed.reshape(1,L, self.output_dim)
+            y_pred_smoothed = torch.from_nupy(y_pred_smoothed)
+            y = torch.from_numpy(y.reshape(1, L, self.output_dim))
+            pearson_per_art = criterion_pearson_no_reduction(y, y_pred_smoothed, cuda_avail=self.cuda_avail, device=self.device) # (1,1,18)
+            pearson_per_art = pearson_per_art.reshape(1, self.output_dim)
+            all_pearson = np.concatenate((all_pearson, pearson_per_art))
+        all_pearson = all_pearson[1:]
+        if index_common == []:
+            all_pearson[:, idx_to_ignore] = 0
+        all_diff = all_diff[1:]
+        if index_common == []:
+            all_diff[:, idx_to_ignore] = 0
+        all_pearson[np.isnan(all_pearson)] = 0
+
+        pearson_per_arti_mean = np.mean(all_pearson, axis=0)
+        rmse_per_arti_mean = np.mean(all_diff, axis=0)
+        if verbose:
+            print("rmse final : ", np.mean(rmse_per_arti_mean[rmse_per_arti_mean != 0]))
+            print("rmse mean per arti : \n", rmse_per_arti_mean)
+            print("pearson final : ", np.mean(pearson_per_arti_mean[pearson_per_arti_mean != 0]))
+            print("pearson mean per arti : \n", pearson_per_arti_mean)
+
+        return rmse_per_arti_mean, pearson_per_arti_mean):
 
 
 
