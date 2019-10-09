@@ -323,9 +323,9 @@ def train_model_arti_common(test_on, n_epochs, loss_train, patience, corpus_to_t
     """  RESULTS ON VALIDATION SET """
 
     pearson_valid = np.zeros((1,output_dim))
-    nb_batch = len(files_for_test) / batch_size
+    nb_batch = len(files_for_valid) / batch_size
     for i in range(int(nb_batch)):
-        x, y = load_np_ema_and_mfcc(files_for_train[i * batch_size:(i + 1) * batch_size])
+        x, y = load_np_ema_and_mfcc(files_for_valid[i * batch_size:(i + 1) * batch_size])
         #y = get_right_indexes(y, arti_common)
         rien, pearson_valid_temp = model.evaluate_on_test(x,y,std_speaker=1, to_plot=to_plot,
                                                              to_consider=arti_to_consider,verbose=False, index_common=arti_common , no_std = True)

@@ -58,7 +58,7 @@ def test_model(test_on ,model_name) :
 
     batch_norma = False
     filter_type = "fix"
-    to_plot = True
+    to_plot = False
 
     cuda_avail = torch.cuda.is_available()
     if cuda_avail:

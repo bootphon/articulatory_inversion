@@ -71,7 +71,7 @@ def rename(folder):
         os.rename(os.path.join(folder, filename), os.path.join(folder, filename[:-8] + '.fea'))
 
 if __name__ == '__main__':
-    """parser = argparse.ArgumentParser(description='Articulatory predictions for some wav files')
+    parser = argparse.ArgumentParser(description='Articulatory predictions for some wav files')
 
     parser.add_argument('name_model', type=str,
                         help='model to use for the inversion')
@@ -89,7 +89,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     prediction_arti_ZS(name_model=args.name_model, Nmax=args.Nmax, wav_folder=args.wav_folder, mfcc_folder=args.mfcc_folder,
-                       ema_folder = args.ema_folder, output_dim=args.output_dim, prepro_done=args.prep_done)"""
-    folder = sys.argv[1]
-    rename(folder)
+                       ema_folder = args.ema_folder, output_dim=args.output_dim, prepro_done=args.prep_done)
+    #folder = sys.argv[1]
+    #rename(folder)
 
