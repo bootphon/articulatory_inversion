@@ -111,8 +111,8 @@ def test_model(test_on ,model_name) :
         arti_to_consider = [1 for k in range(len(arti_indexes))]
 
     rmse_per_arti_mean, pearson_per_arti_mean = model.evaluate_on_test(x,y, std_speaker=std_speaker, to_plot=to_plot
-                                                                       , to_consider=arti_to_consider, verbose=False, arti_indexes= arti_indexes)
-    show_filter = True  #add it in argument
+                                                                       , to_consider=arti_to_consider, verbose=False, index_common= arti_indexes)
+    show_filter = False #add it in argument
     if show_filter:
         weight_apres = model.lowpass.weight.data[0, 0, :]
         print("GAIN",sum(weight_apres.cpu()))
