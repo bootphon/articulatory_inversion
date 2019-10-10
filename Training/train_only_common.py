@@ -379,10 +379,10 @@ if __name__=='__main__':
     parser.add_argument('test_on', type=str,
                         help='the speaker we want to test on')
 
-    parser.add_argument('--speakers_to_train', type=str, default=[],
+    parser.add_argument('--speakers_to_train', type=str, default='[]',
                         help='specific speakers to train on')
 
-    parser.add_argument('--speakers_to_valid', type=str, default=[],
+    parser.add_argument('--speakers_to_valid', type=str, default='[]',
                         help='specific speakers to valid on')
 
     parser.add_argument('--n_epochs', type=int, default=50,
