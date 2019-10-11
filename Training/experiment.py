@@ -329,6 +329,59 @@ def cross_val(corpus_to_train_on, config, only_common = False):
         for row in [row_rmse_mean, row_rmse_std, row_pearson_mean, row_pearson_std]:
             writer.writerow(row)
 
+def cross_val_spec(corpus_to_train_on, only_common = False):
+    """
+        performs the cross validation on corpus_to_train_on corpus
+        the parameters are defined above and can be modified
+        the results of the experiment are printed
+        """
+    art  = ['tt_x', 'tt_y', 'td_x', 'td_y', 'tb_x', 'tb_y', 'li_x', 'li_y',
+                    'ul_x', 'ul_y', 'll_x', 'll_y', 'la', 'lp', 'ttcl', 'tbcl', 'v_x', 'v_y']
+    speakers = []
+    for co in str(corpus_to_train_on[1:-1]).split(","):
+        speakers = speakers + get_speakers_per_corpus(co)
+    print(speakers)
+
+    name = 'experiment_results_spec_' + '_'.join(speakers) + '.csv'
+    f = open(name, 'w')
+    f.close()
+    count = 0
+    output_dim = range(18)
+    for speaker in speakers:
+
+        if only_common:
+            output_dim = give_me_common_articulators(speaker)
+
+            rmse, pearson = train_model_arti_common(test_on=speaker, n_epochs=n_epochs, loss_train=loss_train, patience=patience,
+                                        corpus_to_train_on=corpus_to_train_on,
+                                        batch_norma=batch_norma, filter_type=filter_type, to_plot=to_plot,
+                                        lr=lr, delta_test=delta_test, config='spec', delta_valid = delta_valid)
+        else:
+            rmse, pearson = train_model(test_on=speaker, n_epochs=n_epochs, loss_train=loss_train,
+                                        patience=patience,
+                                        select_arti=select_arti, corpus_to_train_on=corpus_to_train_on,
+                                        batch_norma=batch_norma, filter_type=filter_type, to_plot=to_plot,
+                                        lr=lr, delta_test=delta_test, config='spec')
+        #rmse_all[count, :] = rmse
+        #pearson_all[count, :] = pearson
+        print("for speaker test {} results are".format(speaker))
+        print("RMSE mean ", rmse)
+        print("PEARSON ", pearson)
+        today = date.today().strftime("%d/%m/%Y")
+
+        with open(name, 'a') as f:
+            writer = csv.writer(f)
+            row_arti = [art[int(i)] for i in output_dim]
+            row_rmse_mean = [today, speaker, loss_train, "rmse_mean"] + rmse.tolist()
+
+            row_pearson_mean = [today, speaker, loss_train, "pearson_mean"] + pearson.tolist()
+
+            for row in [row_arti,row_rmse_mean, row_pearson_mean]:
+                writer.writerow(row)
+        count += 1
+
+
+
 if __name__=='__main__':
 
     parser = argparse.ArgumentParser(description='Experiment on the asked corpus by cross validation')
@@ -336,7 +389,7 @@ if __name__=='__main__':
                         help='list of corpus on which perform the experiment')
 
     parser.add_argument('experiment_type', type=str,
-                        help='type of experiment (filter alpha cross or bn)')
+                        help='type of experiment (filter alpha cross cross_spec or bn)')
 
     parser.add_argument('config', type=str,
                         help='indep, spec train_indep or dep')
@@ -370,6 +423,9 @@ if __name__=='__main__':
             print("you have to precise the config for this experiment")
         else:
             cross_val(corpus_to_train_on=args.corpus_exp, config=args.config, only_common=args.only_common_arti)
+
+    elif args.experiment_type == "cross_spec":
+        cross_val_spec(corpus_to_train_on=args.corpus_exp, only_common=args.only_common_arti)
 
 
 

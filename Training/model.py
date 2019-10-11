@@ -154,30 +154,30 @@ class my_ac2art_model(torch.nn.Module):
         return y_pred
 
     def get_filter_weights(self):
-            """
-            :return: low pass filter weights based on calculus exclusively using tensors so pytorch compatible
-            """
-            cutoff = torch.tensor(self.cutoff, dtype=torch.float64,requires_grad=True).view(1, 1)
-            fc = torch.div(cutoff,
-                  self.sampling_rate)  # Cutoff frequency as a fraction of the sampling rate (in (0, 0.5)).
-            if fc > 0.5:
-                raise Exception("cutoff frequency must be at least twice sampling rate")
-            b = 0.08  # Transition band, as a fraction of the sampling rate (in (0, 0.5)).
-            N = int(np.ceil((4 / b)))  # le window
-            if not N % 2:
-                N += 1  # Make sure that N is odd .
-            self.N = N
+        """
+        :return: low pass filter weights based on calculus exclusively using tensors so pytorch compatible
+        """
+        cutoff = torch.tensor(self.cutoff, dtype=torch.float64,requires_grad=True).view(1, 1)
+        fc = torch.div(cutoff,
+              self.sampling_rate)  # Cutoff frequency as a fraction of the sampling rate (in (0, 0.5)).
+        if fc > 0.5:
+            raise Exception("cutoff frequency must be at least twice sampling rate")
+        b = 0.08  # Transition band, as a fraction of the sampling rate (in (0, 0.5)).
+        N = int(np.ceil((4 / b)))  # le window
+        if not N % 2:
+            N += 1  # Make sure that N is odd .
+        self.N = N
 
-            n = torch.arange(N).double()
-            alpha = torch.mul(fc, 2 * (n - (N - 1) / 2)).double()
-            minim = torch.tensor(0.01, dtype=torch.float64) #utile ?
-            alpha = torch.max(alpha,minim)#utile ?
-            h = torch.div(torch.sin(alpha), alpha)
-            beta = n * 2 * math.pi / (N - 1)
-            w = 0.5 * (1 - torch.cos(beta))  # Compute hanning window.
-            h = torch.mul(h, w)  # Multiply sinc filter with window.
-            h = torch.div(h, torch.sum(h))
-            return h
+        n = torch.arange(N).double()
+        alpha = torch.mul(fc, 2 * (n - (N - 1) / 2)).double()
+        minim = torch.tensor(0.01, dtype=torch.float64) #utile ?
+        alpha = torch.max(alpha,minim)#utile ?
+        h = torch.div(torch.sin(alpha), alpha)
+        beta = n * 2 * math.pi / (N - 1)
+        w = 0.5 * (1 - torch.cos(beta))  # Compute hanning window.
+        h = torch.mul(h, w)  # Multiply sinc filter with window.
+        h = torch.div(h, torch.sum(h))
+        return h
 
     def get_filter_weights_en_dur(self):
         """

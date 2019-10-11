@@ -192,7 +192,7 @@ class Speaker():
             """
            :param ema: 1 ema trajectory
            :return: return tongue tip constriction location in degree trajectory .
-           Formula to check again , corresponds to the angle between the horizontal and the tongue tip location
+           Formula to check again , corresponds to the cos of the angle between the horizontal and the tongue tip location
            """
             ind_1, ind_2 = [self.articulators.index("tt_x"), self.articulators.index("tt_y")]
             TTCL = ema[:, ind_1] / np.sqrt(ema[:, ind_1] ** 2 + ema[:, ind_2] ** 2)
@@ -202,7 +202,7 @@ class Speaker():
             """
             :param ema: 1 ema trajectory
            :return: return tongue body constriction location in degree trajectory .
-           Formula to check again , corresponds to the angle between the horizontal and the tongue body location
+           Formula to check again , corresponds to the cos of the angle between the horizontal and the tongue body location
             """
             ind_1, ind_2 = [self.articulators.index("tb_x"), self.articulators.index("tb_y")]
             TBCL = ema[:, ind_1] / np.sqrt(ema[:, ind_1] ** 2 + ema[:, ind_2] ** 2)  # upperlip_y - lowerlip_y
