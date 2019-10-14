@@ -24,7 +24,7 @@ root_folder = os.path.dirname(os.getcwd())
 import argparse
 
 
-def prediction_arti_ZS(name_model, wav_folder, mfcc_folder, ema_folder, output_dim = 18,Nmax = 0, prepro_done = False) :
+def prediction_arti_ZS(name_model, wav_folder, mfcc_folder, ema_folder, fea_folder, output_dim = 18,Nmax = 0, prepro_done = False, predic_done = False) :
     """
     :param name_model: name of the model we want to predict the trajectories with
     :param Nmax: if we dont want to predict the traj of ALL wav files, precise how many
@@ -36,20 +36,21 @@ def prediction_arti_ZS(name_model, wav_folder, mfcc_folder, ema_folder, output_d
         preprocess_my_wav_files(wav_folder=wav_folder, mfcc_folder=mfcc_folder,Nmax = Nmax)
     print('Preprocessed done!')
     print('Predicting...')
-    predictions_arti(model_name=name_model,mfcc_folder=mfcc_folder,ema_folder=ema_folder, output_dim=output_dim)
+    if not predic_done:
+        predictions_arti(model_name=name_model,mfcc_folder=mfcc_folder,ema_folder=ema_folder, output_dim=output_dim)
     print('Predicting done!')
     filenames = os.listdir(os.path.join(root_folder,"Predictions_arti",ema_folder,name_model))
-    if not os.path.exists(os.path.join(root_folder,"Predictions_arti", "fea_ZS2017_1s")):
-        os.mkdir(os.path.join(root_folder,"Predictions_arti", "fea_ZS2017_1s"))
+    if not os.path.exists(os.path.join(root_folder,"Predictions_arti", "fea_files", fea_folder)):
+        os.mkdir(os.path.join(root_folder,"Predictions_arti", "fea_files", fea_folder))
     if Nmax > 0 :
         filenames = filenames[:Nmax]
 
     for filename in filenames :
         arti_pred = np.load(os.path.join(root_folder,"Predictions_arti",ema_folder,name_model,filename))
-        write_fea_file(arti_pred, filename)
+        write_fea_file(arti_pred, filename, fea_folder=fea_folder)
 
 
-def write_fea_file(prediction, filename):
+def write_fea_file(prediction, filename, fea_folder):
     """
     :param prediction: array with ema prediction for 1 sentence
     :param filename:  name of the file with the sentence (will be the name of the fea)
@@ -62,7 +63,7 @@ def write_fea_file(prediction, filename):
     all_times = [frame_lenght / 2 + frame_hop * i for i in range(prediction.shape[0])]
     prediction_with_time[:, 0] = all_times
     lines = [' '.join(str(ema) for ema in prediction_with_time[i]) for i in range(len(prediction_with_time))]
-    with open(os.path.join(root_folder,"Predictions_arti", "fea_ZS2017_1s", filename[:-4] + ".fea"), 'w') as f:
+    with open(os.path.join(root_folder,"Predictions_arti", "fea_files", fea_folder, filename[:-4] + ".fea"), 'w') as f:
         f.writelines("%s\n" % l for l in lines)
 
 def rename(folder):
@@ -81,15 +82,18 @@ if __name__ == '__main__':
                         help='folde to put mfcc')
     parser.add_argument('ema_folder', type=str,
                         help='folder to put ema')
+    parser.add_argument('fea_folder', type=str,
+                        help='folder to put fea')
     parser.add_argument('--Nmax', type=int, default=0,
                         help='#max of predictions to do. If 0 do ALL the predictions')
     parser.add_argument('--output_dim', type=int, default=18,
                         help='output dimension of ema')
     parser.add_argument('--prep_done', type=bool, default = False, help='preprocessing done')
+    parser.add_argument('--pred_done', type=bool, default=False, help='prediction done')
 
     args = parser.parse_args()
     prediction_arti_ZS(name_model=args.name_model, Nmax=args.Nmax, wav_folder=args.wav_folder, mfcc_folder=args.mfcc_folder,
-                       ema_folder = args.ema_folder, output_dim=args.output_dim, prepro_done=args.prep_done)
+                       ema_folder = args.ema_folder, output_dim=args.output_dim, prepro_done=args.prep_done, predic_done=args.pred_done, fea_folder=args.fea_folder)
     #folder = sys.argv[1]
     #rename(folder)
 
