@@ -100,6 +100,8 @@ class my_ac2art_model(torch.nn.Module):
         self.batch_norma = batch_norma
         if cuda_avail :
             self.device = torch.device("cuda")
+        else:
+            self.device = None
 
     def prepare_batch(self, x, y):
         """
