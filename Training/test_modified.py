@@ -37,7 +37,7 @@ fileset_path = os.path.join(root_folder, "Preprocessed_data", "fileset")
 
 print(sys.argv)
 
-def test_model(test_on ,model_name) :
+def test_model(test_on ,model_name, std_included = True) :
     """
     :param test_on:  the speaker test
     :param model_name: the name of the model (of the .txt file, without the ".txt")
@@ -111,7 +111,7 @@ def test_model(test_on ,model_name) :
         arti_to_consider = [1 for k in range(len(arti_indexes))]
 
     rmse_per_arti_mean, pearson_per_arti_mean = model.evaluate_on_test_modified(x,y, std_speaker=std_speaker, to_plot=to_plot
-                                                                       , to_consider=arti_to_consider, verbose=False, index_common= arti_indexes)
+                                                                       , to_consider=arti_to_consider, verbose=False, index_common= arti_indexes, std_not_mult=not std_included)
 
 
     show_filter = False #add it in argument
@@ -147,10 +147,10 @@ if __name__ == '__main__':
     parser.add_argument('model_name', type=str,
                         help='name of the model (without .txt)')
 
-
+    parser.add_argument('--std_included', type = bool, default = True, help='if use std to compute RMSE or not' )
     args = parser.parse_args()
 
-    rmse,pearson = test_model(test_on=args.test_on, model_name=args.model_name)
+    rmse,pearson = test_model(test_on=args.test_on, model_name=args.model_name,  std_included=args.std_included)
     print("results for model ",args.model_name)
     print("rmse",rmse)
     print("pearson",pearson)
