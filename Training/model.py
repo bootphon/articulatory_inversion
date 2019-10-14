@@ -382,8 +382,9 @@ class my_ac2art_model(torch.nn.Module):
             if index_common != [] and not no_std:
                 std_to_modify = get_right_indexes(std_to_modify, index_common, shape=1)
 
-            if not std_not_mult:
-                rmse = rmse*std_to_modify  # unormalize
+            #if not std_not_mult:
+            #    rmse = rmse*std_to_modify  # unormalize
+
             all_diff = np.concatenate((all_diff, rmse))
 
             #y_pred_not_smoothed = y_pred_not_smoothed.reshape(1, L, self.output_dim)

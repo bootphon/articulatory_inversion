@@ -117,7 +117,8 @@ def test_model(test_on ,model_name, std_included = True) :
         arti_to_consider = [1 for k in range(len(arti_indexes))]
 
     rmse_per_arti_mean, pearson_per_arti_mean = model.evaluate_on_test_modified(x,y, std_speaker=std_speaker, to_plot=to_plot
-                                                                       , to_consider=arti_to_consider, verbose=False, index_common= arti_indexes, std_not_mult=not std_included)
+                                                                       , to_consider=arti_to_consider, verbose=False,
+                                                                                index_common= arti_indexes, std_not_mult=not std_included)
 
 
     show_filter = False #add it in argument
