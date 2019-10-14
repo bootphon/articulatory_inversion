@@ -52,8 +52,14 @@ def test_model(test_on ,model_name, std_included = True) :
     if 'only_arti_common' in model_name:
         name = model_name.split('train_indep')
         test = name[0].split('_')[3]
-        train = [sp for sp in name[1].split('valid')[0].split('_') if (sp != '' and sp != 'train')]
-        valid = [sp for sp in name[1].split('valid')[1].split('loss')[0].split('_') if (sp != '' and sp != 'train')]
+        try:
+            train = [sp for sp in name[1].split('valid')[0].split('_') if (sp != '' and sp != 'train')]
+        except:
+            train = []
+        try:
+            valid = [sp for sp in name[1].split('valid')[1].split('loss')[0].split('_') if (sp != '' and sp != 'train')]
+        except:
+            valid = []
         arti_indexes = give_me_common_articulators([test] + train + valid )
 
     batch_norma = False
