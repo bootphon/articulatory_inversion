@@ -382,6 +382,8 @@ class my_ac2art_model(torch.nn.Module):
             if index_common != [] and not no_std:
                 std_to_modify = get_right_indexes(std_to_modify, index_common, shape=1)
 
+
+            # CAREFUL: the std here is not multiplied
             #if not std_not_mult:
             #    rmse = rmse*std_to_modify  # unormalize
 

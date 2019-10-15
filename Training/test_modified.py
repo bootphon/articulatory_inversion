@@ -145,7 +145,7 @@ def test_model(test_on ,model_name, std_included = True) :
 
 
 if __name__ == '__main__':
-
+    # For the moment here the std is not included in the results
     parser = argparse.ArgumentParser(description='Train and save a model.')
 
     parser.add_argument('test_on', type=str,
