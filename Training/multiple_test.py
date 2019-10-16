@@ -11,7 +11,7 @@
 from test_modified import test_model
 
 if __name__ == '__main__':
-    models = ["only_arti_common_M01_train_indep_train_F02_F03_F04_M02_M03_M04_valid_F01_loss_50_filter_fix_bn_False_0",
+    """models = ["only_arti_common_M01_train_indep_train_F02_F03_F04_M02_M03_M04_valid_F01_loss_50_filter_fix_bn_False_0",
               "only_arti_common_M02_train_indep_train_F02_F03_F04_M01_M03_M04_valid_F01_loss_50_filter_fix_bn_False_0",
               "only_arti_common_M03_train_indep_train_F02_F03_F04_M01_M02_M04_valid_F01_loss_50_filter_fix_bn_False_0",
               "only_arti_common_M04_train_indep_train_F02_F03_F04_M01_M02_M03_valid_F01_loss_50_filter_fix_bn_False_0",
@@ -24,6 +24,22 @@ if __name__ == '__main__':
                 "only_arti_common_F1_train_indep_train_M1_M3_valid_F5_loss_50_filter_fix_bn_False_0",
                 "only_arti_common_F5_train_indep_train_M1_M3_valid_F1_loss_50_filter_fix_bn_False_0",
                 "only_arti_common_M1_train_indep_train_F5_M3_valid_F1_loss_50_filter_fix_bn_False_0",
-                "only_arti_common_M3_train_indep_train_F5_M1_valid_F1_loss_50_filter_fix_bn_False_0"]
+                "only_arti_common_M3_train_indep_train_F5_M1_valid_F1_loss_50_filter_fix_bn_False_0"]"""
+
+    models = ["only_arti_common_M01_spec_train__valid__loss_50_filter_fix_bn_False_0",
+              "only_arti_common_M02_spec_train__valid__loss_50_filter_fix_bn_False_0",
+              "only_arti_common_M03_spec_train__valid__loss_50_filter_fix_bn_False_0",
+             "only_arti_common_M04_spec_train__valid__loss_50_filter_fix_bn_False_0",
+             "only_arti_common_F01_spec_train__valid__loss_50_filter_fix_bn_False_0",
+              "only_arti_common_F02_spec_train__valid__loss_50_filter_fix_bn_False_0",
+              "only_arti_common_F03_spec_train__valid__loss_50_filter_fix_bn_False_0",
+              "only_arti_common_F04_spec_train__valid__loss_50_filter_fix_bn_False_0",
+              "only_arti_common_F1_spec_train__valid__loss_50_filter_fix_bn_False_0",
+              "only_arti_common_F5_spec_train__valid__loss_50_filter_fix_bn_False_0",
+              "only_arti_common_M1_spec_train__valid__loss_50_filter_fix_bn_False_0",
+              "only_arti_common_M3_spec_train__valid__loss_50_filter_fix_bn_False_0",
+              "only_arti_common_MNGU0_spec_train__valid__loss_50_filter_fix_bn_False_0",
+              "only_arti_common_msak0_spec_train__valid__loss_50_filter_fix_bn_False_0",
+              "only_arti_common_fsew0_spec_train__valid__loss_50_filter_fix_bn_False_0"]
     for model in models:
         test_model('default', model, test_on_per_default =True)

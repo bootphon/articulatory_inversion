@@ -370,8 +370,6 @@ if __name__=='__main__':
 
     parser.add_argument("--select_arti", type = bool,default=True,
                         help = "whether to learn only on available parameters or not")
-
-
     parser.add_argument('corpus_to_train_on', type=str,
                         help='list of the corpus we want to train on ')
 
