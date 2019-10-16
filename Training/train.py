@@ -100,7 +100,9 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
         valid_on = []
     else:
         valid_on = speakers_to_valid_on
-
+    print('train', train_on)
+    print('valid', valid_on)
+    print('test', test_on)
     name_corpus_concat = ""
     if config != "spec" : # if spec DOESNT train on other speakers
         for corpus in corpus_to_train_on:
