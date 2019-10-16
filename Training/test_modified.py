@@ -38,7 +38,7 @@ fileset_path = os.path.join(root_folder, "Preprocessed_data", "fileset")
 print(sys.argv)
 articulators = ['tt_x', 'tt_y', 'td_x', 'td_y', 'tb_x', 'tb_y', 'li_x', 'li_y',
                     'ul_x', 'ul_y', 'll_x', 'll_y', 'la', 'lp', 'ttcl', 'tbcl', 'v_x', 'v_y']
-def test_model(test_on ,model_name, std_included = True) :
+def test_model(test_on ,model_name, test_on_per_default = False) :
     """
     :param test_on:  the speaker test
     :param model_name: the name of the model (of the .txt file, without the ".txt")
@@ -51,18 +51,37 @@ def test_model(test_on ,model_name, std_included = True) :
     """
     arti_indexes = []
     if 'only_arti_common' in model_name:
-        name = model_name.split('train_indep')
-        test = name[0].split('_')[3]
-        try:
-            train = [sp for sp in name[1].split('valid')[0].split('_') if (sp != '' and sp != 'train')]
-        except:
+        if "train_indep" in model_name:
+            name = model_name.split('train_indep')
+            test = name[0].split('_')[3]
+            try:
+                train = [sp for sp in name[1].split('valid')[0].split('_') if (sp != '' and sp != 'train')]
+            except:
+                train = []
+            try:
+                valid = [sp for sp in name[1].split('valid')[1].split('loss')[0].split('_') if (sp != '' and sp != 'train')]
+            except:
+                valid = []
+            arti_indexes = give_me_common_articulators([test] + train + valid )
+        if "spec" in model_name:
+            test = model_name.split('_')[3]
             train = []
-        try:
-            valid = [sp for sp in name[1].split('valid')[1].split('loss')[0].split('_') if (sp != '' and sp != 'train')]
-        except:
             valid = []
-        arti_indexes = give_me_common_articulators([test] + train + valid )
+            arti_indexes = give_me_common_articulators([test] + train + valid)
+        if 'valid__' in model_name and 'indep' in model_name:
+            test = model_name.split('_')[3]
+            train = [model_name.split('_')[6]]
+            valid = []
+            arti_indexes = give_me_common_articulators([test] + train + valid)
 
+    if test_on_per_default:
+        test_on = test
+
+    print(model_name)
+    print('train on', train)
+    print('valid on', valid)
+    print('tested on', test)
+    print('here test on', test_on)
     batch_norma = False
     filter_type = "fix"
     to_plot = False
@@ -119,7 +138,7 @@ def test_model(test_on ,model_name, std_included = True) :
 
     rmse_per_arti_mean, rmse_per_arti_mean_without_std, pearson_per_arti_mean = model.evaluate_on_test_modified(x,y, std_speaker=std_speaker, to_plot=to_plot
                                                                        , to_consider=arti_to_consider, verbose=False,
-                                                                                index_common= arti_indexes, std_not_mult=not std_included)
+                                                                                index_common= arti_indexes)
 
 
     show_filter = False #add it in argument
@@ -162,10 +181,10 @@ if __name__ == '__main__':
     parser.add_argument('model_name', type=str,
                         help='name of the model (without .txt)')
 
-    parser.add_argument('--std_included', type = bool, default = True, help='if use std to compute RMSE or not' )
+
     args = parser.parse_args()
 
-    rmse,pearson = test_model(test_on=args.test_on, model_name=args.model_name,  std_included=args.std_included)
+    rmse,pearson = test_model(test_on=args.test_on, model_name=args.model_name)
     print("results for model ",args.model_name)
     print("rmse",rmse)
     print("pearson",pearson)
