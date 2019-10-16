@@ -392,7 +392,7 @@ if __name__=='__main__':
                         help='how often evaluate the validation set')
 
     parser.add_argument('config', type=str,
-                        help='spec or dep or indep that stands for speaker specific/dependant/independant')
+                        help='spec or dep or train_indep or indep that stands for speaker specific/dependant/independant')
 
     args = parser.parse_args()
     print('arguments given:', args.test_on, args.speakers_to_train, args.n_epochs, args.loss_train,
