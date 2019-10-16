@@ -26,4 +26,4 @@ if __name__ == '__main__':
                 "only_arti_common_M1_train_indep_train_F5_M3_valid_F1_loss_50_filter_fix_bn_False_0",
                 "only_arti_common_M3_train_indep_train_F5_M1_valid_F1_loss_50_filter_fix_bn_False_0"]
     for model in models:
-        test_model('default', model, std_included = True, test_on_per_default =True)
+        test_model('default', model, test_on_per_default =True)
