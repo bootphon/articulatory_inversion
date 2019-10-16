@@ -48,7 +48,7 @@ import json
 root_folder = os.path.dirname(os.getcwd())
 
 def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_train_on, batch_norma, filter_type,
-                to_plot, lr, delta_test, config, speakers_to_train_on = "", relearn = False):
+                to_plot, lr, delta_test, config, speakers_to_train_on = "", speakers_to_valid_on = "", relearn = False):
     """
     :param test_on: (str) one speaker's name we want to test on, the speakers and the corpus the come frome can be seen in
     "fonction_utiles.py", in the function "get_speakers_per_corpus'.
@@ -94,6 +94,12 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
         train_on = which_speakers_to_train_on(corpus_to_train_on, test_on, config)
     else:
         train_on = speakers_to_train_on
+
+    speakers_to_valid_on = speakers_to_valid_on[1:-1].replace("'", "").replace('"', '').replace(' ', '').split(",")
+    if speakers_to_valid_on == [""] or speakers_to_valid_on == []:
+        valid_on = []
+    else:
+        valid_on = speakers_to_valid_on
 
     name_corpus_concat = ""
     if config != "spec" : # if spec DOESNT train on other speakers
@@ -154,7 +160,7 @@ def train_model(test_on, n_epochs, loss_train, patience, select_arti, corpus_to_
 
 
 
-    files_per_categ, files_for_test = give_me_train_valid_test_filenames(train_on,test_on,config, batch_size)
+    files_per_categ, files_for_test = give_me_train_valid_test_filenames(train_on=train_on,test_on=test_on,config=config,batch_size= batch_size, valid_on=valid_on)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
@@ -345,8 +351,11 @@ if __name__=='__main__':
     parser.add_argument('test_on', type=str,
                         help='the speaker we want to test on')
 
-    parser.add_argument('--speakers_to_train', type=str, default=[],
+    parser.add_argument('--speakers_to_train', type=str, default="",
                         help='specific speakers to train on')
+
+    parser.add_argument('--speakers_to_valid', type=str, default="",
+                        help='specific speakers to valid on')
 
     parser.add_argument('--n_epochs', type=int, default=50,
                         help='max number of epochs to train the model')
@@ -391,4 +400,5 @@ if __name__=='__main__':
     train_model(test_on=args.test_on, n_epochs=args.n_epochs, loss_train=args.loss_train,
                 patience=args.patience, select_arti=args.select_arti, corpus_to_train_on=args.corpus_to_train_on,
                 batch_norma=args.batch_norma, filter_type=args.filter_type, to_plot=args.to_plot,
-                lr=args.lr, delta_test=args.delta_test, config=args.config, speakers_to_train_on=args.speakers_to_train, relearn=args.relearn)
+                lr=args.lr, delta_test=args.delta_test, config=args.config, speakers_to_train_on=args.speakers_to_train,
+                relearn=args.relearn, speakers_to_valid_on=args.speakers_to_valid)

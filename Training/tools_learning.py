@@ -221,7 +221,7 @@ def give_me_common_articulators(list_speakers):
 
 
 
-def give_me_train_valid_test_filenames(train_on, test_on, config, batch_size):
+def give_me_train_valid_test_filenames(train_on, test_on, config, batch_size, valid_on = []):
     """
     :param train_on: list of corpus to train on
     :param test_on: the speaker test
@@ -252,6 +252,11 @@ def give_me_train_valid_test_filenames(train_on, test_on, config, batch_size):
     elif config == "indep":
         files_for_train = load_filenames(train_on, part=["train", "test"])
         files_for_valid = load_filenames(train_on, part=["valid"])
+        files_for_test = load_filenames([test_on], part=["train", "valid", "test"])
+
+    elif config == 'train_indep' and valid_on != []:
+        files_for_train = load_filenames(train_on, part=["train", "valid", "test"])
+        files_for_valid = load_filenames(valid_on, part=["train", "valid", "test"])
         files_for_test = load_filenames([test_on], part=["train", "valid", "test"])
 
     with open('categ_of_speakers.json', 'r') as fp:
