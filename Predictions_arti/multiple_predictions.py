@@ -30,7 +30,9 @@ if __name__ == '__main__':
     "only_arti_common_M1_train_indep_train_F5_M3_valid_F1_loss_50_filter_fix_bn_False_0",
     "only_arti_common_M3_train_indep_train_F5_M1_valid_F1_loss_50_filter_fix_bn_False_0"]"""
     for model in models:
+        print(model)
         test_on = model.split('_')[3] # get the name of indiv it is tested on
+        print('This model was tested on', test_on)
         prediction_arti_ZS(name_model = model, wav_folder = 'no_need', mfcc_folder = 'mfcc_ZS2017_1s/',
                            ema_folder = 'ema_ZS2017_1s/', fea_folder = test_on + '_train_indep', output_dim=dico_output_dim[test_on],
                            Nmax=0, prepro_done=True, predic_done=False)
