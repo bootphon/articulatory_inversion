@@ -36,7 +36,8 @@ root_folder = os.path.dirname(os.getcwd())
 fileset_path = os.path.join(root_folder, "Preprocessed_data", "fileset")
 
 print(sys.argv)
-
+articulators = ['tt_x', 'tt_y', 'td_x', 'td_y', 'tb_x', 'tb_y', 'li_x', 'li_y',
+                    'ul_x', 'ul_y', 'll_x', 'll_y', 'la', 'lp', 'ttcl', 'tbcl', 'v_x', 'v_y']
 def test_model(test_on ,model_name, std_included = True) :
     """
     :param test_on:  the speaker test
@@ -116,7 +117,7 @@ def test_model(test_on ,model_name, std_included = True) :
     if arti_indexes != []:
         arti_to_consider = [1 for k in range(len(arti_indexes))]
 
-    rmse_per_arti_mean, pearson_per_arti_mean = model.evaluate_on_test_modified(x,y, std_speaker=std_speaker, to_plot=to_plot
+    rmse_per_arti_mean, rmse_per_arti_mean_without_std, pearson_per_arti_mean = model.evaluate_on_test_modified(x,y, std_speaker=std_speaker, to_plot=to_plot
                                                                        , to_consider=arti_to_consider, verbose=False,
                                                                                 index_common= arti_indexes, std_not_mult=not std_included)
 
@@ -135,10 +136,17 @@ def test_model(test_on ,model_name, std_included = True) :
 
     with open('model_results_test.csv', 'a',newline="") as f:
         writer = csv.writer(f, delimiter=",")
-        row_rmse = [model_name,"rmse"] + rmse_per_arti_mean.tolist() + [model.epoch_ref]
+        try:
+            row_arti = ['model', 'test on', 'value'] + [articulators[i] for i in arti_indexes]
+            writer.writerow(row_arti)
+        except:
+            print('error')
+        row_rmse = [model_name,test_on,"rmse"] + rmse_per_arti_mean.tolist() + [model.epoch_ref]
         writer.writerow(row_rmse)
-        row_pearson = [model_name, "pearson"] + pearson_per_arti_mean.tolist() + [model.epoch_ref]
-        print(row_rmse)
+        row_rmse_without_std = [model_name,test_on, "rmse without std"] + rmse_per_arti_mean.tolist() + [model.epoch_ref]
+        writer.writerow(row_rmse_without_std)
+        row_pearson = [model_name, test_on, "pearson"] + pearson_per_arti_mean.tolist() + [model.epoch_ref]
+        print(row_pearson)
         writer.writerow(row_pearson)
 
     return rmse_per_arti_mean, pearson_per_arti_mean

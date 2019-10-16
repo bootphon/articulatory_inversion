@@ -342,7 +342,7 @@ class my_ac2art_model(torch.nn.Module):
 
         return rmse_per_arti_mean, pearson_per_arti_mean
 
-    def evaluate_on_test_modified(self,X_test, Y_test, std_speaker, to_plot=False, to_consider=None, verbose=True, index_common = [], no_std = False, std_not_mult = False):
+    def evaluate_on_test_modified(self,X_test, Y_test, std_speaker, to_plot=False, to_consider=None, verbose=True, index_common = [], no_std = False):
         """
         :param X_test:  list of all the input of the test set
         :param Y_test:  list of all the target of the test set
@@ -353,6 +353,7 @@ class my_ac2art_model(torch.nn.Module):
         """
         idx_to_ignore = [i for i in range(len(to_consider)) if not(to_consider[i])]
         all_diff = np.zeros((1, self.output_dim))
+        all_diff_without_std = np.zeros((1, self.output_dim))
         all_pearson = np.zeros((1, self.output_dim))
         if to_plot:
             indices_to_plot = np.random.choice(len(X_test), 2, replace=False)
@@ -382,14 +383,10 @@ class my_ac2art_model(torch.nn.Module):
             if index_common != [] and not no_std:
                 std_to_modify = get_right_indexes(std_to_modify, index_common, shape=1)
 
+            rmse_with_std = rmse*std_to_modify  # unormalize
 
-            # CAREFUL: the std here is not multiplied
-            #if not std_not_mult:
-            #    rmse = rmse*std_to_modify  # unormalize
-
-            all_diff = np.concatenate((all_diff, rmse))
-
-            #y_pred_not_smoothed = y_pred_not_smoothed.reshape(1, L, self.output_dim)
+            all_diff = np.concatenate((all_diff, rmse_with_std))
+            all_diff_without_std = np.concatenate((all_diff_without_std, rmse))
             y_pred_smoothed = y_pred_smoothed.reshape(1,L, self.output_dim)
             y_pred_smoothed = torch.from_numpy(y_pred_smoothed)
             y = torch.from_numpy(y.reshape(1, L, self.output_dim))
@@ -406,13 +403,14 @@ class my_ac2art_model(torch.nn.Module):
 
         pearson_per_arti_mean = np.mean(all_pearson, axis=0)
         rmse_per_arti_mean = np.mean(all_diff, axis=0)
+        rmse_per_art_mean_without_std = np.mean(all_diff_without_std, axis=0)
         if verbose:
             print("rmse final : ", np.mean(rmse_per_arti_mean[rmse_per_arti_mean != 0]))
             print("rmse mean per arti : \n", rmse_per_arti_mean)
             print("pearson final : ", np.mean(pearson_per_arti_mean[pearson_per_arti_mean != 0]))
             print("pearson mean per arti : \n", pearson_per_arti_mean)
 
-        return rmse_per_arti_mean, pearson_per_arti_mean
+        return rmse_per_arti_mean, rmse_per_art_mean_without_std, pearson_per_arti_mean
 
 
 
