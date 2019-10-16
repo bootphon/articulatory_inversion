@@ -162,7 +162,7 @@ def test_model(test_on ,model_name, test_on_per_default = False) :
             print('error')
         row_rmse = [model_name,test_on,"rmse"] + rmse_per_arti_mean.tolist() + [model.epoch_ref]
         writer.writerow(row_rmse)
-        row_rmse_without_std = [model_name,test_on, "rmse without std"] + rmse_per_arti_mean.tolist() + [model.epoch_ref]
+        row_rmse_without_std = [model_name,test_on, "rmse without std"] + rmse_per_arti_mean_without_std.tolist() + [model.epoch_ref]
         writer.writerow(row_rmse_without_std)
         row_pearson = [model_name, test_on, "pearson"] + pearson_per_arti_mean.tolist() + [model.epoch_ref]
         print(row_pearson)
