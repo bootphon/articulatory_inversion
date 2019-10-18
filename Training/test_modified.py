@@ -38,7 +38,7 @@ fileset_path = os.path.join(root_folder, "Preprocessed_data", "fileset")
 print(sys.argv)
 articulators = ['tt_x', 'tt_y', 'td_x', 'td_y', 'tb_x', 'tb_y', 'li_x', 'li_y',
                     'ul_x', 'ul_y', 'll_x', 'll_y', 'la', 'lp', 'ttcl', 'tbcl', 'v_x', 'v_y']
-def test_model(test_on ,model_name, test_on_per_default = False) :
+def test_model(test_on ,model_name, test_on_per_default = False, ) :
     """
     :param test_on:  the speaker test
     :param model_name: the name of the model (of the .txt file, without the ".txt")
