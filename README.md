@@ -10,15 +10,14 @@ It contains 3 main parts :<br/>
 	- preprocessing that reads/cleans/preprocess/reorganize data\
 	- Feed a neural network with our data. Training  on some speakers and testing on a speaker\
 	- Perform articulatory predictions based on a wav file and a model (already trained)
-
+    
 The library enables evaluating the generalization capacity of a set of (or one) corpus.
  To do so we train the model in three different configurations. 
  For each configuration we evaluate the model through cross validation, considering successively the speakers as the test speaker, and averaging the results.
- The three configurations are the following ones:
+ The two configurations are the following ones:
  1) "speaker specific", we train and test on the same speaker. This configuration gives a topline of the results, and learn some characteristics of the speaker
- 2) "speaker dependent", we train on all speakers (including the test speaker). 
- 3) "speaker independent", we train on all speakers EXCEPT the test-speaker. We discover the test-speaker at the evaluation of the model. 
- By analyzing how the scores decrease from configuration 1 to 3 we conclude on the generalization capacity.
+ 3) "speaker train independent", we train on all speakers EXCEPT the test-speaker and EXCEPT the validation speaker(s). 
+ By analyzing how the scores decrease from configuration 1 to 2 we conclude on the generalization capacity.
 
 # Dependencies
 - python 3.7.3
@@ -69,7 +68,7 @@ select_arti (always yes, put gradients to 0 if arti is not available for this sp
 Then for each set of parameters n_speakers models are trained : each time one speaker is left out from the training set to be test on. The results are averaged and saved.
 
 # Usage
-1) Data collect \
+1) Data collect\
 After the corpus data are downloaded, put them in a folder Raw_data and change some name folders to respect the following schema : 
 - mocha :  for each speaker in ["fsew0", "msak0", "faet0", "ffes0", "maps0", "mjjn0", "falh0"] all the files are in Raw_data/mocha/speaker 
 (same filename for same sentence, the extension indicates if its EMA, WAV, TRANS)
@@ -79,7 +78,7 @@ After the corpus data are downloaded, put them in a folder Raw_data and change s
 
 For the speaker falh0 (mocha database), we deleted files from 466 to 470 since there was an issue in the recording.
 
-2) Preprocessing \
+2) Preprocessing\
 The script main_preprocessing takes 1 mandatory argument (the path to the raw data folder) and 2 optional arguments : corpus and N_max. N_max is max number of files to preprocess per speaker, N_max=0 means we want to preprocess all files (it is the default value)
 Corpus is the list of corpus for which we want to do the preprocessing, default value is all the corpuses : ["mocha","Haskins","usc","MNGU0"].
 
@@ -93,8 +92,8 @@ python main_preprocessing.py --corpus ["mocha","Haskins"]
 ```
 The preprocessing of all the data takes about 6 hours. with a parallelization on 4 CPU
 
-3) Training \
-The script Train.py perform the training. The required parameters of the train function are those concerning the training/test set :\
+3) Training\
+The script Train.py perform the training. The required parameters of the train function are those concerning the training/test set :
 - the test-speaker : the speaker on which the model will be evaluated),
 - the corpus we want to train on  : the list the corpus that will be in training set,
 - the configuration : see above the description of the 3 configuration "indep","dep" or "spec",
@@ -138,51 +137,24 @@ python predictions_arti.py  F01_spec_loss_0_filter_fix_bn_False_0 --already_prep
  
 The preprocessing will calculate the mfcc features corresponding to the wav files and save it in "Predictions_arti/my_mfcc_files_for_inversion"\
 The predictions of the articulatory trajectories are as nparray in "Predictions_arti/name_model/my_articulatory_prediction" with the same name as the wav (and mfcc) files.\
-Warning : usually the mfcc features are normalized at a speaker level when enough data for this speaker is available. The preprocessing doesn't normalize the mfcc coeff.
+Warning : usually the mfcc features are normalized at a speaker level when enough data for this speaker is available. The preprocessing normalize the mfcc coeff per file.
+
+5) Modified ABX test
+
 
 #  Experiments \
 The function train.py only trains a model excluding ONE speaker and testing on it.\
 For more significant results, one wants to average results obtained by cross validation excluding all the speakers one by one.\
 The script Experiments enables to perform this cross_validation and save the result of the cross validation.\
-For the moment the experiments that you can run are on the following parameters :\
-- config : speaker specific, dependant or independant (3 possibilities).
-- alpha : the coefficient before pearson in the combined loss (6 possibilities). 
-- filter : filter outside the model, inside with fixe weights or inside with updating weights (3 possibilities).
-- bn : whether or not to add batch normalization after the LSTM layers (2 possibilities).
-For instance if we run the experiment "filter", for each possibility (there are 3) : 
-	- One by one the speakers will be considered as the test speaker,  and then we'll have has many models as speakers.\
-	- Once we have n_speakers results, there are averaged.
-	- The results for this possibility (rmse and pearson) are printed and added as 2 rows in the file "experiment_results_filter.csv".
+
  At the end of the experiment we can see in the csv file the result of each possibility and can compare those easily.
 
 
 The script experiment.py takes 3 required arguments : corpus and experiment_type.
 corpus is the list of the corpus we want to do the experiment on, for instance ["Haskins"] or ["mocha","usc"].
-experiment_type is one of "config","filter","alpha", or "bn".
-The optional argument is "config" and has to be precise for any experiment except "config". It enables to precise in which configuration you 
-want to realise the experiment (again "spec","dep" or "indep")
+experiment_type is one of "cross" or "cross_spec"
 
-We found that the most interesting experiment are on the "config" of the corpus Haskins since it illustrates the capacity of the corpus to generalize well.
-
-To perform this experiment : be in the folder "Training" and type in the command line :
-
-```bash
-python experiment.py ["Haskins"] "config"  
-```
-
-To evaluate what is the best value for alpha for a dependant configuration type :
-
-
-
-```bash
-python experiment.py ["Haskins"] "alpha" --config "dep"
-```
-
-# Results 
-Some models already trained are in saved_models_examples.
-
-For example the following one  "fsew0_spec_loss_0_filter_fix_bn_False_0.txt", is a speaker specific model (train and test on fsew0), with loss rmse, 
-with a filter inside the NN with fixed weights, without batch normalization.
+# Test 
 
 To test this models be in the folder "Training" and type this in the command line :
 ```bash
@@ -194,19 +166,4 @@ The script will save in Training/images_prediction some graph. For one random te
  
 The script will print the rmse and pearson result  per articulator averaged over the test set. It also adds rows in the csv "results_models_test" with the rmse and pearson per articulator.
 
-
-To compare to the state of the art, speaker specific results on fsew0 and msak0 :
-
-
-
-
-| articulator |     tt_x    |     tt_y    |     td_x    |     td_y    |     tb_x    |     li_y    |     ll_x    |     ll_y    |     ttcl    |     v_x     |     v_y     |
-|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|
-|     rmse    |       0,74  |       0,86  |       1,75  |       0,43  |       1,74  |       1,67  |       0,74  |       1,03  |       0,05  |       1,71  |       1,53  |
-|   pearson   |       0,75  |       0,84  |       0,87  |       0,69  |       0,86  |       0,85  |       0,69  |       0,80  |       0,86  |       0,89  |       0,92  |
-
-
-
-Some plot of trajectories 
-
-HASKINS SAME THING + OTHER CONFIG
+You can find the results we obtained here: https://docs.google.com/spreadsheets/d/172osaOYPxoxSziiU6evq4L0OlhEEKZ9bsq0ljmcFTRI/edit?usp=sharing

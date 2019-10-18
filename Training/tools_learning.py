@@ -135,13 +135,6 @@ def criterion_pearson_no_reduction(y, y_pred, cuda_avail, device):
     deno = torch.sqrt(torch.sum(y_1 ** 2, dim=1, keepdim=True)) * \
            torch.sqrt(torch.sum(y_pred_1 ** 2, dim=1, keepdim=True))  # (B,1,18)
 
-    #minim = torch.tensor(0.000001, dtype=torch.float64)  # avoid division by 0
-    """if cuda_avail:
-        minim = minim.to(device=device)
-        deno = deno.to(device=device)
-        nume = nume.to(device=device)
-    nume = nume + minim
-    deno = deno + minim"""
     my_loss = torch.div(nume, deno)  # (B,1,18)
     return my_loss.numpy()
     #my_loss = torch.sum(my_loss)
@@ -231,11 +224,12 @@ def give_me_train_valid_test_filenames(train_on, test_on, config, batch_size, va
     we have a dictionnary with 2 keys (train, valid), and the values is a list of the namefiles for this categ and this
     part (train/valid)
             files_for_test : list of the files of the test set
-    3 configurations that impacts the train/valid/test set (if we train a bit on test speaker, we have to be sure that
+    4 configurations that impacts the train/valid/test set (if we train a bit on test speaker, we have to be sure that
     the don't test on files that were in the train set)
     - spec : for speaker specific, learning and testing only on the speaker test
     - dep : for speaker dependant, learning on speakers in train_on and a part of the speaker test
     - indep : for speaker independant, learnong on other speakers.
+    - train_indep: when you want to train on a list of speakers, valid on another list and test on another speaker
     """
     if config == "spec":
         files_for_train = load_filenames([test_on], part=["train"])
@@ -303,7 +297,7 @@ def give_me_train_valid_test_filenames_no_cat(train_on, test_on, config, valid_o
     we have a dictionnary with 2 keys (train, valid), and the values is a list of the namefiles for this categ and this
     part (train/valid)
             files_for_test : list of the files of the test set
-    3 configurations that impacts the train/valid/test set (if we train a bit on test speaker, we have to be sure that
+    4 configurations that impacts the train/valid/test set (if we train a bit on test speaker, we have to be sure that
     the don't test on files that were in the train set)
     - spec : for speaker specific, learning and testing only on the speaker test
     - dep : for speaker dependant, learning on speakers in train_on and a part of the speaker test
@@ -340,25 +334,26 @@ def give_me_train_valid_test_filenames_no_cat(train_on, test_on, config, valid_o
 
 
 def get_right_indexes(y, indexes_list, shape = 3):
-    #print(y.shape)
+    """
+    Select only the right columns of y an return them
+    :param y:
+    :param indexes_list:
+    :param shape:
+    :return:
+    """
     list_array = []
     for i in indexes_list:
-        #print(i)
-        #print(y[:, :, i:i+1].shape)
-        #print(y[:,:,i].shape)
         if shape == 3:
             list_array.append(y[:, :, i:i+1])
         if shape == 2:
             list_array.append(y[:, i:i + 1])
         if shape == 1:
             list_array.append(y[i:i + 1])
-    #print(list_array)
     if shape == 3:
         return np.concatenate(tuple(list_array), axis=2)
     if shape == 2:
         return np.concatenate(tuple(list_array), axis=1)
     if shape == 1:
-        #print(list_array)
         return np.concatenate(tuple(list_array), axis=0)
 
 

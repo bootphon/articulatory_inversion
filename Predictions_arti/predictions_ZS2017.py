@@ -94,6 +94,5 @@ if __name__ == '__main__':
     args = parser.parse_args()
     prediction_arti_ZS(name_model=args.name_model, Nmax=args.Nmax, wav_folder=args.wav_folder, mfcc_folder=args.mfcc_folder,
                        ema_folder = args.ema_folder, output_dim=args.output_dim, prepro_done=args.prep_done, predic_done=args.pred_done, fea_folder=args.fea_folder)
-    #folder = sys.argv[1]
-    #rename(folder)
+
 
