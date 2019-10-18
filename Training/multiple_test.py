@@ -41,8 +41,8 @@ if __name__ == '__main__':
               "only_arti_common_MNGU0_spec_train__valid__loss_50_filter_fix_bn_False_0",
               "only_arti_common_msak0_spec_train__valid__loss_50_filter_fix_bn_False_0",
               "only_arti_common_fsew0_spec_train__valid__loss_50_filter_fix_bn_False_0"]"""
-    models = ["only_arti_common_MNGU0_train_indep_train_M02_M03_M04_F01_F02_F03_F04_F1_F5_M3_msak0_valid_M01_fsew0_M1_loss_50_filter_fix_bn_False_0",
-              "MNGU0_train_indep_Haskins_usc_mocha_MNGU0_loss_50_filter_fix_bn_False_0",
+    # "only_arti_common_MNGU0_train_indep_train_M02_M03_M04_F01_F02_F03_F04_F1_F5_M3_msak0_valid_M01_fsew0_M1_loss_50_filter_fix_bn_False_0"
+    models = ["MNGU0_train_indep_Haskins_usc_mocha_MNGU0_loss_50_filter_fix_bn_False_0",
               "only_arti_common_M01_train_indep_train_F02_F03_F04_M02_M03_M04_valid_F01_loss_50_filter_fix_bn_False_0"]
     for model in models:
         test_model('MNGU0', model, test_on_per_default =False)

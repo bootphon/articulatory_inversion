@@ -74,8 +74,13 @@ def test_model(test_on ,model_name, test_on_per_default = False, ) :
             valid = []
             arti_indexes = give_me_common_articulators([test] + train + valid)
 
-    if test_on_per_default:
-        test_on = test
+
+        if test_on_per_default:
+            test_on = test
+    else:
+        train  = []
+        valid = []
+        test= []
 
     print(model_name)
     print('train on', train)
