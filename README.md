@@ -1,7 +1,7 @@
 # Inversion-articulatoire
 
 Inversion-articulatoire is a Python library for training/testing neural network models for the acoustic to articulatory reconstruction.\
-The task is the following : based on the acoustic signal of a speech, predict 18 articulatory trajectories of the speaker.
+The task is the following : based on the acoustic signal of a speech, predict articulatory trajectories of the speaker.
 
 It was created for learning the acoustic to articulatory mapping in a subject independent framework.\
 For that we use data from 4 public datasets, that contain in all 19 speakers and more than 10 hours of acoustic and articulatory recordings.
@@ -28,7 +28,7 @@ The library enables evaluating the generalization capacity of a set of (or one) 
 - matplotlib
 - psutil
 
-# Requirements
+# Datasets
 We used data coming from 4 different dataset, it is not necessary to use all of them. We suggest to use Haskins database, since it gives good results of prediction on a new speaker.
 The data from the corpus have to be in the correct folders.
 - mocha : http://data.cstr.ed.ac.uk/mocha/ <br/> , download data for the speakers : "fsew0", "msak0", "faet0", "ffes0", "maps0", "mjjn0", "falh0".
@@ -39,6 +39,35 @@ The data from the corpus have to be in the correct folders.
 
 Once downloaded and unzipped, all the folders should be in "Raw_data", and some folder names should be changed. More details are given in the part "usage".
 
+We analyzed the datasets and found that some articulatory trajectories were wrong, here is a list of the articulatory trajectories we validated for each speaker (1 is for validated, 0 is for deleted):
+ 
+ 
+ 
+ |  speaker  |  tt_x  |  tt_y  | td_x | td_y | tb_x | tb_y | li_x | li_y  | ul_x | ul_y | ll_x | ll_y | la | pro | ttcl | tbcl | v_x | v_y  | 
+ | ------  |  --  |  -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | --  |
+ | fsew0 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 1 | 0 | 0 | 1 | 1 | 0 | 0 | 1 | 0 | 1 | 1 | 
+ | msak0 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 1 | 0 | 0 | 1 | 1 | 0 | 0 | 1 | 0 | 1 | 1 | 
+ | maps0 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 1 | 0 | 0 | 1 | 1 | 0 | 0 | 1 | 0 | 0 | 0 | 
+ | faet0 | 1 | 1 | 1 | 1 | 0 | 0 | 0 | 1 | 0 | 0 | 1 | 1 | 0 | 0 | 1 | 0 | 1 | 1 | 
+ | mjjn0 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 1 | 0 | 0 | 1 | 1 | 0 | 0 | 1 | 0 | 0 | 0 | 
+ | ffes0 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 1 | 0 | 0 | 1 | 1 | 0 | 0 | 1 | 0 | 1 | 1 | 
+ | falh0 | 1 | 1 | 0 | 0 | 1 | 0 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 0 | 
+ | MNGU0 | 1 | 1 | 0 | 1 | 0 | 1 | 1 | 1 | 0 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 
+ | F1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 
+ | F5 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 
+ | M1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 
+ | M3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 
+ | F01 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 
+ | F02 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 
+ | F03 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 
+ | F04 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 
+ | M01 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 
+ | M02 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 
+ | M03 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 
+ | M04 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 
+
+
+All this can be modified by changing the file articulators_per_speakers.csv that you can find in Preprocessing and Training.
 # Contents
 
 ## Preprocessing :
@@ -164,6 +193,6 @@ python test.py "fsew0" "fsew0_spec_loss_0_filter_fix_bn_False_0"
 
 The script will save in Training/images_prediction some graph. For one random test sentence it will plot and save the target and predicted trajectories for every articulators.\
  
-The script will print the rmse and pearson result  per articulator averaged over the test set. It also adds rows in the csv "results_models_test" with the rmse and pearson per articulator.
+The script will write the rmse, the rmse normlized and pearson result  in a csv file per articulator averaged over the test set. It also adds rows in the csv "results_models_test" with the rmse and pearson per articulator.
 
 You can find the results we obtained here: https://docs.google.com/spreadsheets/d/172osaOYPxoxSziiU6evq4L0OlhEEKZ9bsq0ljmcFTRI/edit?usp=sharing
