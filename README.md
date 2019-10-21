@@ -187,7 +187,7 @@ voiced_unvoiced = ['b:p','f:v','ð:θ','d:t','s:z','ʃ:ʒ','tʃ:dʒ','g:k']\
 oral_nasal = ['m:p','b:m','m:w','n:t','d:n','n:s','n:z','l:n','k:ŋ','g:ŋ','ŋ:w']\
 h_vowel = ['eɪ:h','h:ɪ','h:i','h:oʊ','h:ɔɪ','h:u']\
 
-Using the code to perform the 2017 Zerospeech Challenge task1 on the 1s english dataset given by the challenge organizors, you obtai a file across.csv and within.csv. 
+Using the code to perform the 2017 Zerospeech Challenge task1 on the 1s english dataset (https://github.com/bootphon/zerospeech2017/tree/master/track1/eval) given by the challenge organizors, you obtai a file across.csv and within.csv. 
 Those two files are a summary of your discrimination results. You can obtain the modified results (with deletion of the contrasts cited above) using the ABX_evaluation/script_compute_score.py file:
 
 ```bash
