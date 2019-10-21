@@ -177,6 +177,13 @@ The preprocessing will calculate the mfcc features corresponding to the wav file
 The predictions of the articulatory trajectories are as nparray in "Predictions_arti/name_model/my_articulatory_prediction" with the same name as the wav (and mfcc) files.\
 Warning : usually the mfcc features are normalized at a speaker level when enough data for this speaker is available. The preprocessing normalize the mfcc coeff per file.
 
+In particular, if you want to obtain the representation of the 1s english test data set of the 2017 Zerospeech Challenge, you can use the script predictions_ZS2017:
+
+```bash
+python predictions_ZS2017.py  model_name wav_folder mfcc_folder ema_predicted_general_folder particular fea_folder 
+```
+
+It will create a folder in ema_predicted with the name of your model and will put ema predictions in it. It will put fea files of your predictions in fea_folder.
 5) Modified ABX test
 
 We tested our model with the ABX phone discrmination test, based on the 1s english test datae set of the 2017 Zerospeech Challenge. In order for the test to be relevant, we delted some phones and contrast.
