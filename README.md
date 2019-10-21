@@ -16,7 +16,7 @@ The library enables evaluating the generalization capacity of a set of (or one) 
  For each configuration we evaluate the model through cross validation, considering successively the speakers as the test speaker, and averaging the results.
  The two configurations are the following ones:
  1) "speaker specific", we train and test on the same speaker. This configuration gives a topline of the results, and learn some characteristics of the speaker
- 3) "speaker train independent", we train on all speakers EXCEPT the test-speaker and EXCEPT the validation speaker(s). 
+ 2) "speaker train independent", we train on all speakers EXCEPT the test-speaker and EXCEPT the validation speaker(s). 
  By analyzing how the scores decrease from configuration 1 to 2 we conclude on the generalization capacity.
 
 # Dependencies
