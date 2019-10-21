@@ -68,6 +68,7 @@ We analyzed the datasets and found that some articulatory trajectories were wron
 
 
 All this can be modified by changing the file articulators_per_speakers.csv that you can find in Preprocessing and Training.
+
 # Contents
 
 ## Preprocessing :
@@ -170,18 +171,30 @@ Warning : usually the mfcc features are normalized at a speaker level when enoug
 
 5) Modified ABX test
 
+We tested our model with the ABX phone discrmination test, based on the 1s english test datae set of the 2017 Zerospeech Challenge. In order for the test to be relevant, we delted some phones and contrast.
+We deleted the following phones because they were mispronounced in the dataset: \
+["ɔ", "aʊ", "ə", "aɪ", "ɝ"]\
+We deleted the following contrasts because they could not be differentiated by articulatory data:\
+voiced_unvoiced = ['b:p','f:v','ð:θ','d:t','s:z','ʃ:ʒ','tʃ:dʒ','g:k']\
+oral_nasal = ['m:p','b:m','m:w','n:t','d:n','n:s','n:z','l:n','k:ŋ','g:ŋ','ŋ:w']\
+h_vowel = ['eɪ:h','h:ɪ','h:i','h:oʊ','h:ɔɪ','h:u']\
+
+Using the code to perform the 2017 Zerospeech Challenge task1 on the 1s english dataset given by the challenge organizors, you obtai a file across.csv and within.csv. 
+Those two files are a summary of your discrimination results. You can obtain the modified results (with deletion of the contrasts cited above) using the ABX_evaluation/script_compute_score.py file:
+
+```bash
+python score/folder/created/by/task1 file/were/you/want/your/results/to/be/printed.csv
+```
 
 #  Experiments \
-The function train.py only trains a model excluding ONE speaker and testing on it.\
-For more significant results, one wants to average results obtained by cross validation excluding all the speakers one by one.\
-The script Experiments enables to perform this cross_validation and save the result of the cross validation.\
+The function train.py only trains only one model.
+For more significant results, one wants to average results obtained by cross validation.
+The script experiments.py enables to perform this cross_validation and save the result.\
 
- At the end of the experiment we can see in the csv file the result of each possibility and can compare those easily.
-
-
-The script experiment.py takes 3 required arguments : corpus and experiment_type.
+The script experiment.py takes 2 required arguments : corpus and experiment_type, and one optional argument only_arti_common
 corpus is the list of the corpus we want to do the experiment on, for instance ["Haskins"] or ["mocha","usc"].
 experiment_type is one of "cross" or "cross_spec"
+only_arti_common is False by default, you can choose True if you want to train only on the articulators that are common to all the speakers you are using.
 
 # Test 
 
@@ -196,3 +209,4 @@ The script will save in Training/images_prediction some graph. For one random te
 The script will write the rmse, the rmse normlized and pearson result  in a csv file per articulator averaged over the test set. It also adds rows in the csv "results_models_test" with the rmse and pearson per articulator.
 
 You can find the results we obtained here: https://docs.google.com/spreadsheets/d/172osaOYPxoxSziiU6evq4L0OlhEEKZ9bsq0ljmcFTRI/edit?usp=sharing
+
