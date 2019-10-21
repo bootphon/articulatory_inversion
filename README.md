@@ -123,10 +123,10 @@ python main_preprocessing.py --corpus ["mocha","Haskins"]
 The preprocessing of all the data takes about 6 hours. with a parallelization on 4 CPU
 
 3) Training\
-The script Train.py perform the training. The required parameters of the train function are those concerning the training/test set :
+The script train.py perform the training. The required parameters of the train function are those concerning the training/test set :
 - the test-speaker : the speaker on which the model will be evaluated),
 - the corpus we want to train on  : the list the corpus that will be in training set,
-- the configuration : see above the description of the 3 configuration "indep","dep" or "spec",
+- the configuration : see above the description of the 2 configurations that we used train_indep and spec
 The optional parameters are the parameters of the models itself.
 To train on all the speakers except F01 of the Haskins corpus with the default parameters : be in the folder "Training" and type the following in the commandline
 ```bash
@@ -136,7 +136,7 @@ python train.py "F01" ["Haskins"] "indep"
 The model name contains information about the training/testing set , and some parameters for which we did experiments\.
 The model name is constructed as follow\  
    speaker_test+"_"+config+"_"+name_corpus_concat+"loss_"+str(loss_train)+"_filter_"+str(filter_type)+"_bn_"+str(batch_norma)\
-   with config either "indep","dep",or "spec", name corpus concat the list of the corpus to train on.
+   with config either "spec"or "train_indep, name corpus concat the list of the corpus to train on.
    loss train the a in the loss function described above, filter type either "out","fix" or "unfix", batch norma is a boolean\
 The model weights are saved in "Training/saved_models". The name of the above model would be "F01_spec_loss_90_filter_fix_bn_False_0"\
 If we train twice with the same parameters, a new model will be created with an increment in the suffix of the namefile.\
@@ -144,7 +144,15 @@ An exception is when the last model didn't end training, in that case the traini
 At the end of the training (either by early stopping or n_epochs hit), the model is evaluated.
  It calculates the pearson and rmse mean per articulator, and add 2 rows in the csv files "results_models" (one for rmse, one for pearson) with the results.
  It also prints the results.
+ 
+ If you want to train, test and validate on specific speakers, you can with:
+ 
+```bash
+python train.py "F01" ["Haskins"] --speakers_to_train ['F02','F03'] --speakers_to_valid ['M01','M02] --config train_indep
+```
+Here for example, you are going to test on F01, train on F02, F03 and validate on M02, M01
 
+If you want to train only on the common articulators of the speakers you are using, you can using the script train_only_common.py exactly the same way as train.py
 
 4) Perform inversion \
 Supposed you have acoustic data (.wav) and you want to get the articulatory trajectories. \
