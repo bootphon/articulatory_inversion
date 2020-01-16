@@ -58,6 +58,8 @@ def preprocess_my_wav_files(wav_folder, mfcc_folder, Nmax=0):
     if Nmax > 0:
         wav_files = wav_files[:Nmax]
     for filename in wav_files:
+        if not filename.endswith('.wav'):
+            continue
         filename = filename[:-4]  #remove extension
         wav, sr = librosa.load(os.path.join(path_wav,filename+".wav"), sr=sampling_rate_wav_wanted)  # chargement de données
         wav = 0.5 * wav / np.max(wav)
