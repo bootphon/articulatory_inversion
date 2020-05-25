@@ -183,7 +183,8 @@ In particular, if you want to obtain the representation of the 1s english test d
 python predictions_ZS2017.py  model_name wav_folder mfcc_folder ema_predicted_general_folder particular fea_folder 
 ```
 
-It will create a folder in ema_predicted with the name of your model and will put ema predictions in it. It will put fea files of your predictions in fea_folder.
+It will create a folder in ema_predicted with the name of your model and will put ema predictions in it. It will put fea files of your predictions in fea_folder. The single corpus model described in the paper [1] associated with this git is provided in Training/saved_models_example/Single-corpus-model.txt
+
 5) Modified ABX test
 
 We tested our model with the ABX phone discrmination test, based on the 1s english test datae set of the 2017 Zerospeech Challenge. In order for the test to be relevant, we delted some phones and contrast.
@@ -224,4 +225,6 @@ The script will save in Training/images_prediction some graph. For one random te
 The script will write the rmse, the rmse normlized and pearson result  in a csv file per articulator averaged over the test set. It also adds rows in the csv "results_models_test" with the rmse and pearson per articulator.
 
 You can find the results we obtained here: https://docs.google.com/spreadsheets/d/172osaOYPxoxSziiU6evq4L0OlhEEKZ9bsq0ljmcFTRI/edit?usp=sharing
+
+[1] Parrot, M., Millet, J., & Dunbar, E. (2019). Independent and automatic evaluation of acoustic-to-articulatory inversion models. arXiv, arXiv-1911.
 
